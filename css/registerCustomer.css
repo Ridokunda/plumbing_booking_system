@@ -1,0 +1,14 @@
+
+.body{
+    display: flex;
+    justify-content: center;
+}
+.reg_customer{
+    display: flex;
+    border:1px solid gray;
+    padding: 10px;
+    width:800px;
+    justify-content: space-around;
+    flex-direction: column;
+   
+}
