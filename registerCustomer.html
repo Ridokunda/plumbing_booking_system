@@ -7,28 +7,46 @@
     <link rel="stylesheet" href="css/registerCustomer.css">
 </head>
 <body>
-    <form class="reg_customer" action="" method="post">
-        <fieldset>
-            <label for="cus_name">First Name:</label>
-            <input type="text" name="cus_name" id="cus_name">
+
+    <header>
+        <div class="logo">
+            <h1>WeFixIt</h1>
+        </div>
+        <div class="right-header">
+            <a href="#"><span>Sign up</span></a>
+            <a href="#"><span>Log in</span></a>
+        </div>
         
-            <label for="cus_lastname">Last Name:</label>
+    </header>
+    <form class="reg_customer" action="" method="post">
+        <h1>Sign Up</h1>
+        <fieldset>
+            <label for="cus_name">First Name</label>
+            <input type="text" name="cus_name" id="cus_name">
+        </fieldset>
+        <fieldset>
+            <label for="cus_lastname">Last Name</label>
             <input type="text" name="cus_lastname" id="cus_lastname">
         </fieldset>
 
         <fieldset>
-            <label for="birthdate">Birthday:</label>
+            <label for="birthdate">Date of Birth</label>
             <input type="date" id="birthdate" name="birthdate">
-
-            <label for="id_no">ID number:</label>
+        </fieldset>
+        <fieldset>
+            <label for="id_no">ID number</label>
             <input type="number" name="id_no" id="id_no">
         </fieldset>
 
         <fieldset>
-            <label for="password">Password:</label>
+            <label for="password">Password</label>
             <input type="password" id="password" name="password">
         </fieldset>
-        <button type="submit" id="btn_reg_customer">Register</button>
+        <button type="submit" id="btn_reg_customer">Sign Up</button>
     </form>
+
+    <footer>
+        
+    </footer>
 </body>
 </html>
