@@ -2,10 +2,30 @@
 <html>
   <head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel='stylesheet' href='/stylesheets/regCUstomer.css' />
   </head>
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
+    <%- include('./partials/head.ejs') %>
+    <div class="container">
+        <form class="reg_customer" action="" method="post">
+            <h1>Log in</h1>
+            <fieldset>
+                <label for="cus_email">Email</label>
+                <input type="email" placeholder="abc@mail.com" name="cus_email" id="cus_email">
+            </fieldset>
+           
+            <fieldset>
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password">
+            </fieldset>
+            <button type="submit" id="btn_reg_customer">Log in</button>
+        </form>
+    </div>
+    
+
+    <footer>
+
+    </footer>
+
   </body>
 </html>
