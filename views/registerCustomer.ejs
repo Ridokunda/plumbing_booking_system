@@ -9,15 +9,15 @@
 
    <%- include('./partials/head.ejs') %>
     <div class="container">
-        <form class="reg_customer" action="" method="post">
+        <form class="reg_customer" action="/routes/users" method="post">
             <h1>Sign Up</h1>
             <fieldset>
                 <label for="cus_name">First Name</label>
-                <input type="text" value="John" name="cus_name" id="cus_name">
+                <input type="text" value="John" name="name" id="cus_name">
             </fieldset>
             <fieldset>
                 <label for="cus_lastname">Last Name</label>
-                <input type="text" value="Doe" name="cus_lastname" id="cus_lastname">
+                <input type="text" value="Doe" name="surname" id="cus_lastname">
             </fieldset>
     
             <fieldset>
@@ -25,8 +25,8 @@
                 <input type="date" id="birthdate" name="birthdate">
             </fieldset>
             <fieldset>
-                <label for="id_no">ID number</label>
-                <input type="number" name="id_no" id="id_no">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email">
             </fieldset>
     
             <fieldset>

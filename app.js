@@ -3,20 +3,13 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const mysql2 = require('mysql2');
+const BodyParser = require('body-parser');
+
 
 // create a database connection
-const connection = mysql2.createConnection({
-  host: "localhost",
-  database: "fixit_db",
-  user: "root",
-  password: "Kundi2001rio!"
-});
 
-connection.connect((err)=>{
-  if(err) throw err;
-  console.log("Database connected");
-})
+
+
 
 var registerCustomerRouter = require('./routes/registerCustomer');
 var loginRouter = require('./routes/login');
@@ -25,23 +18,29 @@ var indexRouter = require('./routes/index');
 
 var app = express();
 
+
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-
 app.set('view options', { debug: true });
 
 
 app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(BodyParser.json());
+//app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(BodyParser.urlencoded({ extended: false }));
 
+
+app.use('/routes/users', indexRouter);
 app.use('/', indexRouter);
 app.use('/registerCustomer', indexRouter);
 app.use('/login', indexRouter);
 app.use('/users', usersRouter);
+
+
 
 
 
@@ -64,6 +63,7 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
 
 module.exports = app;
 
