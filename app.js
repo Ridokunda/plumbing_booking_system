@@ -3,7 +3,20 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const mysql2 = require('mysql2');
 
+// create a database connection
+const connection = mysql2.createConnection({
+  host: "localhost",
+  database: "fixit_db",
+  user: "root",
+  password: "Kundi2001rio!"
+});
+
+connection.connect((err)=>{
+  if(err) throw err;
+  console.log("Database connected");
+})
 
 var registerCustomerRouter = require('./routes/registerCustomer');
 var loginRouter = require('./routes/login');
