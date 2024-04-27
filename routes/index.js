@@ -5,15 +5,15 @@ const connection = require("../database/connection");
 
 // GET registerCustomer page
 router.get('/registerCustomer', function(req, res, next) {
-  res.render('registerCustomer', { title: 'Register Page' });
+  res.render('registerCustomer', { title: 'WeFixIt | Register Page' });
 });
 /* GET home page. */
 router.get('/login', function(req, res, next) {
-  res.render('login',{ title: 'Log in'});
+  res.render('login',{ title: 'WeFixIt | Log in'});
 });
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.render('index', { title: 'WeFixIt | Home' });
 });
 
 /* POST add a customer*/
