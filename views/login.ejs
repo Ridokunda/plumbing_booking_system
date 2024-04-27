@@ -2,16 +2,16 @@
 <html>
   <head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/regCUstomer.css' />
+    <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
     <%- include('./partials/head.ejs') %>
     <div class="container">
-        <form class="reg_customer" action="" method="post">
+        <form class="reg_customer" action="/routes/users/login" method="post">
             <h1>Log in</h1>
             <fieldset>
                 <label for="cus_email">Email</label>
-                <input type="email" placeholder="abc@mail.com" name="cus_email" id="cus_email">
+                <input type="email" placeholder="abc@mail.com" name="email" id="cus_email">
             </fieldset>
            
             <fieldset>

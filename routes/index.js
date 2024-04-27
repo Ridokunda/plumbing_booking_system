@@ -16,16 +16,32 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
+/* POST add a customer*/
 router.post('/routes/users', (req, res) =>{
-  const { name, surname , email, password} = req.body;
-  const query = "INSERT INTO customers (C_Name,C_Surname,C_Email,C_Password) VALUES (?,?,?,?)";
+  const { name, surname , birthdate, email, password} = req.body;
+  const query = "INSERT INTO customers (C_Name,C_Surname,C_Birthdate,C_Email,C_Password) VALUES (?,?,?,?,?)";
 
-  connection.query(query, [name,surname,email,password], (err,result) =>{
+  connection.query(query, [name,surname,birthdate,email,password], (err,result) =>{
     if(err) throw err;
     console.log("Customer added");
     res.end("Customer Added");
   });
 });
+
+/* POST login*/
+router.post('/routes/users/login', (req, res) =>{
+  const {email, password} = req.body;
+  const query = "SELECT * FROM customers WHERE C_Email="+email+" AND C_Password="+password;
+
+  connection.query(query, [email,password], (err,result) =>{
+    if(err) throw err;
+    if(result != null){
+      console.log('Successfully logged in')
+    }
+    res.end('Successfully logged in');
+  });
+});
+
 
 
 module.exports = router;
