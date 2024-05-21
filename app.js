@@ -33,12 +33,13 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(BodyParser.urlencoded({ extended: false }));
 
-
-app.use('/routes/users', usersRouter);
 app.use('/', indexRouter);
-app.use('/registerCustomer', indexRouter);
-app.use('/login', indexRouter);
+app.use('/routes/users', usersRouter);
 app.use('/users', usersRouter);
+app.use('/registerCustomer', registerCustomerRouter);
+app.use('/registerCustomer/register', registerCustomerRouter);
+app.use('/login', loginRouter);
+
 
 
 
