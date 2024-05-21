@@ -39,6 +39,7 @@ app.use('/users', usersRouter);
 app.use('/registerCustomer', registerCustomerRouter);
 app.use('/registerCustomer/register', registerCustomerRouter);
 app.use('/login', loginRouter);
+app.use('/login/log', loginRouter);
 
 
 

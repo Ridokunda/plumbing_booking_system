@@ -1,6 +1,6 @@
 body{
   /*background-image: url('../images/background.jpg');*/
-  background-color: aliceblue;
+  background-color: white;
   margin: 0%;
   padding: 0px;
   border: 0px;
@@ -16,26 +16,59 @@ header{
 }
 
 /*-------------index---------------------------*/
+.book{
+  display: flex;
+  margin-left: 60px;
+}
 .box1{
-  background-color: rgb(15, 126, 148);
-  color: aliceblue;
+  
+  background-color: aliceblue;
+  color: black;
   font-size: 150%;
   width: 400px;
   height: 280px;
   padding:20px;
+  
   border-radius: 10px;
   margin-left: 20px;
   box-shadow: 2px 3px 4px;
+
+  position: relative;
+  z-index: 1;
+  padding: 20px;
 }
 
 .box1 button{
-  background-color: aliceblue;
+  background-color: rgb(15, 126, 148);
+  color: aliceblue;
+  margin-left: 100px;
   height:50px;
   width:200px;
   border: 0px;
   border-radius: 4px;
+  font-size: large;
+  box-shadow: 2px 3px 4px;
 }
 
+.services{
+  background-color: aliceblue;
+  display: flex;
+  justify-content: space-around;
+  height:250px;
+}
+.service{
+  background-color: white;
+  height: 180px;
+  width: 500px;
+  margin: 20px;
+  padding: 10px;
+  box-shadow: 2px 3px 4px;
+}
+
+.service .s-head{
+  display: flex;
+  color: rgb(15, 126, 148);
+}
 
 /*---------registerCustomer css----------*/
 
@@ -87,7 +120,9 @@ fieldset{
   font-size: 120%;
 }
 
-
+a {
+  text-decoration: none;
+}
 
 .logo{
   color: white;
@@ -106,7 +141,7 @@ fieldset{
 
 footer{
   display: flex;
-  background-color: rgb(1, 54, 105);
+  background-color: rgb(11, 25, 151);
   height: 300px;
   margin-top: 100px;
   align-items: center;
