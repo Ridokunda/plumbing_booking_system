@@ -4,11 +4,22 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const BodyParser = require('body-parser');
+const session = require('express-session');
+
+var app = express();
 
 
-// create a database connection
+app.use(session({
+  secret : 'fixit',
+  resave : true,
+  saveUninitialized : true,
+}));
 
-
+//middleware that sets the session variable
+app.use((req,res,next)=>{
+  res.locals.session = req.session;
+  next();
+});
 
 
 var registerCustomerRouter = require('./routes/registerCustomer');
@@ -16,7 +27,7 @@ var loginRouter = require('./routes/login');
 var usersRouter = require('./routes/users');
 var indexRouter = require('./routes/index');
 var bookingRouter = require('./routes/booking');
-var app = express();
+
 
 
 
