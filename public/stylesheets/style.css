@@ -78,27 +78,25 @@ header{
   align-items: center;
   height: 100vh;
 }
-.reg_customer{
+.form{
   font-family: Arial, Helvetica, sans-serif;
   background-color: white;
   display: flex;
   border:1px solid rgb(67, 62, 62);
   padding: 20px;
   width:400px;
+  gap: 10px;
   justify-content: space-around;
   flex-direction: column;
-  
-  
   border-radius: 10px;
   box-shadow: 2px 3px 4px;
   border: 0px;
 
 }
-.reg_customer h1{
-  
+.form h2{
   text-align: center;
 }
-.reg_customer input{
+.form input{
   height: 25px;
   border-radius: 4px;
   border: 1px solid #ccc;
@@ -110,7 +108,7 @@ fieldset{
   height: 50px;
 }
 
-#btn_reg_customer{
+#btn_submit{
   color: white;
   background-color: rgb(15, 126, 148);
   border: 0px;
@@ -152,3 +150,8 @@ footer span{
   text-align: center;
 }
 
+/*----------------------------Booking---------------------------------*/
+.container{
+  width: 100%;
+  justify-content: center;
+}

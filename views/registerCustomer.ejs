@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title><%= title %></title>
+    <title>WeFixIt | <%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
@@ -9,8 +9,8 @@
 
    <%- include('./partials/head.ejs') %>
     <div class="container">
-        <form class="reg_customer" action="/registerCustomer/register" method="post">
-            <h1>Sign Up</h1>
+        <form class="form reg" action="/registerCustomer/register" method="post">
+            <h2>Sign Up</h2>
             <fieldset>
                 <label for="cus_name">First Name</label>
                 <input type="text" value="John" name="name" id="cus_name">
@@ -33,7 +33,7 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password">
             </fieldset>
-            <button type="submit" id="btn_reg_customer">Sign Up</button>
+            <button type="submit" id="btn_submit">Sign Up</button>
         </form>
     
     </div>

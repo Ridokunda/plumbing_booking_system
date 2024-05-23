@@ -5,7 +5,7 @@ var router = express.Router();
 
 /* GET Login page. */
 router.get('/', function(req, res, next) {
-  res.render('login',{ title: 'WeFixIt | Log in'});
+  res.render('login',{ title: 'Log in'});
 });
 
 /* POST login*/

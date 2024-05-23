@@ -15,7 +15,7 @@ var registerCustomerRouter = require('./routes/registerCustomer');
 var loginRouter = require('./routes/login');
 var usersRouter = require('./routes/users');
 var indexRouter = require('./routes/index');
-
+var bookingRouter = require('./routes/booking');
 var app = express();
 
 
@@ -23,7 +23,7 @@ var app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-app.set('view options', { debug: true });
+app.set('view options', { debug: false });
 
 
 app.use(logger('dev'));
@@ -40,12 +40,7 @@ app.use('/registerCustomer', registerCustomerRouter);
 app.use('/registerCustomer/register', registerCustomerRouter);
 app.use('/login', loginRouter);
 app.use('/login/log', loginRouter);
-
-
-
-
-
-
+app.use('/booking', bookingRouter);
 
 
 // catch 404 and forward to error handler
