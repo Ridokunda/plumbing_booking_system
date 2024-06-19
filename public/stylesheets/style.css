@@ -50,6 +50,10 @@ header{
   box-shadow: 2px 3px 4px;
 }
 
+.book-button:hover{
+  background-color: rgb(12, 12, 184);
+}
+
 .services{
   background-color: aliceblue;
   display: flex;

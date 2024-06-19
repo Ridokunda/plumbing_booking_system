@@ -12,7 +12,7 @@
       <div class="box1">
         <p>Experience top-notch plumbing service at your doorstep! Don't let leaks or clogs disrupt your day. 
           Request our expert plumbing team now for fast, reliable fixes that keep your home running smoothly</p>
-        <button>Book Us</button>
+        <button class="book-button" id="btnBook">Book Us</button>
       </div>
       <div>
         <img src="images/book.png"  alt="">
@@ -38,5 +38,11 @@
     
     
     <%- include('./partials/footer') %>
+
+    <script>
+      document.getElementById("btnBook").addEventListener("click", function() {
+        window.location.href = 'booking';
+      });
+    </script>
   </body>
 </html>

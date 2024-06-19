@@ -52,6 +52,7 @@ app.use('/registerCustomer/register', registerCustomerRouter);
 app.use('/login', loginRouter);
 app.use('/login/log', loginRouter);
 app.use('/booking', bookingRouter);
+app.use('/booking/book', bookingRouter);
 
 
 // catch 404 and forward to error handler
