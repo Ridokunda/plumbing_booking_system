@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-
+const connection = require('../database/connection');
 
 
 /* GET Login page. */
@@ -9,16 +9,28 @@ router.get('/', function(req, res, next) {
 });
 
 /* POST login*/
-router.post('/login/log', (req, res) =>{
+router.post('/', (req, res) =>{
   const {email, password} = req.body;
-  const query = "SELECT * FROM customers WHERE C_Email="+email+" AND C_Password="+password;
+  if(!email || !password){
+    return res.send("Provide email and password");
+  }
+
+  const query = "SELECT * FROM users WHERE email = ? AND password = ?";
 
   connection.query(query, [email,password], (err,result) =>{
-    if(err) throw err;
-    if(result != null){
-      console.log('Successfully logged in')
+    if(err){
+      console.error('error querying the database',err);
+      return res.status(500).send('Internal server error');
+    };
+
+    if(result.length === 0){
+      return res.status(401).send("Invalid password or email");
     }
-    res.end('Successfully logged in');
+    const user = result[0];
+
+    req.session.userid = user.idusers;
+    //res.end('Successfully logged in');
+    res.redirect('/');
   });
 });
 

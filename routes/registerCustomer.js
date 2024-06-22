@@ -1,41 +1,41 @@
 var express = require('express');
 var router = express.Router();
- const connection = require('../database/connection')
+var bcrypt = require('bcrypt');
+ const connection = require('../database/connection');
 
 // GET registerCustomer page
 router.get('/', function(req, res, next) {
-    res.render('registerCustomer', { title: 'WeFixIt | Register Page', message: null });
+    res.render('registerCustomer', { title: 'Register Page', message: null });
   });
 
 
 
 /* POST add a customer*/
-router.post('/', (req, res) =>{
+router.post('/', async (req, res) =>{
     const { name, surname , birthdate, email, password} = req.body;
     const query1 = "INSERT INTO users (name,surname,birthdate,email,password) VALUES (?,?,?,?,?)";
     
     const query2 = `SELECT * FROM users WHERE email='${email}'`;
 
-    const query3 = 'INSERT INTO customers (FK_iduser) VALUES (?)';
+    //const query3 = 'INSERT INTO customers (FK_iduser) VALUES (?)';
+    try{
 
-    connection.query(query1, [name,surname,birthdate,email,password], (err,result) =>{
-      if(err) throw err;
-      console.log("User added");
-      //res.render('registerCustomer', { title: 'Register Page', message: null });
-      connection.query(query2, [email], (err, result) =>{
-        if(err) throw err;
-        console.log("User found");
-        var userid = result[0].idusers;
-
-        connection.query(query3, [userid], (err, result) =>{
-          if(err) throw err;
-          console.log('customer added');
-          req.session.user_id = userid;
-          res.redirect('/');
-        });
+      const hash = await bcrypt.hash(password,10);
+      connection.query(query1, [name,surname,birthdate,email,hash], (err,result) =>{
+        if(err){
+          console.error('Error while searching for user in the database', err);
+          return res.status(501).send('internal server error');
+        }
+        
+        res.status(201).send('User successfully registered');
+        
+  
       });
-
-    });
+    }catch(err){
+      console.error('error hashing password', err);
+      return res.status(500).send('error with hashing');
+    }
+    
 });
 module.exports = router;
 
