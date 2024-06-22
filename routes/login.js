@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var bcrypt = require('bcrypt');
 const connection = require('../database/connection');
 
 
@@ -15,9 +16,9 @@ router.post('/', (req, res) =>{
     return res.send("Provide email and password");
   }
 
-  const query = "SELECT * FROM users WHERE email = ? AND password = ?";
+  const query = "SELECT * FROM users WHERE email = ?";
 
-  connection.query(query, [email,password], (err,result) =>{
+  connection.query(query, [email], async (err,result) =>{
     if(err){
       console.error('error querying the database',err);
       return res.status(500).send('Internal server error');
@@ -28,6 +29,10 @@ router.post('/', (req, res) =>{
     }
     const user = result[0];
 
+    const match = await bcrypt.compare(password, user.password)
+    if(!match){
+      return res.status(401).send('Invalid username or password');
+    }
     req.session.userid = user.idusers;
     //res.end('Successfully logged in');
     res.redirect('/');
