@@ -170,3 +170,39 @@ footer span{
   width: 100%;
   justify-content: center;
 }
+
+/*------------------------------admin-dashboard---------------------------*/
+.admin-container{
+  display: flex;
+  padding:0%;
+  margin: 0%;
+}
+.sidebar{
+  background-color: rgb(15, 126, 148);
+  color: white;
+  width: 250px;
+  height: 100vh;
+}
+
+.sidebar ul{
+  list-style-type: none;
+}
+.sidebar ul li{
+  
+  padding: 10px;
+  margin: 0px;
+}
+
+.sidebar ul li:hover{
+  border-bottom: solid white 2px;
+}
+
+.sidebar .logo{
+  margin-left:60px;
+}
+
+.sidebar a{
+  color: inherit;
+}
+
+
