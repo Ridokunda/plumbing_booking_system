@@ -16,9 +16,16 @@ header{
 }
 
 /*-------------index---------------------------*/
+.opening-image{
+  margin-top: 20px;
+  margin-left: 80px;
+  margin-bottom: 20px;
+}
 .book{
   display: flex;
+  justify-content: space-between;
   margin-left: 60px;
+  margin-bottom: 100px;
 }
 .box1{
   
@@ -29,7 +36,7 @@ header{
   height: 280px;
   padding:20px;
   
-  border-radius: 10px;
+  border-radius: 0px;
   margin-left: 20px;
   box-shadow: 2px 3px 4px;
 
@@ -52,6 +59,10 @@ header{
 
 .book-button:hover{
   background-color: rgb(12, 12, 184);
+}
+
+.side-image{
+  margin-right: 80px;
 }
 
 .services{
