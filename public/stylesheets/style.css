@@ -206,8 +206,43 @@ footer span{
 }
 
 .content{
-  
+  flex-grow: 1;
   
 }
+
+/*----------------------------------bookings page---------------------------------------*/
+.bookings-container{
+  padding: 20px;
+}
+.container-bookings-tables{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bookings-container h2{
+  text-align: center;
+}
+
+.booking-table{
+  background-color: #ddd;
+  border: solid black 1px;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  background-color: rgb(15, 126, 148);
+  color: white;
+  padding: 10px;
+  text-align: left;
+  border-bottom: 2px solid #ddd;
+  border:solid #333 1px;
+}
+
+tbody td{
+  border:solid #333 1px;
+}
+
 
 

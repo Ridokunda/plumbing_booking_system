@@ -9,7 +9,44 @@
 <body>
  
     <div class="bookings-container">
-        <h2>Welcome to bookings page</h2>
+        <h2>Bookings Page</h2>
+
+        <div class="container-bookings-tables">
+
+            <% bookings.forEach(booking =>{ %>
+                <table class="booking-table">
+                    <thead>
+                        <tr>
+                            <th>Customer Name</th>
+                            <th>Service type</th>
+                            <th>Date Available</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                           <td>
+                            <span>Ridokunda</span>
+                           </td>
+                           <td>
+                            <span><%= booking.type %></span>
+                           </td>
+                           <td>
+                            <span>10 Feb 2024</span>
+                           </td>
+                           <td>
+                            <span>I want full plumbing for two bathrooms</span>
+                           </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                
+            <% }); %>
+
+        </div>
+        
+        
     </div>
     
    
