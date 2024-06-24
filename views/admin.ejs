@@ -5,6 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
     <link rel="stylesheet" href="/stylesheets/style.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', () =>{
+            const contentDiv = document.querySelector('.content');
+
+            document.querySelectorAll('.admin-pages a').forEach(link =>{
+                link.addEventListener('click', async event =>{
+                    event.preventDefault();
+
+                    const linkid = event.target.id;
+                    let url = '';
+
+                    
+                    if(linkid === 'user-management-link'){
+                        url = '/usermanagement';
+                    }else if(linkid === 'bookings-link'){
+                        url = '/bookings';
+                    }
+
+                    try{
+                        const response = await fetch(url);
+
+                        if(response.ok){
+                            const content = await response.text();
+                            contentDiv.innerHTML = content;
+                        }else{
+                            contentDiv.innerHTML = '<p>Failure while loading content<p>';
+                        }
+                    }catch(error){
+                        contentDiv.innerHTML = '<p>Error while loading content<p>';
+                        console.error('error',error); 
+                    }
+                });
+            });
+        });
+        
+    </script>
 </head>
 <body>
     <div class="admin-container">
@@ -14,9 +50,9 @@
             </div>
             <div class="admin-pages">
                 <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a>User management</a></li>
-                    <li><a>Bookings</a></li>
+                    <li><a href="/" >Home</a></li>
+                    <li><a href="#" id="user-management-link">User management</a></li>
+                    <li><a href="#" id="bookings-link">Bookings</a></li>
                     
                 </ul>
             </div>
