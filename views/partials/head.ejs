@@ -6,7 +6,11 @@
         
         <a href="">Our Services</a>
         <a href="#">Contact us</a>
-        <a href="login"><span>Log in</span></a>
+        <% if(session.userid) { %>
+            <a href="/login/logout"><span>Log out</span></a>
+        <% }else { %>
+            <a href="login"><span>Log in</span></a>
+        <% } %>
     </div>
     
 </header>
