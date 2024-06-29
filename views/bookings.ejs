@@ -21,6 +21,7 @@
                             <th>Service type</th>
                             <th>Date Available</th>
                             <th>Description</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -37,6 +38,9 @@
                            <td>
                             <span>I want full plumbing for two bathrooms</span>
                            </td>
+                           <td>
+                            <button class="btn_assign_plumber" data-booking-id="<%= booking.idbookings %>">Assign plumber</button>
+                           </td>
                         </tr>
                     </tbody>
                 </table>
@@ -48,7 +52,18 @@
         
         
     </div>
-    
+    <script>
+        document.addEventListener('DOMContentLoaded', () =>{
+            const buttons = document.querySelectorAll('.btn_assign_plumber');
+
+            buttons.forEach(button =>{
+                button.addEventListener('click' , (event)=>{
+                    const bookingid = event.target.getAttribute('data-booking-id');
+                })
+            })
+        })
+        
+    </script>
    
 </body>
 </html>

@@ -244,5 +244,17 @@ tbody td{
   border:solid #333 1px;
 }
 
+#btn_assign_plumber{
+  background-color: rgb(15, 126, 148);
+  color: aliceblue;
+  margin-left: 100px;
+  border: 0px;
+  border-radius: 4px;
+  font-size: large;
+  box-shadow: 2px 3px 4px;
+}
+#btn_assign_plumber:hover{
+  background-color: rgb(31, 31, 168);
+}
 
 
