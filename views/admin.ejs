@@ -5,42 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
     <link rel="stylesheet" href="/stylesheets/style.css">
-    <script>
-        document.addEventListener('DOMContentLoaded', () =>{
-            const contentDiv = document.querySelector('.content');
-
-            document.querySelectorAll('.admin-pages a').forEach(link =>{
-                link.addEventListener('click', async event =>{
-                    event.preventDefault();
-
-                    const linkid = event.target.id;
-                    let url = '';
-
-                    
-                    if(linkid === 'user-management-link'){
-                        url = '/usermanagement';
-                    }else if(linkid === 'bookings-link'){
-                        url = '/bookings';
-                    }
-
-                    try{
-                        const response = await fetch(url);
-
-                        if(response.ok){
-                            const content = await response.text();
-                            contentDiv.innerHTML = content;
-                        }else{
-                            contentDiv.innerHTML = '<p>Failure while loading content<p>';
-                        }
-                    }catch(error){
-                        contentDiv.innerHTML = '<p>Error while loading content<p>';
-                        console.error('error',error); 
-                    }
-                });
-            });
-        });
-        
-    </script>
 </head>
 <body>
     <div class="admin-container">
@@ -53,11 +17,73 @@
                     <li><a href="/">Home</a></li>
                     <li><a href="#" id="user-management-link">User management</a></li>
                     <li><a href="#" id="bookings-link">Bookings</a></li>
-                    
                 </ul>
             </div>
         </div>
         <div class="content"></div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const contentDiv = document.querySelector('.content');
+
+            document.querySelectorAll('.admin-pages a').forEach(link => {
+                link.addEventListener('click', async event => {
+                    event.preventDefault();
+
+                    const linkid = event.target.id;
+                    let url = '';
+
+                    if (linkid === 'user-management-link') {
+                        url = '/usermanagement';
+                    } else if (linkid === 'bookings-link') {
+                        url = '/bookings';
+                    }
+
+                    try {
+                        const response = await fetch(url);
+
+                        if (response.ok) {
+                            const content = await response.text();
+                            contentDiv.innerHTML = content;
+                            attachEventListeners(); // Attach event listeners after content is loaded
+                        } else {
+                            contentDiv.innerHTML = '<p>Failure while loading content</p>';
+                        }
+                    } catch (error) {
+                        contentDiv.innerHTML = '<p>Error while loading content</p>';
+                        console.error('error', error);
+                    }
+                });
+            });
+
+            function attachEventListeners() {
+                const buttons = document.querySelectorAll('.btn-assign');
+
+                buttons.forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        console.log('Button clicked');
+                        const bookingId = event.target.getAttribute('data-booking-id');
+                        const popup = document.getElementById(`assign-container-${bookingId}`);
+                        popup.style.display = 'block';
+                    });
+                });
+
+                document.querySelectorAll('.close').forEach(span => {
+                    span.addEventListener('click', (event) => {
+                        console.log('Close button clicked');
+                        const popup = event.target.closest('.assign-container');
+                        popup.style.display = 'none';
+                    });
+                });
+
+                window.addEventListener('click', (event) => {
+                    if (event.target.classList.contains('assign-container')) {
+                        console.log('Outside popup clicked');
+                        event.target.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
