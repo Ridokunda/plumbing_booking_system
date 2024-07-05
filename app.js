@@ -22,7 +22,7 @@ app.use((req,res,next)=>{
 });
 
 
-var registerCustomerRouter = require('./routes/registerCustomer');
+var registerRouter = require('./routes/register');
 var loginRouter = require('./routes/login');
 var usersRouter = require('./routes/users');
 var indexRouter = require('./routes/index');
@@ -49,7 +49,7 @@ app.use(BodyParser.urlencoded({ extended: false }));
 app.use('/', indexRouter);
 app.use('/routes/users', usersRouter);
 app.use('/users', usersRouter);
-app.use('/registerCustomer', registerCustomerRouter);
+app.use('/register', registerRouter);
 app.use('/login', loginRouter);
 app.use('/booking', bookingRouter);
 app.use('/booking/book', bookingRouter);

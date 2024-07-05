@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WeFixIt | <%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+
+    <div class="container">
+        <form class="form reg" action="/register/registeruser" method="post">
+            <h2>Register user</h2>
+            <style>
+                .additional-fields {
+                    display: none;
+                }
+            </style>
+            <fieldset>
+                <label for="cus_name">First Name</label>
+                <input type="text" value="John" name="name" id="cus_name">
+            </fieldset>
+            <fieldset>
+                <label for="cus_lastname">Last Name</label>
+                <input type="text" value="Doe" name="surname" id="cus_lastname">
+            </fieldset>
+            <fieldset>
+                <label for="usertype">User Type</label>
+                <select name="usertype" id="usertype">
+                    <option value="1">Customer</option>
+                    <option value="2">Admin</option>
+                    <option value="3">Plumber</option>
+                </select>
+            </fieldset>
+             <!-- Additional fields for Admin -->
+            <div id="adminFields" class="additional-fields">
+                <fieldset>
+                    <label for="admin_code">Admin Code</label>
+                    <input type="text" id="admin_code" name="admin_code">
+                </fieldset>
+            </div>
+
+            <!-- Additional fields for Plumber -->
+            <div id="plumberFields" class="additional-fields">
+                <fieldset>
+                    <label for="plumber_license">License</label>
+                    <input type="text" id="plumber_license" name="plumber_license">
+                </fieldset>
+                <fieldset>
+                    <label for="experience">Years of Experience</label>
+                    <input type="number" id="experience" name="experience">
+                </fieldset>
+            </div>
+            <fieldset>
+                <label for="birthdate">Date of Birth</label>
+                <input type="date" id="birthdate" name="birthdate">
+            </fieldset>
+            <fieldset>
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email">
+            </fieldset>
+    
+            <fieldset>
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password">
+            </fieldset>
+            <button type="submit" id="btn_submit">Sign Up</button>
+        </form>
+    
+    </div>
+ 
+</body>
+</html>
