@@ -36,7 +36,7 @@
                     if (linkid === 'user-management-link') {
                         url = '/register/registeruser';
                     } else if (linkid === 'bookings-link') {
-                        url = '/bookings';
+                        url = '/booking/bookings';
                     }
 
                     try {
@@ -57,6 +57,26 @@
             });
 
             function attachEventListeners() {
+                //eventlisteners for manageuser page
+                const usertype = document.getElementById('usertype');
+                if(usertype!==null){
+                    usertype.addEventListener('change', function() {
+                        var userType = this.value;
+                        var adminFields = document.getElementById('adminFields');
+                        var plumberFields = document.getElementById('plumberFields');
+
+                        adminFields.style.display = 'none';
+                        plumberFields.style.display = 'none';
+
+                        if (userType == '2') {
+                            adminFields.style.display = 'block';
+                        } else if (userType == '3') {
+                            plumberFields.style.display = 'block';
+                        }
+                    });
+                }
+                 
+                //eventlisteners for bookings page
                 const buttons = document.querySelectorAll('.btn-assign');
 
                 buttons.forEach(button => {
@@ -82,21 +102,7 @@
                         event.target.style.display = 'none';
                     }
                 });
-                //eventlisteners for manageuser page
-                document.getElementById('usertype').addEventListener('change', function() {
-                var userType = this.value;
-                var adminFields = document.getElementById('adminFields');
-                var plumberFields = document.getElementById('plumberFields');
-
-                adminFields.style.display = 'none';
-                plumberFields.style.display = 'none';
-
-                if (userType == '2') {
-                    adminFields.style.display = 'block';
-                } else if (userType == '3') {
-                    plumberFields.style.display = 'block';
-                }
-        });
+                
             }
         });
     </script>

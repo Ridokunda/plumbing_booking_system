@@ -3,14 +3,15 @@ var router = express.Router();
 var bcrypt = require('bcrypt');
  const connection = require('../database/connection');
 
-// GET registerCustomer page
-router.get('/register', function(req, res, next) {
-    res.render('registerCustomer', { title: 'Register Page', message: null });
-});
 // GET registeruser page
 router.get('/registeruser', function(req, res, next) {
   res.render('registeruser', { title: 'Register Page', message: null });
 });
+// GET registerCustomer page
+router.get('/register', function(req, res, next) {
+    res.render('registerCustomer', { title: 'Register Page', message: null });
+});
+
 
 
 /* POST add a user*/
@@ -40,14 +41,14 @@ router.post('/register', async (req, res) =>{
 });
 /* POST add a user*/
 router.post('/registeruser', async (req, res) =>{
-  const { name, surname , birthdate, email, password} = req.body;
-  const query1 = "INSERT INTO users (name,surname,birthdate,email,password) VALUES (?,?,?,?,?)";
+  const { name, surname , birthdate,usertype, email, password} = req.body;
+  const query1 = "INSERT INTO users (name,surname,birthdate,usertype,email,password) VALUES (?,?,?,?,?,?)";
   
   const query2 = `SELECT * FROM users WHERE email='${email}'`;
   try{
 
     const hash = await bcrypt.hash(password,10);
-    connection.query(query1, [name,surname,birthdate,email,hash], (err,result) =>{
+    connection.query(query1, [name,surname,birthdate,usertype,email,hash], (err,result) =>{
       if(err){
         console.error('Error while searching for user in the database', err);
         return res.status(501).send('internal server error');

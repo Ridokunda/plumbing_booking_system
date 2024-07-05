@@ -11,7 +11,7 @@ router.get('/', function(req, res, next) {
   res.render('booking', { title: 'Book a Trip' });
 });
 
-router.post('/', (req,res, next) => {
+router.post('/book', (req,res, next) => {
   if(!req.session.userid){
     return res.redirect('/login');
   }
@@ -35,6 +35,19 @@ router.post('/', (req,res, next) => {
 });
 
 
-
+router.get('/bookings', function(req,res,next){
+    
+  connection.query('SELECT * FROM bookings', (err, results) => {
+      if (err) {
+          console.error('Error executing MySQL query: ' + err.stack);
+          res.status(500).send('Error fetching bookings');
+          return;
+      }
+      console.log('bookings found');
+      res.render('bookings', { bookings: results , title : 'Bookings' });
+  });
+  
+  
+});
 
 module.exports = router;

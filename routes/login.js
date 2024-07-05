@@ -36,7 +36,16 @@ router.post('/log', (req, res) =>{
     }
     req.session.userid = user.idusers;
     //res.end('Successfully logged in');
-    res.redirect('/');
+    if(user.usertype === 3){
+      res.redirect('/plumber');
+    }
+    if(user.usertype === 2){
+      res.redirect('/admin');
+    }
+    if(user.usertype === 1){
+      res.redirect('/');
+    }
+    
   });
 });
 

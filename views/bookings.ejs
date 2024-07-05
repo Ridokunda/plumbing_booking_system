@@ -58,32 +58,6 @@
             <% }); %>
         </div>
     </div>
-   <script>
-        const buttons = document.querySelectorAll('.btn-assign');
-
-        buttons.forEach(button => {
-            button.addEventListener('click', (event) => {
-                console.log('Button clicked');
-                const bookingId = event.target.getAttribute('data-booking-id');
-                const popup = document.getElementById(`assign-container-${bookingId}`);
-                popup.style.display = 'block';
-            });
-        });
-
-        document.querySelectorAll('.close').forEach(span => {
-            span.addEventListener('click', (event) => {
-                console.log('Close button clicked');
-                const popup = event.target.closest('.assign-container');
-                popup.style.display = 'none';
-            });
-        });
-
-        window.addEventListener('click', (event) => {
-            if (event.target.classList.contains('assign-container')) {
-                console.log('Outside popup clicked');
-                event.target.style.display = 'none';
-            }
-        });
-   </script>
+   
 </body>
 </html>
