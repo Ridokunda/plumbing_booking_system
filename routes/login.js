@@ -6,11 +6,12 @@ const connection = require('../database/connection');
 
 /* GET Login page. */
 router.get('/', function(req, res, next) {
-  res.render('login',{ title: 'Log in'});
+  const error = req.query.error;
+  res.render('login',{ title: 'Log in', error});
 });
 
 /* POST login*/
-router.post('/', (req, res) =>{
+router.post('/log', (req, res) =>{
   const {email, password} = req.body;
   if(!email || !password){
     return res.send("Provide email and password");
@@ -25,13 +26,13 @@ router.post('/', (req, res) =>{
     };
 
     if(result.length === 0){
-      return res.status(401).send("Invalid password or email");
+      return res.redirect("/login?error=Invalid password or email");
     }
     const user = result[0];
 
     const match = await bcrypt.compare(password, user.password)
     if(!match){
-      return res.status(401).send('Invalid username or password');
+      return res.redirect("/login?error=Invalid password or email");
     }
     req.session.userid = user.idusers;
     //res.end('Successfully logged in');

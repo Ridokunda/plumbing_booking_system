@@ -59,6 +59,8 @@
             buttons.forEach(button =>{
                 button.addEventListener('click' , (event)=>{
                     const bookingid = event.target.getAttribute('data-booking-id');
+
+                    window.location.href = `/booking/managebooking?bookingid=${bookingid}`;
                 })
             })
         })

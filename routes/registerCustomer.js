@@ -10,14 +10,12 @@ router.get('/', function(req, res, next) {
 
 
 
-/* POST add a customer*/
-router.post('/', async (req, res) =>{
+/* POST add a user*/
+router.post('/register', async (req, res) =>{
     const { name, surname , birthdate, email, password} = req.body;
     const query1 = "INSERT INTO users (name,surname,birthdate,email,password) VALUES (?,?,?,?,?)";
     
     const query2 = `SELECT * FROM users WHERE email='${email}'`;
-
-    //const query3 = 'INSERT INTO customers (FK_iduser) VALUES (?)';
     try{
 
       const hash = await bcrypt.hash(password,10);

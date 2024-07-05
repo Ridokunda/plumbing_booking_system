@@ -5,7 +5,7 @@ const connection = mysql2.createConnection({
     host: "localhost",
     database: "fixit_db",
     user: "root",
-    password: "Kundi2001rio!"
+    password: "root"
   });
   
   connection.connect((err)=>{
