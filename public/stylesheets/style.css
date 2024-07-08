@@ -70,6 +70,7 @@ header{
   display: flex;
   justify-content: space-around;
   height:250px;
+  padding: 50px;
 }
 .service{
   background-color: white;
@@ -84,7 +85,32 @@ header{
   display: flex;
   color: rgb(15, 126, 148);
 }
+.testimonias{
+  padding: 100px;
 
+}
+.testimonias h2{
+  text-align: center;
+  color: rgb(15, 126, 148);
+}
+.testimonias .clients{
+  display: flex;
+  justify-content: space-between;
+}
+.client{
+  
+  background-color: aliceblue;
+  border: none;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 2px 3px 4px;;
+}
+.client-img img{
+  
+  width: 100px; 
+  height: 100px; 
+  border-radius: 100%;
+}
 /*---------registerCustomer css----------*/
 
 .container{
@@ -154,7 +180,7 @@ a {
 
 footer{
   display: flex;
-  background-color: rgb(11, 25, 151);
+  background-color: rgba(5, 40, 88, 0.797);
   height: 300px;
   margin-top: 100px;
   align-items: center;
@@ -252,7 +278,7 @@ thead th {
   box-shadow: 2px 3px 4px;
 }
 #btn_assign_plumber:hover{
-  background-color: rgb(31, 31, 168);
+  background-color: rgba(11, 55, 126, 0.709);
 }
 .plumbers-table{
   border-collapse: collapse ;
