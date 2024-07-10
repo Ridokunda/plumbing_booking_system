@@ -36,7 +36,7 @@ router.post('/book', (req,res, next) => {
 
 
 router.get('/bookings', function(req,res,next){
-    
+  //get bookings
   connection.query('SELECT * FROM bookings', (err, results) => {
       if (err) {
           console.error('Error executing MySQL query: ' + err.stack);
@@ -44,10 +44,21 @@ router.get('/bookings', function(req,res,next){
           return;
       }
       console.log('bookings found');
-      res.render('bookings', { bookings: results , title : 'Bookings' });
+
+      //get plumbers
+      const query = "SELECT * FROM fixit_db.users WHERE status = 'AVAILABLE' AND usertype = 3";
+      console.log('retrieving plumbers');
+      connection.query(query,(error,result) =>{
+        if(error){
+          console.error('error while querying the database');
+          console.log('retrieving plumbers');
+          res.status(500).send('Error fetching plumbers');
+          return;
+        }
+        res.render('bookings', { bookings: results, plumbers: result, title : 'Bookings' });
+      }); 
+      
   });
-  
-  
 });
 
 module.exports = router;

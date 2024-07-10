@@ -40,16 +40,16 @@
                                 <thead>
                                     <tr>
                                         <th>Plumber Name</th>
-                                        <th>Status</th>
+                                        <th>Select Plumber</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <a href="" style="text-decoration: none; color: inherit;">
+                                    <% plumbers.forEach(plumber =>{ %>
                                         <tr>
-                                            <td>Kundi netshi</td>
-                                            <td>Available</td>
+                                            <td><%= plumber.name %> <%= plumber.surname %></td>
+                                            <td><button id="btn">Assign</button></td>
                                         </tr>
-                                    </a>
+                                    <% }) %>
                                 </tbody>
                             </table>
                         </div>
