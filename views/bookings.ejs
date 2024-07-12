@@ -47,7 +47,7 @@
                                     <% plumbers.forEach(plumber =>{ %>
                                         <tr>
                                             <td><%= plumber.name %> <%= plumber.surname %></td>
-                                            <td><button id="btn">Assign</button></td>
+                                            <td><button id="btnselect<%= plumber.idusers %>">Assign</button></td>
                                         </tr>
                                     <% }) %>
                                 </tbody>

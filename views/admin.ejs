@@ -95,7 +95,37 @@
                         popup.style.display = 'none';
                     });
                 });
+                document.querySelectorAll('button[id^=btnselect]').forEach(button =>{
+                    button.addEventListener('click',(event)=>{
+                        userID = event.target.id.replace('btnselect','');
+                        bookingID = getBookingID();
+                        console.log(bookingID+" : "+userID);
+                        const data = {userID, bookingID}
+                        fetch('/plumber/select',{
+                            method: 'POST',
+                            headers: {'Content-Type' : 'application/json'},
+                            body : JSON.stringify(data),
 
+                        })
+                        .then(response =>{
+                            if(!response.ok){
+                                throw new Error('error while assigning plumber');
+                            }
+                            
+                        })
+                        .catch(error =>{
+                            console.error('errro',error);
+                        })
+                        
+                        
+                        
+                    })
+                })
+                function getBookingID(){
+                    const div = document.querySelector('div[id^=assign-container-]');
+                    const bookingid = div.id.replace('assign-container-','');
+                    return bookingid;
+                }
                 window.addEventListener('click', (event) => {
                     if (event.target.classList.contains('assign-container')) {
                         console.log('Outside popup clicked');

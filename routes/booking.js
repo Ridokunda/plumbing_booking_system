@@ -37,7 +37,7 @@ router.post('/book', (req,res, next) => {
 
 router.get('/bookings', function(req,res,next){
   //get bookings
-  connection.query('SELECT * FROM bookings', (err, results) => {
+  connection.query("SELECT * FROM bookings WHERE status = 'NEW'", (err, results) => {
       if (err) {
           console.error('Error executing MySQL query: ' + err.stack);
           res.status(500).send('Error fetching bookings');
