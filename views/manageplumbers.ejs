@@ -4,6 +4,23 @@
     <title>WeFixIt | <%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
+  <style>
+    .findbar{
+      display: flex;
+      justify-content: space-around;
+      margin: 20px;
+    }
+    table{
+      width: 100%;
+      padding: 20px;
+    }
+    tbody td{
+      padding: 10px;
+    }
+    table td{
+      border-bottom: solid 1px gray;
+    }
+  </style>
   <body>
   
     <div class="container-manage">
@@ -11,8 +28,44 @@
             <h3>Manage Plumbers Page</h3>
             <hr>
         <div>
-        <div class="body">
-            
+        <div class="users-container">
+            <div class="findbar">
+              <div class="search-section">
+                <input type="search" name="search" id="searh" placeholder="Search for plumber">
+              </div>
+              <div class="filter-section">
+                <select name="filter" id="filter">
+                  <option value="AVAILABLE">AVAILABLE</option>
+                  <option value="OFFLINE">NOT AVAILABLE</option>
+                </select>
+                <button>Filter</button>
+              </div>
+            </div>
+
+            <div class="table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Active Jobs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if(plumbers.length === 0){
+
+                  }else{
+                    plumbers.forEach(plumber=>{ %>
+                      <tr>
+                        <td><%= plumber.name %> <%= plumber.surname %></td>
+                        <td><%= plumber.status %></td>
+                        <td>2</td>
+                      </tr>
+                  <% })
+                  } %>
+                </tbody>
+              </table>
+            </div>
         </div>
       
     </div>
