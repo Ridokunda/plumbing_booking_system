@@ -10,4 +10,12 @@ router.get('/manageusers', function(req, res, next){
     res.render('manageusers', {title : 'Manage Users'});
 });
 
+router.get('/managecustomers', function(req, res, next){
+    res.render('managecustomers', {title : 'Manage Customers'});
+});
+
+router.get('/manageplumbers', function(req, res, next){
+    res.render('manageplumbers', {title : 'Manage Plumbers'});
+});
+
 module.exports = router;

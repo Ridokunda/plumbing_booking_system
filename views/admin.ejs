@@ -59,6 +59,42 @@
 
             function attachEventListeners() {
                 //eventlisteners for manageuser page
+                const contentDiv = document.querySelector('.content');
+                document.querySelectorAll('.stats a').forEach(link =>{
+                    link.addEventListener('click', async (event) =>{
+                        event.preventDefault();
+                        var url = '';
+                        linkid = event.currentTarget.id;
+                        switch(linkid){
+                            case 'customers-link':
+                                url = '/admin/managecustomers';
+                                break;
+                            case 'plumbers-link':
+                                url = '/admin/manageplumbers'
+                                break;
+                            default:
+                                url = '/admin/manageusers'
+                                break;
+                        }
+
+                        try{
+                            const response = await fetch(url);
+                            
+                            if(response.ok){
+                                const content = await response.text();
+                                contentDiv.innerHTML = content;
+                            }else{
+                                contentDiv.innerHTML = '<p>Failure while loading content</p>';
+                            }
+                        }catch(error){
+                            contentDiv.innerHTML = '<p>Error while loading content</p>';
+                            console.error('error', error);
+                        }
+                    });
+                });
+
+
+
                 const usertype = document.getElementById('usertype');
                 if(usertype!==null){
                     usertype.addEventListener('change', function() {
