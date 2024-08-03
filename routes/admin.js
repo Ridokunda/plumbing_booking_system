@@ -11,7 +11,16 @@ router.get('/manageusers', function(req, res, next){
 });
 
 router.get('/managecustomers', function(req, res, next){
-    res.render('managecustomers', {title : 'Manage Customers'});
+    const query = 'SELECT * FROM users WHERE usertype = 1'
+
+    connection.query(query, function(err, results){
+        if(err){
+            console.error('error while querying the database', err);
+            return res.status(500).send('Internal server error');
+        }
+        res.render('managecustomers', {title : 'Manage Customers', customers: results});
+    });
+    
 });
 
 router.get('/manageplumbers', function(req, res, next){
