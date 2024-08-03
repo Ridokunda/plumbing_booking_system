@@ -33,7 +33,7 @@ header{
   color: black;
   font-size: 150%;
   width: 400px;
-  height: 280px;
+  height: fit-content;
   padding:20px;
   
   border-radius: 0px;
