@@ -14,9 +14,10 @@
             </div>
             <div class="admin-pages">
                 <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a href="#" id="user-management-link">User management</a></li>
-                    <li><a href="#" id="bookings-link">Bookings</a></li>
+                    <li><a  href="/">Home</a></li>
+                    <li><a class="link" href="#" id="user-management-link">User management</a></li>
+                    <li><a class="link" href="#" id="bookings-link">Bookings</a></li>
+                    <li><a href="/login/logout">Logout</a></li>
                 </ul>
             </div>
         </div>
@@ -26,7 +27,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const contentDiv = document.querySelector('.content');
 
-            document.querySelectorAll('.admin-pages a').forEach(link => {
+            document.querySelectorAll('.admin-pages .link a').forEach(link => {
                 link.addEventListener('click', async event => {
                     event.preventDefault();
 
