@@ -315,4 +315,25 @@ thead th {
     text-decoration: none;
     cursor: pointer;
 }
+/*-------------------------------Manage users page--------------*/
+.container-manage{
+  height:100vh;
+  padding: 0px;
+  margin: 0px;
+}
+.head{
+  text-align: center;
+}
+.body{
+  padding: 20px;
+}
+.stats{
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+}
+.data{
+  padding: 20px;
+  box-shadow: 2px 3px 4px;
+}
 

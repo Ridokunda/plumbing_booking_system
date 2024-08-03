@@ -27,7 +27,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const contentDiv = document.querySelector('.content');
 
-            document.querySelectorAll('.admin-pages .link a').forEach(link => {
+            document.querySelectorAll('.admin-pages .link').forEach(link => {
                 link.addEventListener('click', async event => {
                     event.preventDefault();
 
@@ -35,7 +35,7 @@
                     let url = '';
 
                     if (linkid === 'user-management-link') {
-                        url = '/register/registeruser';
+                        url = '/admin/manageusers';
                     } else if (linkid === 'bookings-link') {
                         url = '/booking/bookings';
                     }
