@@ -9,6 +9,18 @@ const connection = require("../database/connection");
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Home' });
 });
+/* GET about page. */
+router.get('/about', function(req, res, next) {
+  res.render('about', { title: 'About' });
+});
+/* GET service page. */
+router.get('/service', function(req, res, next) {
+  res.render('service', { title: 'Service' });
+});
+/* GET contact page. */
+router.get('/contact', function(req, res, next) {
+  res.render('contact', { title: 'Contact' });
+});
 
 
 

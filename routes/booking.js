@@ -8,7 +8,7 @@ router.get('/', function(req, res, next) {
   if(!req.session.userid){
     return res.redirect('/login');
   }
-  res.render('booking', { title: 'Book a Trip' });
+  res.render('booking', { title: 'Book Us' });
 });
 
 router.post('/book', (req,res, next) => {

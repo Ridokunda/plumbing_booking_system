@@ -46,6 +46,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(BodyParser.urlencoded({ extended: false }));
 
 app.use('/', indexRouter);
+app.use('/index', indexRouter);
 app.use('/routes/users', usersRouter);
 app.use('/users', usersRouter);
 app.use('/register', registerRouter);
