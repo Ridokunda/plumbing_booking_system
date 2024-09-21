@@ -29,7 +29,7 @@ router.post('/register', async (req, res) =>{
           return res.status(501).send('internal server error');
         }
         
-        res.status(201).send('User successfully registered');
+        res.render('registerCustomer', { title: 'Register Page', message: "Registration successful" });
         
   
       });
@@ -54,7 +54,7 @@ router.post('/registeruser', async (req, res) =>{
         return res.status(501).send('internal server error');
       }
       
-      res.status(201).send('User successfully registered');
+      res.status(200).send('User successfully registered');
       
 
     });

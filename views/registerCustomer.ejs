@@ -62,7 +62,12 @@
                 <input type="password" id="confirm_password" name="confirm_password">
             </fieldset>
             <div id="passwordError" class="error"></div>
+            
+            
             <button type="submit" id="btn_submit">Sign Up</button>
+            <% if(message){ %>
+                <div><%= message %></div>
+            <% } %>
         </form>
     </div>
     <script>
