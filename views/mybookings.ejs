@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeFixIt | <%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/custom.css">
+</head>
+<body>
+    <div class="bookings-container">
+        <h2>Bookings Page</h2>
+        <div class="container-bookings-tables">
+            <% bookings.forEach(booking =>{ %>
+                <div class="booking-entry">
+                    <table class="booking-table">
+                        <thead>
+                            <tr>
+                                <th>Service type</th>
+                                <th>status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span><%= booking.type %></span></td>
+                                <td><span><%= booking.status %></span></td>
+                                
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                </div>
+            <% }); %>
+        </div>
+    </div>
+   
+</body>
+</html>

@@ -29,6 +29,7 @@ var indexRouter = require('./routes/index');
 var bookingRouter = require('./routes/booking');
 var adminRouter = require('./routes/admin');
 var plumberRouter = require('./routes/plumber');
+var customerRouter = require('./routes/customer');
 
 
 
@@ -53,7 +54,7 @@ app.use('/register', registerRouter);
 app.use('/login', loginRouter);
 app.use('/booking', bookingRouter);
 app.use('/admin', adminRouter);
-
+app.use('/customer', customerRouter);
 app.use('/plumber', plumberRouter);
 
 

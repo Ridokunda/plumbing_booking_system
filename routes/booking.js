@@ -60,5 +60,22 @@ router.get('/bookings', function(req,res,next){
       
   });
 });
+/* GET customer bookings page*/
+router.get('/mybookings', function(req, res, next){
+  //get bookings
+  
+  const userid = req.session.userid;
+  connection.query("SELECT * FROM bookings WHERE idUser = ?", [userid], (err, results) => {
+      if (err) {
+          console.error('Error executing MySQL query: ' + err.stack);
+          res.status(500).send('Error fetching bookings');
+          return;
+      }
+      
+      res.render('mybookings', { bookings: results, title : 'Bookings' });
+      
+      
+  });
+});
 
 module.exports = router;
