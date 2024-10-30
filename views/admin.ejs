@@ -169,6 +169,31 @@
                         event.target.style.display = 'none';
                     }
                 });
+                //decline booking button
+                const declineButtons = document.querySelectorAll('button[id^=btndecline]');
+                if(declineButtons != null){
+                    declineButtons.forEach(button =>{
+                        button.addEventListener('click', (event) =>{
+                            event.preventDefault();
+
+                            const booking_id = event.target.id.replace('btndecline', '');
+                            fetch('/admin/declinebooking', {
+                                method: 'POST',
+                                headers:{
+                                    'Content-Type':'application/json'
+                                },
+                                body: JSON.stringify({booking_id : booking_id})
+                            })
+                            .then(response => response.json())
+                            .then(data =>{
+                                alert(data.message);
+                            })
+                            .catch(error =>{
+                                alert(error);
+                            })
+                        })
+                    })
+                }
                 
             }
         });

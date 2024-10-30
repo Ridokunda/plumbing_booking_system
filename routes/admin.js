@@ -26,7 +26,7 @@ router.get('/manageusers', function(req, res, next){
     })
     
 });
-
+/* GET managecustomers page */
 router.get('/managecustomers', function(req, res, next){
     const query = 'SELECT * FROM users WHERE usertype = 1'
 
@@ -39,7 +39,7 @@ router.get('/managecustomers', function(req, res, next){
     });
     
 });
-
+/* GET manageplumbers */
 router.get('/manageplumbers', function(req, res, next){
     const query = 'SELECT * FROM users WHERE usertype = 3'
 
@@ -52,5 +52,21 @@ router.get('/manageplumbers', function(req, res, next){
     });
     
 });
+
+/* POST decline booking*/
+router.post('/declinebooking', function(req, res, next){
+    
+    const {booking_id} = req.body;
+
+    const query = 'UPDATE bookings SET status = ? WHERE idbookings = ?';
+    connection.query(query, ['DECLINED', booking_id], function(err, result){
+        if(err){
+            console.error('error while querying the database', err);
+            return res.status(500).json({message:'Internal server error'});
+        }
+        res.json({message:'Booking declined'});
+    })
+    
+})
 
 module.exports = router;
