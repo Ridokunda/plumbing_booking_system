@@ -37,7 +37,7 @@
                     if (linkid === 'user-management-link') {
                         url = '/admin/manageusers';
                     } else if (linkid === 'bookings-link') {
-                        url = '/booking/bookings';
+                        url = '/admin/bookings';
                     }
 
                     try {
@@ -122,6 +122,7 @@
                         const bookingId = event.target.getAttribute('data-booking-id');
                         const popup = document.getElementById(`assign-container-${bookingId}`);
                         popup.style.display = 'block';
+                        attachEventListeners();
                     });
                 });
 
@@ -132,32 +133,51 @@
                         popup.style.display = 'none';
                     });
                 });
-                document.querySelectorAll('button[id^=btnselect]').forEach(button =>{
-                    button.addEventListener('click',(event)=>{
-                        userID = event.target.id.replace('btnselect','');
-                        bookingID = getBookingID();
-                        console.log(bookingID+" : "+userID);
-                        const data = {userID, bookingID}
-                        fetch('/plumber/select',{
-                            method: 'POST',
-                            headers: {'Content-Type' : 'application/json'},
-                            body : JSON.stringify(data),
+                // Event listener for the inner "Assign" button within the plumber list
+                // This targets the new class 'btn-assign-plumber'
+                document.querySelectorAll('.btn-assign-plumber').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const plumberId = event.target.getAttribute('data-plumber-id');
+                        const bookingId = event.target.getAttribute('data-booking-id'); // Get bookingId directly from the button
 
+                        console.log(`Attempting to assign booking ${bookingId} to plumber ${plumberId}`);
+
+                        const data = { booking_id: bookingId, plumber_id: plumberId }; // Match backend expected keys
+
+                        fetch('/admin/assign-booking', { // Use the correct backend endpoint
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data),
                         })
-                        .then(response =>{
-                            if(!response.ok){
-                                throw new Error('error while assigning plumber');
+                        .then(response => {
+                            if (!response.ok) {
+                                // If response is not ok (e.g., 400, 500), read the error message from the body
+                                return response.json().then(errorData => {
+                                    throw new Error(errorData.message || 'Error while assigning plumber');
+                                });
                             }
-                            
+                            return response.json(); // Parse JSON response for success message
                         })
-                        .catch(error =>{
-                            console.error('errro',error);
+                        .then(data => {
+                            alert(data.message);
+                            // Close the popup after successful assignment
+                            const popup = event.target.closest('.assign-container');
+                            if (popup) {
+                                popup.style.display = 'none';
+                            }
+                            // Re-load bookings to show updated status/assignment
+                            // This simulates clicking the 'Bookings' link in the sidebar to refresh the content
+                            const bookingsLink = document.getElementById('bookings-link');
+                            if (bookingsLink) {
+                                bookingsLink.click();
+                            }
                         })
-                        
-                        
-                        
-                    })
-                })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert(`Failed to assign plumber: ${error.message}`);
+                        });
+                    });
+                });
                 function getBookingID(){
                     const div = document.querySelector('div[id^=assign-container-]');
                     const bookingid = div.id.replace('assign-container-','');

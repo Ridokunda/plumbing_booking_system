@@ -25,10 +25,10 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><span>Ridokunda</span></td>
+                                <td><span><%= booking.customer_name %></span></td>
                                 <td><span><%= booking.type %></span></td>
-                                <td><span>10 Feb 2024</span></td>
-                                <td><span>I want full plumbing for two bathrooms</span></td>
+                                <td><span><%= booking.date_start %></span></td>
+                                <td><span><%= booking.des %></span></td>
                                 <td><button type="button" class="btn-assign" data-booking-id="<%= booking.idbookings %>">Assign plumber</button></td>
                                 <td><button type="button" class="declineBtn" id="btndecline<%= booking.idbookings %>">Decline</button></td>
                             </tr>
@@ -49,7 +49,7 @@
                                     <% plumbers.forEach(plumber =>{ %>
                                         <tr>
                                             <td><%= plumber.name %> <%= plumber.surname %></td>
-                                            <td><button id="btnselect<%= plumber.idusers %>">Assign</button></td>
+                                            <td><button class="btn-assign-plumber" data-plumber-id="<%= plumber.idusers %>" data-booking-id="<%= booking.idbookings %>">Assign</button></td>
                                         </tr>
                                     <% }) %>
                                 </tbody>

@@ -20,61 +20,39 @@ router.post('/book', (req,res, next) => {
   var date_start = req.body.date_start;
   var des = req.body.description;
 
-  
-    
-  const query = 'INSERT INTO bookings (idUser,type,date_start,des) VALUES(?,?,?,?)';
+  // Basic validation
+  if (!service || !date_start || !des) {
+      return res.status(400).send('Please provide service type, date, and description.');
+  }
 
-  connection.query(query, [req.session.userid,service,date_start,des], (err, result) =>{
+  const query = 'INSERT INTO bookings (idUser,type,date_start,des,status) VALUES(?,?,?,?,?)';
+
+  connection.query(query, [req.session.userid,service,date_start,des,'NEW'], (err, result) =>{
     if(err){
-      console.error('Error insert booking in the database', err);
+      console.error('Error inserting booking in the database', err);
       return res.status(500).send('Internal server error');
     }
     console.log('booking added');
-    res.send('Booking added');
-  })
-});
-
-
-router.get('/bookings', function(req,res,next){
-  //get bookings
-  connection.query("SELECT * FROM bookings WHERE status = 'NEW'", (err, results) => {
-      if (err) {
-          console.error('Error executing MySQL query: ' + err.stack);
-          res.status(500).send('Error fetching bookings');
-          return;
-      }
-      console.log('bookings found');
-
-      //get plumbers
-      const query = "SELECT * FROM fixit_db.users WHERE status = 'AVAILABLE' AND usertype = 3";
-      console.log('retrieving plumbers');
-      connection.query(query,(error,result) =>{
-        if(error){
-          console.error('error while querying the database');
-          console.log('retrieving plumbers');
-          res.status(500).send('Error fetching plumbers');
-          return;
-        }
-        res.render('bookings', { bookings: results, plumbers: result, title : 'Bookings' });
-      }); 
-      
+    res.status(200).send('Booking added successfully!'); // Send a success status and message
   });
 });
+
+
 /* GET customer bookings page*/
 router.get('/mybookings', function(req, res, next){
-  //get bookings
-  
   const userid = req.session.userid;
-  connection.query("SELECT * FROM bookings WHERE idUser = ?", [userid], (err, results) => {
+
+  if (!userid) {
+      return res.redirect('/login'); // Redirect if user is not logged in
+  }
+
+  // Retrieve bookings made by the current customer
+  connection.query("SELECT * FROM bookings WHERE idUser = ? ORDER BY date_start DESC", [userid], (err, results) => {
       if (err) {
-          console.error('Error executing MySQL query: ' + err.stack);
-          res.status(500).send('Error fetching bookings');
-          return;
+          console.error('Error executing MySQL query to fetch customer bookings: ' + err.stack);
+          return res.status(500).send('Error fetching your bookings');
       }
-      
-      res.render('mybookings', { bookings: results, title : 'Bookings' });
-      
-      
+      res.render('mybookings', { bookings: results, title : 'My Bookings' });
   });
 });
 
