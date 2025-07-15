@@ -18,14 +18,21 @@
                                 <th>Booking date</th>
                                 <th>Service type</th>
                                 <th>status</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><span><%= booking.booking_date %></span></td>
+                                <td><span><%= booking.booking_date || booking.date_start %></span></td>
                                 <td><span><%= booking.type %></span></td>
-                                <td><span><%= booking.status %></span></td>
-                                
+                                <td><span class="booking-status"><%= booking.status %></span></td>
+                                <td>
+                                  <% if (booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED') { %>
+                                    <button class="cancel-booking-btn" data-booking-id="<%= booking.idbookings %>">Cancel</button>
+                                  <% } else { %>
+                                    <span>-</span>
+                                  <% } %>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -34,6 +41,47 @@
             <% }); %>
         </div>
     </div>
-   
+    <div id="cancel-message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
 </body>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.cancel-booking-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const bookingId = this.getAttribute('data-booking-id');
+      if (!confirm('Are you sure you want to cancel this booking?')) return;
+      fetch('/booking/cancel-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: bookingId })
+      })
+      .then(res => res.json())
+      .then(result => {
+        const msgDiv = document.getElementById('cancel-message');
+        msgDiv.style.display = 'block';
+        msgDiv.textContent = result.message;
+        if(result.success) {
+          msgDiv.style.backgroundColor = '#d4edda';
+          msgDiv.style.color = '#155724';
+          msgDiv.style.border = '1px solid #c3e6cb';
+          // Update status in UI
+          this.closest('tr').querySelector('.booking-status').textContent = 'CANCELLED';
+          this.remove();
+        } else {
+          msgDiv.style.backgroundColor = '#f8d7da';
+          msgDiv.style.color = '#721c24';
+          msgDiv.style.border = '1px solid #f5c6cb';
+        }
+      })
+      .catch(() => {
+        const msgDiv = document.getElementById('cancel-message');
+        msgDiv.style.display = 'block';
+        msgDiv.textContent = 'An error occurred. Please try again.';
+        msgDiv.style.backgroundColor = '#f8d7da';
+        msgDiv.style.color = '#721c24';
+        msgDiv.style.border = '1px solid #f5c6cb';
+      });
+    });
+  });
+});
+</script>
 </html>

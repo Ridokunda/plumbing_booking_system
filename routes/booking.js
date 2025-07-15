@@ -56,4 +56,42 @@ router.get('/mybookings', function(req, res, next){
   });
 });
 
+// Cancel a booking (customer)
+router.post('/cancel-booking', function(req, res, next) {
+  const user = req.session.user;
+  const { booking_id } = req.body;
+
+  if (!user) {
+    return res.status(401).json({ success: false, message: 'Not logged in' });
+  }
+  if (!booking_id) {
+    return res.status(400).json({ success: false, message: 'Booking ID is required.' });
+  }
+
+  // Check if the booking belongs to the user and is cancellable
+  const checkQuery = 'SELECT * FROM bookings WHERE idbookings = ? AND idUser = ?';
+  connection.query(checkQuery, [booking_id, user.idusers], (err, results) => {
+    if (err) {
+      console.error('Error checking booking:', err);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: 'Booking not found or not yours.' });
+    }
+    const booking = results[0];
+    if (booking.status === 'CANCELLED' || booking.status === 'COMPLETED') {
+      return res.status(400).json({ success: false, message: 'Booking cannot be cancelled.' });
+    }
+    // Update status to CANCELLED
+    const updateQuery = 'UPDATE bookings SET status = ? WHERE idbookings = ?';
+    connection.query(updateQuery, ['CANCELLED', booking_id], (err, result) => {
+      if (err) {
+        console.error('Error cancelling booking:', err);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+      }
+      return res.json({ success: true, message: 'Booking cancelled successfully.' });
+    });
+  });
+});
+
 module.exports = router;
