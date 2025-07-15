@@ -26,7 +26,7 @@ function isAdmin(req, res, next) {
 router.use(isAdmin);
 
 router.get('/', function(req,res,next){
-    res.render('admin', {title:'Admin Dashboard'});
+    res.render('admindashboard', {title:'Admin Dashboard'});
 });
 
 router.get('/manageusers', function(req, res, next){

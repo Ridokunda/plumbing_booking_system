@@ -45,6 +45,10 @@ app.use(BodyParser.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(BodyParser.urlencoded({ extended: false }));
+app.use(function(req, res, next) {
+  res.locals.session = req.session;
+  next();
+});
 
 app.use('/', indexRouter);
 app.use('/index', indexRouter);

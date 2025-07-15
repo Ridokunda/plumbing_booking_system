@@ -34,13 +34,13 @@ router.post('/log', (req, res) =>{
     if(!match){
       return res.redirect("/login?error=Invalid password or email");
     }
-    req.session.userid = user.idusers;
+    req.session.user = user;
     //res.end('Successfully logged in');
     if(user.usertype === 3){
-      res.redirect('/plumber');
+      res.redirect('/');
     }
     if(user.usertype === 2){
-      res.redirect('/admin');
+      res.redirect('/');
     }
     if(user.usertype === 1){
       res.redirect('/');

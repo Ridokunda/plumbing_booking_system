@@ -7,7 +7,7 @@ const connection = require("../database/connection");
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Home' });
+  res.render('index', { title: 'Home2', session: req.session });
 });
 /* GET about page. */
 router.get('/about', function(req, res, next) {
