@@ -50,5 +50,17 @@
     </div>
     
     <%- include('./partials/footer') %>
+    <script>
+        // Restrict date input to today and future dates only
+        document.addEventListener('DOMContentLoaded', function() {
+            var dateInput = document.getElementById('date_start');
+            var today = new Date();
+            var yyyy = today.getFullYear();
+            var mm = String(today.getMonth() + 1).padStart(2, '0');
+            var dd = String(today.getDate()).padStart(2, '0');
+            var todayStr = yyyy + '-' + mm + '-' + dd;
+            dateInput.setAttribute('min', todayStr);
+        });
+    </script>
 </body>
 </html>
