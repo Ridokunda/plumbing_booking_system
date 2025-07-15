@@ -5,8 +5,8 @@ const connection = require('../database/connection');
 // Middleware to check if the user is an admin (usertype = 2)
 
 function isAdmin(req, res, next) {
-    if (req.session.userid) {
-        connection.query('SELECT usertype FROM users WHERE idusers = ?', [req.session.userid], function(err, results) {
+    if (req.session.user) {
+        connection.query('SELECT usertype FROM users WHERE idusers = ?', [req.session.user.idusers], function(err, results) {
             if (err) {
                 console.error('Error querying user type:', err);
                 return res.status(500).send('Internal server error');

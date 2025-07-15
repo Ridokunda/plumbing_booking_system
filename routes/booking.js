@@ -5,14 +5,14 @@ const connection = require("../database/connection");
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  if(!req.session.userid){
+  if(!req.session.user){
     return res.redirect('/login');
   }
   res.render('booking', { title: 'Book Us' });
 });
 
 router.post('/book', (req,res, next) => {
-  if(!req.session.userid){
+  if(!req.session.user){
     return res.redirect('/login');
   }
    
@@ -27,7 +27,7 @@ router.post('/book', (req,res, next) => {
 
   const query = 'INSERT INTO bookings (idUser,type,date_start,des,status) VALUES(?,?,?,?,?)';
 
-  connection.query(query, [req.session.userid,service,date_start,des,'NEW'], (err, result) =>{
+  connection.query(query, [req.session.user.idusers,service,date_start,des,'NEW'], (err, result) =>{
     if(err){
       console.error('Error inserting booking in the database', err);
       return res.status(500).send('Internal server error');
@@ -40,14 +40,14 @@ router.post('/book', (req,res, next) => {
 
 /* GET customer bookings page*/
 router.get('/mybookings', function(req, res, next){
-  const userid = req.session.userid;
+  const userid = req.session.user;
 
-  if (!userid) {
+  if (!user) {
       return res.redirect('/login'); // Redirect if user is not logged in
   }
 
   // Retrieve bookings made by the current customer
-  connection.query("SELECT * FROM bookings WHERE idUser = ? ORDER BY date_start DESC", [userid], (err, results) => {
+  connection.query("SELECT * FROM bookings WHERE idUser = ? ORDER BY date_start DESC", [user.idusers], (err, results) => {
       if (err) {
           console.error('Error executing MySQL query to fetch customer bookings: ' + err.stack);
           return res.status(500).send('Error fetching your bookings');
