@@ -31,14 +31,15 @@
         <div class="users-container">
             <div class="findbar">
               <div class="search-section">
-                <input type="search" name="search" id="searh" placeholder="Search for plumber">
+                <input type="search" name="search" id="search-plumber" placeholder="Search for plumber">
               </div>
               <div class="filter-section">
-                <select name="filter" id="filter">
+                <select name="filter" id="filter-plumber">
+                  <option value="ALL">All</option>
                   <option value="AVAILABLE">AVAILABLE</option>
                   <option value="OFFLINE">NOT AVAILABLE</option>
                 </select>
-                <button>Filter</button>
+                <button type="button" id="filter-btn-plumber">Filter</button>
               </div>
             </div>
 
@@ -69,6 +70,30 @@
         </div>
       
     </div>
-    
+    <script>
+      // Client-side search and filter for plumbers
+      document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-plumber');
+        const filterSelect = document.getElementById('filter-plumber');
+        const filterBtn = document.getElementById('filter-btn-plumber');
+        const tableRows = document.querySelectorAll('tbody tr');
+
+        function filterTable() {
+          const searchValue = searchInput.value.toLowerCase();
+          const filterValue = filterSelect.value;
+          tableRows.forEach(row => {
+            const name = row.children[0]?.textContent.toLowerCase() || '';
+            const status = row.children[1]?.textContent.toUpperCase() || '';
+            let show = name.includes(searchValue);
+            if (filterValue !== 'ALL') {
+              show = show && status === filterValue;
+            }
+            row.style.display = show ? '' : 'none';
+          });
+        }
+        searchInput.addEventListener('input', filterTable);
+        filterBtn.addEventListener('click', filterTable);
+      });
+    </script>
   </body>
 </html>

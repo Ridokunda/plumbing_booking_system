@@ -31,14 +31,15 @@
         <div class="users-container">
             <div class="findbar">
               <div class="search-section">
-                <input type="search" name="search" id="searh" placeholder="Search for customer">
+                <input type="search" name="search" id="search-customer" placeholder="Search for customer">
               </div>
               <div class="filter-section">
-                <select name="filter" id="filter">
+                <select name="filter" id="filter-customer">
+                  <option value="ALL">All</option>
                   <option value="AVAILABLE">AVAILABLE</option>
                   <option value="OFFLINE">NOT AVAILABLE</option>
                 </select>
-                <button>Filter</button>
+                <button type="button" id="filter-btn-customer">Filter</button>
               </div>
             </div>
 
@@ -69,6 +70,33 @@
         </div>
       
     </div>
-    
+    <script>
+      // Client-side search and filter for customers
+      document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-customer');
+        const filterSelect = document.getElementById('filter-customer');
+        const filterBtn = document.getElementById('filter-btn-customer');
+        const tableRows = document.querySelectorAll('tbody tr');
+
+        function filterTable() {
+          const searchValue = searchInput.value.toLowerCase();
+          const filterValue = filterSelect.value;
+          tableRows.forEach(row => {
+            const name = row.children[0]?.textContent.toLowerCase() || '';
+            
+            // const status = row.children[2]?.textContent.toUpperCase() || '';
+            let show = name.includes(searchValue);
+            // If filtering by status, add logic here (currently not in table)
+            if (filterValue !== 'ALL') {
+              
+              // show = show && status === filterValue;
+            }
+            row.style.display = show ? '' : 'none';
+          });
+        }
+        searchInput.addEventListener('input', filterTable);
+        filterBtn.addEventListener('click', filterTable);
+      });
+    </script>
   </body>
 </html>

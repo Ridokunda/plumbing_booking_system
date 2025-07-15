@@ -65,7 +65,7 @@ router.get('/managecustomers', function(req, res, next){
 });
 
 /* GET manageplumbers */
-router.get('/manageplbers', function(req, res, next){
+router.get('/manageplumbers', function(req, res, next){
     const query = 'SELECT * FROM users WHERE usertype = 3';
     connection.query(query, function(err,results){
         if(err){

@@ -13,7 +13,7 @@ router.get('/', function(req, res, next) {
 
 router.post('/book', (req,res, next) => {
   if(!req.session.user){
-    return res.redirect('/login');
+    return res.status(401).json({ success: false, message: 'Not logged in' });
   }
    
   var service = req.body.service;
@@ -22,7 +22,7 @@ router.post('/book', (req,res, next) => {
 
   // Basic validation
   if (!service || !date_start || !des) {
-      return res.status(400).send('Please provide service type, date, and description.');
+      return res.status(400).json({ success: false, message: 'Please provide service type, date, and description.' });
   }
 
   const query = 'INSERT INTO bookings (idUser,type,date_start,des,status) VALUES(?,?,?,?,?)';
@@ -30,17 +30,17 @@ router.post('/book', (req,res, next) => {
   connection.query(query, [req.session.user.idusers,service,date_start,des,'NEW'], (err, result) =>{
     if(err){
       console.error('Error inserting booking in the database', err);
-      return res.status(500).send('Internal server error');
+      return res.status(500).json({ success: false, message: 'Internal server error' });
     }
     console.log('booking added');
-    res.status(200).send('Booking added successfully!'); // Send a success status and message
+    res.status(200).json({ success: true, message: 'Booking added successfully!' });
   });
 });
 
 
 /* GET customer bookings page*/
 router.get('/mybookings', function(req, res, next){
-  const userid = req.session.user;
+  const user = req.session.user;
 
   if (!user) {
       return res.redirect('/login'); // Redirect if user is not logged in
