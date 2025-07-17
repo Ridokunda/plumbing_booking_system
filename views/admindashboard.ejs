@@ -15,6 +15,7 @@
             <div class="admin-pages">
                 <ul>
                     <li><a  href="/">Home</a></li>
+                    <li><a class="link" href="#" id="stats-link">Dashboard Analytics</a></li>
                     <li><a class="link" href="#" id="user-management-link">User management</a></li>
                     <li><a class="link" href="#" id="bookings-link">Bookings</a></li>
                     <li><a href="/login/logout">Logout</a></li>
@@ -38,6 +39,8 @@
                         url = '/admin/manageusers';
                     } else if (linkid === 'bookings-link') {
                         url = '/admin/bookings';
+                    } else if (linkid === 'stats-link') {
+                        url = '/admin/stats';
                     }
 
                     try {
@@ -71,6 +74,9 @@
                                 break;
                             case 'plumbers-link':
                                 url = '/admin/manageplumbers'
+                                break;
+                            case 'stats-link':
+                                url = '/admin/stats';
                                 break;
                             default:
                                 url = '/admin/manageusers'

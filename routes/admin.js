@@ -113,6 +113,28 @@ router.get('/bookings', function(req, res, next) {
   });
 });
 
+// Dashboard analytics stats page
+router.get('/stats', function(req, res, next) {
+    // Query for analytics
+    const stats = {};
+    connection.query('SELECT COUNT(*) AS totalBookings FROM bookings', (err, bookingsResult) => {
+        if (err) return res.status(500).send('Error fetching bookings count');
+        stats.totalBookings = bookingsResult[0].totalBookings;
+        connection.query('SELECT COUNT(*) AS totalCustomers FROM users WHERE usertype = 1', (err, customersResult) => {
+            if (err) return res.status(500).send('Error fetching customers count');
+            stats.totalCustomers = customersResult[0].totalCustomers;
+            connection.query('SELECT COUNT(*) AS totalPlumbers FROM users WHERE usertype = 3', (err, plumbersResult) => {
+                if (err) return res.status(500).send('Error fetching plumbers count');
+                stats.totalPlumbers = plumbersResult[0].totalPlumbers;
+                connection.query("SELECT COUNT(*) AS completedBookings FROM bookings WHERE status = 'COMPLETED'", (err, completedResult) => {
+                    if (err) return res.status(500).send('Error fetching completed bookings count');
+                    stats.completedBookings = completedResult[0].completedBookings;
+                    res.render('stats', { title: 'Dashboard Analytics', stats });
+                });
+            });
+        });
+    });
+});
 
 
 /* POST to assign a plumber to a booking */

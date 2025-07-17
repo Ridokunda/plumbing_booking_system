@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeFixIt | <%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/custom.css">
+    <style>
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 30px 40px;
+            min-width: 220px;
+            text-align: center;
+        }
+        .stat-title {
+            font-size: 1.2em;
+            color: #0f7e94;
+            margin-bottom: 10px;
+        }
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="analytics-container">
+        <h2 style="text-align:center; margin-top:30px;">Dashboard Analytics</h2>
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-title">Total Bookings</div>
+                <div class="stat-value"><%= stats.totalBookings %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Total Customers</div>
+                <div class="stat-value"><%= stats.totalCustomers %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Total Plumbers</div>
+                <div class="stat-value"><%= stats.totalPlumbers %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Completed Bookings</div>
+                <div class="stat-value"><%= stats.completedBookings %></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
