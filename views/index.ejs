@@ -56,6 +56,12 @@
                 </li>
                 <% }else{ %>
                 <% } %>
+                <% if(session.user && session.user.usertype == 3){ %>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/plumber">Dashboard</a>
+                  </li>
+                  <% }else{ %>
+                  <% } %>
                 <li class="nav-item">
                   <a class="nav-link" href="/index/service">Services</a>
                 </li>

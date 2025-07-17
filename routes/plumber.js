@@ -4,8 +4,8 @@ const connection = require('../database/connection');
 
 // Middleware to check if the user is a plumber (usertype = 3)
 function isPlumber(req, res, next) {
-    if (req.session.userid) {
-        connection.query('SELECT usertype FROM users WHERE idusers = ?', [req.session.userid], function(err, results) {
+    if (req.session.user.usertype == 3) {
+        connection.query('SELECT usertype FROM users WHERE idusers = ?', [req.session.user.idusers], function(err, results) {
             if (err) {
                 console.error('Error querying user type:', err);
                 return res.status(500).send('Internal server error');
@@ -30,8 +30,8 @@ router.get('/', function(req,res,next){
 
 /* GET assigned bookings for the logged-in plumber */
 router.get('/my-bookings', function(req, res, next){
-    const plumberId = req.session.userid;
-
+    const plumberId = req.session.user.idusers;
+    
     if (!plumberId) {
         return res.status(401).send('Plumber not authenticated.');
     }
@@ -56,7 +56,9 @@ router.get('/my-bookings', function(req, res, next){
     `;
 
     connection.query(query, [plumberId], (err, results) => {
+        console.log("trying the query");
         if (err) {
+            console.log("trying the query");
             console.error('Error fetching assigned bookings for plumber:', err.stack);
             return res.status(500).send('Error fetching assigned bookings');
         }
@@ -70,7 +72,7 @@ router.get('/my-bookings', function(req, res, next){
 /* POST to update the status of an assigned booking by the plumber */
 router.post('/update-booking-status', function(req, res, next){
     const { booking_id, status } = req.body;
-    const plumberId = req.session.userid;
+    const plumberId = req.session.user.idusers;
 
     if (!booking_id || !status) {
         return res.status(400).json({ message: 'Booking ID and Status are required.' });

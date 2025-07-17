@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeFixIt | <%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/custom.css">
+</head>
+<body>
+    <div class="bookings-container">
+        <h2>My Assigned Bookings</h2>
+        <div class="container-bookings-tables">
+            <% if (bookings.length === 0) { %>
+                <p>No bookings assigned to you yet.</p>
+            <% } else { %>
+                <table class="booking-table">
+                    <thead>
+                        <tr>
+                            <th>Booking Date</th>
+                            <th>Service Type</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                            <th>Customer Name</th>
+                            <th>Customer Email</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% bookings.forEach(booking => { %>
+                            <tr>
+                                <td class="booking-date" data-date="<%= booking.date_start %>"></td>
+                                <td><%= booking.service_type %></td>
+                                <td class="booking-status"><%= booking.status %></td>
+                                <td><%= booking.description %></td>
+                                <td><%= booking.customer_name %> <%= booking.customer_surname %></td>
+                                <td><%= booking.customer_email %></td>
+                                <td>
+                                  <% if (booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED') { %>
+                                    <button class="complete-booking-btn" data-booking-id="<%= booking.idbookings %>">Mark as Complete</button>
+                                  <% } else { %>
+                                    <span>-</span>
+                                  <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } %>
+        </div>
+        <div id="complete-message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
+    </div>
+</body>
+</html> 

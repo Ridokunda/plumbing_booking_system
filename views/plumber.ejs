@@ -36,7 +36,7 @@
                     if (linkid === 'user-management-link') {
                         url = '/register/registeruser';
                     } else if (linkid === 'bookings-link') {
-                        url = `plumber/bookings?userID=${req.session.userid}`;
+                        url = `plumber/my-bookings`;
                     }
 
                     try {
@@ -57,8 +57,54 @@
             });
 
             function attachEventListeners() {
-                
-                
+                // Format booking dates
+                document.querySelectorAll('.booking-date').forEach(function(td) {
+                    var dateStr = td.getAttribute('data-date');
+                    if (dateStr) {
+                        var date = new Date(dateStr);
+                        var options = { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit' };
+                        td.textContent = date.toLocaleDateString(undefined, options);
+                    }
+                });
+                // Handle mark as complete
+                document.querySelectorAll('.complete-booking-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var bookingId = this.getAttribute('data-booking-id');
+                        if (!confirm('Mark this booking as complete?')) return;
+                        fetch('/plumber/update-booking-status', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ booking_id: bookingId, status: 'COMPLETED' })
+                        })
+                        .then(res => res.json())
+                        .then(result => {
+                            var msgDiv = document.getElementById('complete-message');
+                            msgDiv.style.display = 'block';
+                            msgDiv.textContent = result.message;
+                            if(result.message && result.message.includes('updated')) {
+                                msgDiv.style.backgroundColor = '#d4edda';
+                                msgDiv.style.color = '#155724';
+                                msgDiv.style.border = '1px solid #c3e6cb';
+                                // Update status in UI
+                                var row = btn.closest('tr');
+                                row.querySelector('.booking-status').textContent = 'COMPLETED';
+                                btn.remove();
+                            } else {
+                                msgDiv.style.backgroundColor = '#f8d7da';
+                                msgDiv.style.color = '#721c24';
+                                msgDiv.style.border = '1px solid #f5c6cb';
+                            }
+                        })
+                        .catch(() => {
+                            var msgDiv = document.getElementById('complete-message');
+                            msgDiv.style.display = 'block';
+                            msgDiv.textContent = 'An error occurred. Please try again.';
+                            msgDiv.style.backgroundColor = '#f8d7da';
+                            msgDiv.style.color = '#721c24';
+                            msgDiv.style.border = '1px solid #f5c6cb';
+                        });
+                    });
+                });
             }
         });
     </script>
