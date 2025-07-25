@@ -130,12 +130,13 @@ header{
   justify-content: space-around;
   flex-direction: column;
   border-radius: 10px;
-  box-shadow: 2px 3px 4px;
+  box-shadow: 2px 3px 4px gray;
   border: 0px;
 
 }
 .form h2{
   text-align: center;
+  color: rgb(15, 126, 148);
 }
 .form input{
   height: 25px;
@@ -195,6 +196,24 @@ footer span{
 .container{
   width: 100%;
   justify-content: center;
+}
+/*------------------------------mybookings---------------------------------*/
+.mybookings-container{
+  padding: 20px;
+  background-color: #fafbfc;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, sans-serif;
+}
+.mybookings-header{
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 40px 0 20px 0;
+  text-align: left;
+  color: rgb(15, 126, 148);
 }
 
 /*------------------------------admin-dashboard---------------------------*/

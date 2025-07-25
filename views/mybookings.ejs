@@ -5,83 +5,151 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeFixIt | <%= title %></title>
     <link rel="stylesheet" href="/stylesheets/custom.css">
+    <!-- slider stylesheet -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <!-- bootstrap core css -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.css" />
+    <!-- font awesome style -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome.min.css" />
+    
+    <!-- Custom styles for this template -->
+    <link href="/stylesheets/style.css" rel="stylesheet" />
+    <!-- responsive style -->
+    <link href="/stylesheets/responsive.css" rel="stylesheet" />
+      
+      
+   
+    <style>
+        body { background: #fafbfc; }
+        .mybookings-header { font-size: 2.5rem; font-weight: bold; margin: 40px 0 20px 0; text-align: left; }
+        .search-filter-bar { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 24px; }
+        .search-input { flex: 1; min-width: 220px; padding: 10px 16px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 1rem; }
+        .status-filter, .date-filter, .service-filter { padding: 8px 16px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; font-size: 1rem; }
+        .bookings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; margin-top: 24px; }
+        .booking-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 28px 24px; display: flex; flex-direction: column; gap: 12px; position: relative; }
+        .booking-card .service-type { font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 4px; }
+        .booking-card .booking-date { color: #555; font-size: 1rem; margin-bottom: 8px; }
+        .booking-card .status-label { display: inline-block; padding: 2px 12px; border-radius: 12px; font-size: 0.95em; margin-right: 6px; margin-bottom: 4px; }
+        .status-NEW { background: #eaf1ff; color: #2563eb; border: 1px solid #b6d0ff; }
+        .status_CANCELLED, .status_DECLINED { background: #ffeaea; color: #d32f2f; border: 1px solid #ffc6c6; }
+        .status_COMPLETED { background: #eaffea; color: #388e3c; border: 1px solid #b6ffc6; }
+        .status_IN_PROGRESS { background: #fffbe6; color: #b59f00; border: 1px solid #ffe9a6; }
+        .booking-card .cancel-btn { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+        .booking-card .cancel-btn:hover { background: #1746a2; }
+        .booking-card .service-badge { position: absolute; top: 18px; right: 18px; background: #f3f6fa; color: #2563eb; border-radius: 8px; padding: 4px 12px; font-size: 0.95em; font-weight: 500; }
+        .booking-card .avatar { width: 38px; height: 38px; border-radius: 50%; background: #e0e7ef; display: inline-block; vertical-align: middle; margin-right: 8px; }
+        .booking-card .card-row { display: flex; align-items: center; gap: 10px; }
+        .booking-card .card-row-top { justify-content: space-between; }
+        .booking-card .card-row-bottom { justify-content: flex-start; gap: 12px; }
+        .booking-card .card-row .label { font-size: 0.98em; color: #888; }
+        .booking-card .card-row .value { font-weight: 500; color: #222; }
+        @media (max-width: 600px) { .bookings-grid { grid-template-columns: 1fr; } }
+    </style>
 </head>
 <body>
-    <div class="bookings-container">
-        <h2>Bookings Page</h2>
-        <div class="container-bookings-tables">
-            <% bookings.forEach(booking =>{ %>
-                <div class="booking-entry">
-                    <table class="booking-table">
-                        <thead>
-                            <tr>
-                                <th>Booking date</th>
-                                <th>Service type</th>
-                                <th>status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><span><%= booking.booking_date || booking.date_start %></span></td>
-                                <td><span><%= booking.type %></span></td>
-                                <td><span class="booking-status"><%= booking.status %></span></td>
-                                <td>
-                                  <% if (booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED') { %>
-                                    <button class="cancel-booking-btn" data-booking-id="<%= booking.idbookings %>">Cancel</button>
-                                  <% } else { %>
-                                    <span>-</span>
-                                  <% } %>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
+    <%- include('./partials/head') %>
+    <div class="mybookings-container" style="max-width: 1100px; margin: 0 auto;">
+        <div class="mybookings-header">My Bookings</div>
+        <div class="search-filter-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search & Search">
+            <select id="statusFilter" class="status-filter">
+                <option value="ALL">STATUS</option>
+                <option value="NEW">NEW</option>
+                <option value="CANCELLED">CANCELLED</option>
+                <option value="DECLINED">DECLINED</option>
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="IN_PROGRESS">IN PROGRESS</option>
+            </select>
+        </div>
+        <div class="bookings-grid" id="bookingsGrid">
+            <% bookings.forEach(booking => { %>
+                <div class="booking-card" data-status="<%= booking.status %>" data-type="<%= booking.type %>" data-date="<%= booking.booking_date || booking.date_start %>" data-search="<%= booking.type %> <%= booking.status %> <%= booking.booking_date || booking.date_start %>">
+                    <div class="card-row card-row-top">
+                        <div class="service-type">Service Type</div>
+                        <span class="service-badge"><%= booking.type %></span>
+                    </div>
+                    <div class="service-type" style="font-size:1.25em; margin-bottom:2px;"><%= booking.type %></div>
+                    <div class="booking-date" data-date="<%= booking.booking_date || booking.date_start %>"></div>
+                    <div class="card-row card-row-bottom">
+                        <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
+                    </div>
+                    <% if (booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && booking.status !== 'DECLINED') { %>
+                        <button class="cancel-btn" data-booking-id="<%= booking.idbookings %>">Cancel Booking</button>
+                    <% } %>
                 </div>
             <% }); %>
         </div>
+        <div id="cancel-message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
     </div>
-    <div id="cancel-message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
-</body>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.cancel-booking-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const bookingId = this.getAttribute('data-booking-id');
-      if (!confirm('Are you sure you want to cancel this booking?')) return;
-      fetch('/booking/cancel-booking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ booking_id: bookingId })
-      })
-      .then(res => res.json())
-      .then(result => {
-        const msgDiv = document.getElementById('cancel-message');
-        msgDiv.style.display = 'block';
-        msgDiv.textContent = result.message;
-        if(result.success) {
-          msgDiv.style.backgroundColor = '#d4edda';
-          msgDiv.style.color = '#155724';
-          msgDiv.style.border = '1px solid #c3e6cb';
-          // Update status in UI
-          this.closest('tr').querySelector('.booking-status').textContent = 'CANCELLED';
-          this.remove();
-        } else {
-          msgDiv.style.backgroundColor = '#f8d7da';
-          msgDiv.style.color = '#721c24';
-          msgDiv.style.border = '1px solid #f5c6cb';
+    <script>
+    // Format booking dates
+    document.querySelectorAll('.booking-date').forEach(function(el) {
+        var dateStr = el.getAttribute('data-date');
+        if (dateStr) {
+            var date = new Date(dateStr);
+            var options = { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+            el.textContent = date.toLocaleDateString(undefined, options) + (dateStr.length > 10 ? ' at ' + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '');
         }
-      })
-      .catch(() => {
-        const msgDiv = document.getElementById('cancel-message');
-        msgDiv.style.display = 'block';
-        msgDiv.textContent = 'An error occurred. Please try again.';
-        msgDiv.style.backgroundColor = '#f8d7da';
-        msgDiv.style.color = '#721c24';
-        msgDiv.style.border = '1px solid #f5c6cb';
-      });
     });
-  });
-});
-</script>
+    // Cancel booking AJAX
+    document.querySelectorAll('.cancel-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var bookingId = this.getAttribute('data-booking-id');
+            if (!confirm('Are you sure you want to cancel this booking?')) return;
+            fetch('/booking/cancel-booking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ booking_id: bookingId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                var msgDiv = document.getElementById('cancel-message');
+                msgDiv.style.display = 'block';
+                msgDiv.textContent = result.message;
+                if(result.success) {
+                    msgDiv.style.backgroundColor = '#d4edda';
+                    msgDiv.style.color = '#155724';
+                    msgDiv.style.border = '1px solid #c3e6cb';
+                    // Update status in UI
+                    var card = btn.closest('.booking-card');
+                    card.querySelector('.status-label').textContent = 'CANCELLED';
+                    card.querySelector('.status-label').className = 'status-label status_CANCELLED';
+                    btn.remove();
+                } else {
+                    msgDiv.style.backgroundColor = '#f8d7da';
+                    msgDiv.style.color = '#721c24';
+                    msgDiv.style.border = '1px solid #f5c6cb';
+                }
+            })
+            .catch(() => {
+                var msgDiv = document.getElementById('cancel-message');
+                msgDiv.style.display = 'block';
+                msgDiv.textContent = 'An error occurred. Please try again.';
+                msgDiv.style.backgroundColor = '#f8d7da';
+                msgDiv.style.color = '#721c24';
+                msgDiv.style.border = '1px solid #f5c6cb';
+            });
+        });
+    });
+    // Search and filter
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const bookingsGrid = document.getElementById('bookingsGrid');
+    function filterBookings() {
+        const searchVal = searchInput.value.toLowerCase();
+        const statusVal = statusFilter.value;
+        bookingsGrid.querySelectorAll('.booking-card').forEach(card => {
+            const cardSearch = card.getAttribute('data-search').toLowerCase();
+            const cardStatus = card.getAttribute('data-status');
+            let show = cardSearch.includes(searchVal);
+            if (statusVal !== 'ALL') {
+                show = show && cardStatus === statusVal;
+            }
+            card.style.display = show ? '' : 'none';
+        });
+    }
+    searchInput.addEventListener('input', filterBookings);
+    statusFilter.addEventListener('change', filterBookings);
+    </script>
+</body>
 </html>
