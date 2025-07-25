@@ -17,38 +17,10 @@
     <!-- responsive style -->
     <link href="/stylesheets/responsive.css" rel="stylesheet" />
       
-      
-   
-    <style>
-        body { background: #fafbfc; }
-        .mybookings-header { font-size: 2.5rem; font-weight: bold; margin: 40px 0 20px 0; text-align: left; }
-        .search-filter-bar { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 24px; }
-        .search-input { flex: 1; min-width: 220px; padding: 10px 16px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 1rem; }
-        .status-filter, .date-filter, .service-filter { padding: 8px 16px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; font-size: 1rem; }
-        .bookings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; margin-top: 24px; }
-        .booking-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 28px 24px; display: flex; flex-direction: column; gap: 12px; position: relative; }
-        .booking-card .service-type { font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 4px; }
-        .booking-card .booking-date { color: #555; font-size: 1rem; margin-bottom: 8px; }
-        .booking-card .status-label { display: inline-block; padding: 2px 12px; border-radius: 12px; font-size: 0.95em; margin-right: 6px; margin-bottom: 4px; }
-        .status-NEW { background: #eaf1ff; color: #2563eb; border: 1px solid #b6d0ff; }
-        .status_CANCELLED, .status_DECLINED { background: #ffeaea; color: #d32f2f; border: 1px solid #ffc6c6; }
-        .status_COMPLETED { background: #eaffea; color: #388e3c; border: 1px solid #b6ffc6; }
-        .status_IN_PROGRESS { background: #fffbe6; color: #b59f00; border: 1px solid #ffe9a6; }
-        .booking-card .cancel-btn { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
-        .booking-card .cancel-btn:hover { background: #1746a2; }
-        .booking-card .service-badge { position: absolute; top: 18px; right: 18px; background: #f3f6fa; color: #2563eb; border-radius: 8px; padding: 4px 12px; font-size: 0.95em; font-weight: 500; }
-        .booking-card .avatar { width: 38px; height: 38px; border-radius: 50%; background: #e0e7ef; display: inline-block; vertical-align: middle; margin-right: 8px; }
-        .booking-card .card-row { display: flex; align-items: center; gap: 10px; }
-        .booking-card .card-row-top { justify-content: space-between; }
-        .booking-card .card-row-bottom { justify-content: flex-start; gap: 12px; }
-        .booking-card .card-row .label { font-size: 0.98em; color: #888; }
-        .booking-card .card-row .value { font-weight: 500; color: #222; }
-        @media (max-width: 600px) { .bookings-grid { grid-template-columns: 1fr; } }
-    </style>
 </head>
 <body>
     <%- include('./partials/head') %>
-    <div class="mybookings-container" style="max-width: 1100px; margin: 0 auto;">
+    <div class="mybookings-container" ">
         <div class="mybookings-header">My Bookings</div>
         <div class="search-filter-bar">
             <input type="text" id="searchInput" class="search-input" placeholder="Search & Search">
