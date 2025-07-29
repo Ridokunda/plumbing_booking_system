@@ -1,3 +1,4 @@
+require('dotenv').config();
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -10,9 +11,15 @@ var app = express();
 
 
 app.use(session({
-  secret : 'fixit',
-  resave : true,
-  saveUninitialized : true,
+  secret: process.env.SESSION_SECRET || 'fixit',
+  resave: true,
+  saveUninitialized: true,
+  name: process.env.SESSION_NAME || 'connect.sid',
+  cookie: {
+    secure: process.env.COOKIE_SECURE === 'true',
+    httpOnly: process.env.COOKIE_HTTPONLY === 'true',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
 //middleware that sets the session variable

@@ -8,7 +8,7 @@ const fs = require('fs');
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const uploadDir = 'public/uploads/profile-pictures';
+        const uploadDir = process.env.UPLOAD_PATH || 'public/uploads/profile-pictures';
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -23,10 +23,12 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
+        fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024 // 5MB limit
     },
     fileFilter: function (req, file, cb) {
-        const allowedTypes = /jpeg|jpg|png|gif/;
+        const allowedTypes = process.env.ALLOWED_IMAGE_TYPES ? 
+            new RegExp(process.env.ALLOWED_IMAGE_TYPES.replace(/,/g, '|')) : 
+            /jpeg|jpg|png|gif/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = allowedTypes.test(file.mimetype);
         
