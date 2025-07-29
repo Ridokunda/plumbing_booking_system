@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeFixIt | Profile</title>
+    <link rel="stylesheet" href="/stylesheets/custom.css">
+    <!-- slider stylesheet -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <!-- bootstrap core css -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.css" />
+    <!-- font awesome style -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome.min.css" />
+    
+    <!-- Custom styles for this template -->
+    <link href="/stylesheets/style.css" rel="stylesheet" />
+    <!-- responsive style -->
+    <link href="/stylesheets/responsive.css" rel="stylesheet" />
+</head>
+<body>
+    <%- include('./partials/head') %>
+    
+    <div class="profile-container">
+        <div class="profile-header">
+            <h1>My Profile</h1>
+        </div>
+        
+        <div class="profile-content">
+            <div class="profile-card">
+                <div class="profile-picture-section">
+                    <div class="profile-picture-container">
+                        <img id="profilePicture" src="<%= user.profile_picture || '/images/default-profile.jpg' %>" alt="Profile Picture" class="profile-picture">
+                        <div class="profile-picture-overlay">
+                            <label for="profilePictureInput" class="upload-btn">
+                                <i class="fa fa-camera"></i>
+                                <span>Change Photo</span>
+                            </label>
+                        </div>
+                    </div>
+                    <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+                </div>
+                
+                <div class="profile-info">
+                    <form id="profileForm" class="profile-form">
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" name="name" value="<%= user.name %>" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="surname">Surname</label>
+                            <input type="text" id="surname" name="surname" value="<%= user.surname %>" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" value="<%= user.email %>" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" value="<%= user.phone || '' %>">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <textarea id="address" name="address" rows="3"><%= user.address || '' %></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="usertype">User Type</label>
+                            <input type="text" id="usertype" name="usertype" value="<%= user.usertype %>" readonly>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="save-btn">Save Changes</button>
+                            <button type="button" class="cancel-btn" onclick="window.history.back()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="profile-stats">
+                <h3>Account Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number"><%= stats.totalBookings || 0 %></div>
+                        <div class="stat-label">Total Bookings</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number"><%= stats.completedBookings || 0 %></div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number"><%= stats.pendingBookings || 0 %></div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number"><%= stats.cancelledBookings || 0 %></div>
+                        <div class="stat-label">Cancelled</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="message" class="message" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Profile picture upload functionality
+        document.getElementById('profilePictureInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('profile_picture', file);
+                
+                fetch('/profile/upload-picture', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('profilePicture').src = data.profile_picture_url;
+                        showMessage('Profile picture updated successfully!', 'success');
+                    } else {
+                        showMessage(data.message || 'Failed to upload profile picture', 'error');
+                    }
+                })
+                .catch(error => {
+                    showMessage('Error uploading profile picture', 'error');
+                });
+            }
+        });
+
+        // Profile form submission
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('/profile/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: formData.get('name'),
+                    surname: formData.get('surname'),
+                    email: formData.get('email'),
+                    phone: formData.get('phone'),
+                    address: formData.get('address')
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Profile updated successfully!', 'success');
+                } else {
+                    showMessage(data.message || 'Failed to update profile', 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('Error updating profile', 'error');
+            });
+        });
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html> 

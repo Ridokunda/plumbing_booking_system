@@ -30,6 +30,7 @@ var bookingRouter = require('./routes/booking');
 var adminRouter = require('./routes/admin');
 var plumberRouter = require('./routes/plumber');
 var customerRouter = require('./routes/customer');
+var profileRouter = require('./routes/profile');
 
 
 
@@ -60,6 +61,7 @@ app.use('/booking', bookingRouter);
 app.use('/admin', adminRouter);
 app.use('/customer', customerRouter);
 app.use('/plumber', plumberRouter);
+app.use('/profile', profileRouter);
 
 
 // catch 404 and forward to error handler

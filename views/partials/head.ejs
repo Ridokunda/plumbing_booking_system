@@ -22,16 +22,25 @@
                 <li class="nav-item">
                   <a class="nav-link" href="/booking/mybookings">My Bookings</a>
                 </li>
-              <% } %>
-              <% if(session.user && session.user.usertype == 2){ %>
                 <li class="nav-item">
-                  <a class="nav-link" href="/admin">Dashboard</a>
+                  <a class="nav-link" href="/profile">Profile</a>
                 </li>
-                <% }else{ %>
-                <% } %>
+              <% } %>
+                              <% if(session.user && session.user.usertype == 2){ %>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/admin">Dashboard</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/profile">Profile</a>
+                  </li>
+                  <% }else{ %>
+                  <% } %>
                 <% if(session.user && session.user.usertype == 3){ %>
                   <li class="nav-item">
                     <a class="nav-link" href="/plumber">Dashboard</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/profile">Profile</a>
                   </li>
                   <% }else{ %>
                   <% } %>
