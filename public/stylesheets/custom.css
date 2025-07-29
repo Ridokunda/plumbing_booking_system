@@ -199,27 +199,29 @@ footer span{
 }
 /*------------------------------mybookings---------------------------------*/
 .mybookings-container{
-  width: 100vw;
-  padding: 0px;
+  width: 100%;
+  height: 100vh;
+  padding: 20px;
   margin: 0px;
   background-color: #fafbfc;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   font-family: Arial, sans-serif;
+  overflow-x: hidden;
 }
 .mybookings-header{
   font-size: 2.5rem;
   font-weight: bold;
-  margin: 0px 0 20px 0;
+  margin: 20px 0 20px 0;
   text-align: left;
   color: rgb(15, 126, 148);
+  display: block;
+  position: relative;
+  z-index: 1;
 }
-
-/* --- My Bookings Card UI --- */
-.mybookings-header { font-size: 2.5rem; font-weight: bold; margin: 40px 0 20px 0; text-align: left; }
 .search-filter-bar { 
   display: flex; 
   flex-wrap: wrap; 
@@ -244,9 +246,11 @@ footer span{
 }
 .bookings-grid { 
   display: grid; 
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-  gap: 32px; 
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 20px; 
   padding: 20px 0;
+  width: 100%;
+  max-width: 100%;
 }
 .booking-card { 
   background: #fff; 
@@ -293,7 +297,21 @@ footer span{
 .booking-card .card-row-bottom { justify-content: flex-start; gap: 12px; }
 .booking-card .card-row .label { font-size: 0.98em; color: #888; }
 .booking-card .card-row .value { font-weight: 500; color: #222; }
-@media (max-width: 2000px) { .bookings-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1200px) { 
+  .bookings-grid { 
+    grid-template-columns: repeat(2, 1fr); 
+  } 
+}
+@media (max-width: 768px) { 
+  .bookings-grid { 
+    grid-template-columns: 1fr; 
+  } 
+}
+@media (max-width: 768px) { 
+  .bookings-grid { 
+    grid-template-columns: 1fr; 
+  } 
+}
 
 /*------------------------------admin-dashboard---------------------------*/
 .admin-container{
@@ -331,7 +349,8 @@ footer span{
 
 .content{
   flex-grow: 1;
-  
+  padding: 20px;
+  overflow-y: auto;
 }
 
 /*----------------------------------bookings page---------------------------------------*/

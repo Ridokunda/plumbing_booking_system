@@ -17,14 +17,15 @@
     <link href="/stylesheets/responsive.css" rel="stylesheet" />
 </head>
 <body>
-    <%- include('./partials/head') %>
-    <div class="container" style="max-width: 1100px; margin: 0 auto;">
+    
+    <div class="mybookings-container">
         <div class="mybookings-header">Admin Bookings</div>
         <div class="search-filter-bar">
             <input type="text" id="searchInput" class="search-input" placeholder="Search bookings">
             <select id="statusFilter" class="status-filter">
-                <option value="ALL">STATUS</option>
+                <option value="ALL">ALL STATUS</option>
                 <option value="NEW">NEW</option>
+                <option value="ASSIGNED">ASSIGNED</option>
                 <option value="CANCELLED">CANCELLED</option>
                 <option value="DECLINED">DECLINED</option>
                 <option value="COMPLETED">COMPLETED</option>
@@ -47,8 +48,12 @@
                         <strong>Description:</strong> <%= booking.des %>
                     </div>
                     <div style="display:flex; gap:8px; margin-top:10px;">
-                        <button class="assign-btn" data-booking-id="<%= booking.idbookings %>" style="background:#007bff; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Assign Plumber</button>
-                        <button class="decline-btn" data-booking-id="<%= booking.idbookings %>" style="background:#dc3545; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Decline</button>
+                        <% if (booking.status === 'NEW' || booking.status === 'PENDING') { %>
+                            <button class="assign-btn" data-booking-id="<%= booking.idbookings %>" style="background:#007bff; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Assign Plumber</button>
+                            <button class="decline-btn" data-booking-id="<%= booking.idbookings %>" style="background:#dc3545; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Decline</button>
+                        <% } else { %>
+                            <span style="color:#666; font-style:italic;">No actions available</span>
+                        <% } %>
                     </div>
                 </div>
             <% }); %>
@@ -62,150 +67,15 @@
             <span id="closeAssignModal" style="position:absolute; top:16px; right:20px; font-size:1.8em; color:#888; cursor:pointer;">&times;</span>
             <h3 style="margin-top:0; color:#0f7e94;">Assign Plumber</h3>
             <div id="plumbersList">
-                <!-- Populated by JS -->
+                <% plumbers.forEach(plumber => { %>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;">
+                        <span><%= plumber.name %> <%= plumber.surname %></span>
+                        <button class="assign-plumber-btn" data-plumber-id="<%= plumber.idusers %>" data-booking-id="" style="background:#28a745; color:#fff; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Assign</button>
+                    </div>
+                <% }); %>
             </div>
         </div>
     </div>
 
-    <script>
-    // Format booking dates
-    document.querySelectorAll('.booking-date').forEach(function(el) {
-        var dateStr = el.getAttribute('data-date');
-        if (dateStr) {
-            var date = new Date(dateStr);
-            var options = { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' };
-            el.textContent = date.toLocaleDateString(undefined, options) + (dateStr.length > 10 ? ' at ' + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '');
-        }
-    });
-
-    // Assign plumber functionality
-    document.querySelectorAll('.assign-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var bookingId = this.getAttribute('data-booking-id');
-            // Populate plumbers list
-            var plumbersList = document.getElementById('plumbersList');
-            plumbersList.innerHTML = '';
-            <% plumbers.forEach(plumber => { %>
-                plumbersList.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;">
-                        <span><%= plumber.name %> <%= plumber.surname %></span>
-                        <button class="assign-plumber-btn" data-plumber-id="<%= plumber.idusers %>" data-booking-id="${bookingId}" style="background:#28a745; color:#fff; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Assign</button>
-                    </div>
-                `;
-            <% }); %>
-            document.getElementById('assignModal').style.display = 'flex';
-        });
-    });
-
-    // Handle assign plumber
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('assign-plumber-btn')) {
-            var plumberId = e.target.getAttribute('data-plumber-id');
-            var bookingId = e.target.getAttribute('data-booking-id');
-            fetch('/admin/assign-booking', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ booking_id: bookingId, plumber_id: plumberId })
-            })
-            .then(res => res.json())
-            .then(result => {
-                var msgDiv = document.getElementById('message');
-                msgDiv.style.display = 'block';
-                msgDiv.textContent = result.message;
-                if(result.message && result.message.includes('assigned')) {
-                    msgDiv.style.backgroundColor = '#d4edda';
-                    msgDiv.style.color = '#155724';
-                    msgDiv.style.border = '1px solid #c3e6cb';
-                    document.getElementById('assignModal').style.display = 'none';
-                } else {
-                    msgDiv.style.backgroundColor = '#f8d7da';
-                    msgDiv.style.color = '#721c24';
-                    msgDiv.style.border = '1px solid #f5c6cb';
-                }
-            })
-            .catch(() => {
-                var msgDiv = document.getElementById('message');
-                msgDiv.style.display = 'block';
-                msgDiv.textContent = 'An error occurred. Please try again.';
-                msgDiv.style.backgroundColor = '#f8d7da';
-                msgDiv.style.color = '#721c24';
-                msgDiv.style.border = '1px solid #f5c6cb';
-            });
-        }
-    });
-
-    // Decline booking functionality
-    document.querySelectorAll('.decline-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var bookingId = this.getAttribute('data-booking-id');
-            if (!confirm('Are you sure you want to decline this booking?')) return;
-            fetch('/admin/declinebooking', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ booking_id: bookingId })
-            })
-            .then(res => res.json())
-            .then(result => {
-                var msgDiv = document.getElementById('message');
-                msgDiv.style.display = 'block';
-                msgDiv.textContent = result.message;
-                if(result.message && result.message.includes('declined')) {
-                    msgDiv.style.backgroundColor = '#d4edda';
-                    msgDiv.style.color = '#155724';
-                    msgDiv.style.border = '1px solid #c3e6cb';
-                    // Update status in UI
-                    var card = btn.closest('.booking-card');
-                    card.querySelector('.status-label').textContent = 'DECLINED';
-                    card.querySelector('.status-label').className = 'status-label status_DECLINED';
-                    btn.remove();
-                    card.querySelector('.assign-btn').remove();
-                } else {
-                    msgDiv.style.backgroundColor = '#f8d7da';
-                    msgDiv.style.color = '#721c24';
-                    msgDiv.style.border = '1px solid #f5c6cb';
-                }
-            })
-            .catch(() => {
-                var msgDiv = document.getElementById('message');
-                msgDiv.style.display = 'block';
-                msgDiv.textContent = 'An error occurred. Please try again.';
-                msgDiv.style.backgroundColor = '#f8d7da';
-                msgDiv.style.color = '#721c24';
-                msgDiv.style.border = '1px solid #f5c6cb';
-            });
-        });
-    });
-
-    // Close assign modal
-    document.getElementById('closeAssignModal').onclick = function() {
-        document.getElementById('assignModal').style.display = 'none';
-    };
-    window.onclick = function(event) {
-        var modal = document.getElementById('assignModal');
-        if(event.target === modal) modal.style.display = 'none';
-    };
-
-    // Search and filter
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
-    const bookingsGrid = document.getElementById('bookingsGrid');
-    function filterBookings() {
-        const searchVal = searchInput.value.toLowerCase();
-        const statusVal = statusFilter.value;
-        bookingsGrid.querySelectorAll('.booking-card').forEach(card => {
-            const cardSearch = card.getAttribute('data-search').toLowerCase();
-            const cardStatus = card.getAttribute('data-status');
-            let show = cardSearch.includes(searchVal);
-            if (statusVal !== 'ALL') {
-                show = show && cardStatus === statusVal;
-            }
-            card.style.display = show ? '' : 'none';
-        });
-    }
-    searchInput.addEventListener('input', filterBookings);
-    statusFilter.addEventListener('change', filterBookings);
-    </script>
 </body>
 </html>

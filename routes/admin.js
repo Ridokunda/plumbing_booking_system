@@ -78,12 +78,12 @@ router.get('/manageplumbers', function(req, res, next){
 
 /* GET all bookings for admin view */
 router.get('/bookings', function(req, res, next) {
-  // Get bookings with customer name
+  // Get all bookings with customer name, ordered by newest first
   const bookingsQuery = `
     SELECT bookings.*, users.name AS customer_name 
     FROM bookings 
     JOIN users ON bookings.idUser = users.idusers 
-    WHERE bookings.status = 'NEW'
+    ORDER BY bookings.idbookings DESC
   `;
 
   connection.query(bookingsQuery, (err, results) => {
