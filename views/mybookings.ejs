@@ -45,9 +45,12 @@
                     <div class="card-row card-row-bottom">
                         <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
                     </div>
-                    <% if (booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && booking.status !== 'DECLINED') { %>
-                        <button class="cancel-btn" data-booking-id="<%= booking.idbookings %>">Cancel Booking</button>
-                    <% } %>
+                    <div style="display:flex; gap:8px; margin-top:10px;">
+                        <% if (booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && booking.status !== 'DECLINED') { %>
+                            <button class="edit-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Edit</button>
+                            <button class="cancel-btn" data-booking-id="<%= booking.idbookings %>">Cancel Booking</button>
+                        <% } %>
+                    </div>
                 </div>
             <% }); %>
         </div>
@@ -55,11 +58,35 @@
     </div>
     <!-- Booking Details Modal -->
     <div id="bookingDetailsModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
-      <div class="modal-content" style="background:#fff; border-radius:12px; max-width:400px; width:90%; margin:auto; padding:32px 24px; position:relative; box-shadow:0 4px 24px rgba(0,0,0,0.15);">
+      <div class="modal-content" style="background:#fff; border-radius:12px; max-width:500px; width:90%; margin:auto; padding:32px 24px; position:relative; box-shadow:0 4px 24px rgba(0,0,0,0.15);">
         <span id="closeModalBtn" style="position:absolute; top:16px; right:20px; font-size:1.8em; color:#888; cursor:pointer;">&times;</span>
         <h3 style="margin-top:0; color:#0f7e94;">Booking Details</h3>
         <div id="modalDetailsContent">
           <!-- Populated by JS -->
+        </div>
+        <div id="editForm" style="display:none; margin-top:20px;">
+          <h4 style="color:#0f7e94;">Edit Booking</h4>
+          <form id="bookingEditForm">
+            <div style="margin-bottom:15px;">
+              <label style="display:block; margin-bottom:5px; font-weight:bold;">Service Type:</label>
+              <select id="editService" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                <option value="Installation">Installation</option>
+                <option value="Fix">Fix</option>
+              </select>
+            </div>
+            <div style="margin-bottom:15px;">
+              <label style="display:block; margin-bottom:5px; font-weight:bold;">Date:</label>
+              <input type="date" id="editDate" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+            </div>
+            <div style="margin-bottom:15px;">
+              <label style="display:block; margin-bottom:5px; font-weight:bold;">Description:</label>
+              <textarea id="editDescription" rows="4" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"></textarea>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button type="submit" style="background:#28a745; color:#fff; border:none; border-radius:4px; padding:10px 20px; cursor:pointer;">Save Changes</button>
+              <button type="button" id="cancelEdit" style="background:#6c757d; color:#fff; border:none; border-radius:4px; padding:10px 20px; cursor:pointer;">Cancel</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -117,7 +144,7 @@
     // Booking details modal logic
     document.querySelectorAll('.booking-card').forEach(function(card) {
       card.addEventListener('click', function(e) {
-        if(e.target.classList.contains('cancel-btn')) return; // Don't open modal on cancel btn
+        if(e.target.classList.contains('cancel-btn') || e.target.classList.contains('edit-btn')) return; // Don't open modal on buttons
         var type = card.getAttribute('data-type');
         var status = card.getAttribute('data-status');
         var dateStr = card.getAttribute('data-date');
@@ -133,9 +160,81 @@
         var desc = card.querySelector('.service-type[style]')?.textContent;
         if(desc && desc !== type) modalContent += `<div><b>Description:</b> ${desc}</div>`;
         document.getElementById('modalDetailsContent').innerHTML = modalContent;
+        document.getElementById('editForm').style.display = 'none';
         document.getElementById('bookingDetailsModal').style.display = 'flex';
       });
     });
+    // Edit booking functionality
+    document.querySelectorAll('.edit-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var card = this.closest('.booking-card');
+        var type = card.getAttribute('data-type');
+        var dateStr = card.getAttribute('data-date');
+        var desc = card.querySelector('.service-type[style]')?.textContent || '';
+        // Populate edit form
+        document.getElementById('editService').value = type;
+        document.getElementById('editDate').value = dateStr;
+        document.getElementById('editDescription').value = desc;
+        // Set min date to today
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('editDate').setAttribute('min', today);
+        // Show modal with edit form
+        document.getElementById('modalDetailsContent').innerHTML = '';
+        document.getElementById('editForm').style.display = 'block';
+        document.getElementById('bookingDetailsModal').style.display = 'flex';
+        // Store booking ID for form submission
+        document.getElementById('bookingEditForm').setAttribute('data-booking-id', this.getAttribute('data-booking-id'));
+      });
+    });
+    // Handle edit form submission
+    document.getElementById('bookingEditForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var bookingId = this.getAttribute('data-booking-id');
+      var service = document.getElementById('editService').value;
+      var date = document.getElementById('editDate').value;
+      var description = document.getElementById('editDescription').value;
+      fetch('/booking/edit-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: bookingId, service: service, date_start: date, description: description })
+      })
+      .then(res => res.json())
+      .then(result => {
+        var msgDiv = document.getElementById('cancel-message');
+        msgDiv.style.display = 'block';
+        msgDiv.textContent = result.message;
+        if(result.success) {
+          msgDiv.style.backgroundColor = '#d4edda';
+          msgDiv.style.color = '#155724';
+          msgDiv.style.border = '1px solid #c3e6cb';
+          // Update card data and refresh display
+          var card = document.querySelector(`[data-booking-id="${bookingId}"]`).closest('.booking-card');
+          card.setAttribute('data-type', service);
+          card.setAttribute('data-date', date);
+          card.querySelector('.service-badge').textContent = service;
+          card.querySelector('.service-type[style]').textContent = description;
+          // Close modal
+          document.getElementById('bookingDetailsModal').style.display = 'none';
+        } else {
+          msgDiv.style.backgroundColor = '#f8d7da';
+          msgDiv.style.color = '#721c24';
+          msgDiv.style.border = '1px solid #f5c6cb';
+        }
+      })
+      .catch(() => {
+        var msgDiv = document.getElementById('cancel-message');
+        msgDiv.style.display = 'block';
+        msgDiv.textContent = 'An error occurred. Please try again.';
+        msgDiv.style.backgroundColor = '#f8d7da';
+        msgDiv.style.color = '#721c24';
+        msgDiv.style.border = '1px solid #f5c6cb';
+      });
+    });
+    document.getElementById('cancelEdit').onclick = function() {
+      document.getElementById('editForm').style.display = 'none';
+      document.getElementById('bookingDetailsModal').style.display = 'none';
+    };
     document.getElementById('closeModalBtn').onclick = function() {
       document.getElementById('bookingDetailsModal').style.display = 'none';
     };

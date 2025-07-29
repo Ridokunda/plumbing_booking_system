@@ -94,4 +94,45 @@ router.post('/cancel-booking', function(req, res, next) {
   });
 });
 
+// Edit a booking (customer)
+router.post('/edit-booking', function(req, res, next) {
+  const user = req.session.user;
+  const { booking_id, service, date_start, description } = req.body;
+
+  if (!user) {
+    return res.status(401).json({ success: false, message: 'Not logged in' });
+  }
+  if (!booking_id || !service || !date_start || !description) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
+  }
+
+  // Check if the booking belongs to the user and is editable
+  const checkQuery = 'SELECT * FROM bookings WHERE idbookings = ? AND idUser = ?';
+  connection.query(checkQuery, [booking_id, user.idusers], (err, results) => {
+    if (err) {
+      console.error('Error checking booking:', err);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: 'Booking not found or not yours.' });
+    }
+    const booking = results[0];
+    if (booking.status === 'CANCELLED' || booking.status === 'COMPLETED' || booking.status === 'DECLINED') {
+      return res.status(400).json({ success: false, message: 'Booking cannot be edited.' });
+    }
+    // Update the booking
+    const updateQuery = 'UPDATE bookings SET type = ?, date_start = ?, des = ? WHERE idbookings = ? AND idUser = ?';
+    connection.query(updateQuery, [service, date_start, description, booking_id, user.idusers], (err, result) => {
+      if (err) {
+        console.error('Error updating booking:', err);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: 'Booking not found or not updated.' });
+      }
+      return res.json({ success: true, message: 'Booking updated successfully.' });
+    });
+  });
+});
+
 module.exports = router;
