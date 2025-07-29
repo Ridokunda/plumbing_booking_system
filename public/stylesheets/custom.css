@@ -220,9 +220,28 @@ footer span{
 
 /* --- My Bookings Card UI --- */
 .mybookings-header { font-size: 2.5rem; font-weight: bold; margin: 40px 0 20px 0; text-align: left; }
-.search-filter-bar { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 24px; }
-.search-input { flex: 1; min-width: 220px; padding: 10px 16px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 1rem; }
-.status-filter, .date-filter, .service-filter { padding: 8px 16px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; font-size: 1rem; }
+.search-filter-bar { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 16px; 
+  align-items: center; 
+  margin-bottom: 24px; 
+}
+.search-input { 
+  flex: 1; 
+  min-width: 220px; 
+  padding: 10px 16px; 
+  border-radius: 8px; 
+  border: 1px solid #e0e0e0; 
+  font-size: 1rem; 
+}
+.status-filter, .date-filter, .service-filter { 
+  padding: 8px 16px; 
+  border-radius: 8px; 
+  border: 1px solid #e0e0e0; 
+  background: #fff; 
+  font-size: 1rem; 
+}
 .bookings-grid { 
   display: grid; 
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
@@ -238,10 +257,30 @@ footer span{
   flex-direction: column; 
   gap: 12px; 
   position: relative; }
-.booking-card .service-type { font-size: 1.1rem; font-weight: 600; color: #222; margin-bottom: 4px; }
-.booking-card .booking-date { color: #555; font-size: 1rem; margin-bottom: 8px; }
-.booking-card .status-label { display: inline-block; padding: 2px 12px; border-radius: 12px; font-size: 0.95em; margin-right: 6px; margin-bottom: 4px; }
-.status-NEW { background: #eaf1ff; color: #2563eb; border: 1px solid #b6d0ff; }
+.booking-card .service-type { 
+  font-size: 1.1rem; 
+  font-weight: 600; 
+  color: #222; 
+  margin-bottom: 4px; 
+}
+.booking-card .booking-date { 
+  color: #555; 
+  font-size: 1rem; 
+  margin-bottom: 8px; 
+}
+.booking-card .status-label { 
+  display: inline-block; 
+  padding: 2px 12px; 
+  border-radius: 12px; 
+  font-size: 0.95em; 
+  margin-right: 6px; 
+  margin-bottom: 4px; 
+}
+.status-NEW { 
+  background: #eaf1ff; 
+  color: #2563eb; 
+  border: 1px solid #b6d0ff; 
+}
 .status_CANCELLED, .status_DECLINED { background: #ffeaea; color: #d32f2f; border: 1px solid #ffc6c6; }
 .status_COMPLETED { background: #eaffea; color: #388e3c; border: 1px solid #b6ffc6; }
 .status_IN_PROGRESS { background: #fffbe6; color: #b59f00; border: 1px solid #ffe9a6; }

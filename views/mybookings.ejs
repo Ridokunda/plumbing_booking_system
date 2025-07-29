@@ -53,6 +53,16 @@
         </div>
         <div id="cancel-message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
     </div>
+    <!-- Booking Details Modal -->
+    <div id="bookingDetailsModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
+      <div class="modal-content" style="background:#fff; border-radius:12px; max-width:400px; width:90%; margin:auto; padding:32px 24px; position:relative; box-shadow:0 4px 24px rgba(0,0,0,0.15);">
+        <span id="closeModalBtn" style="position:absolute; top:16px; right:20px; font-size:1.8em; color:#888; cursor:pointer;">&times;</span>
+        <h3 style="margin-top:0; color:#0f7e94;">Booking Details</h3>
+        <div id="modalDetailsContent">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
     <script>
     // Format booking dates
     document.querySelectorAll('.booking-date').forEach(function(el) {
@@ -65,7 +75,8 @@
     });
     // Cancel booking AJAX
     document.querySelectorAll('.cancel-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
             var bookingId = this.getAttribute('data-booking-id');
             if (!confirm('Are you sure you want to cancel this booking?')) return;
             fetch('/booking/cancel-booking', {
@@ -103,6 +114,35 @@
             });
         });
     });
+    // Booking details modal logic
+    document.querySelectorAll('.booking-card').forEach(function(card) {
+      card.addEventListener('click', function(e) {
+        if(e.target.classList.contains('cancel-btn')) return; // Don't open modal on cancel btn
+        var type = card.getAttribute('data-type');
+        var status = card.getAttribute('data-status');
+        var dateStr = card.getAttribute('data-date');
+        var date = new Date(dateStr);
+        var options = { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+        var formattedDate = date.toLocaleDateString(undefined, options) + (dateStr.length > 10 ? ' at ' + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '');
+        var modalContent = `
+          <div><b>Service Type:</b> ${type}</div>
+          <div><b>Status:</b> ${status}</div>
+          <div><b>Date:</b> ${formattedDate}</div>
+        `;
+        // Add more fields if available (e.g., description, location)
+        var desc = card.querySelector('.service-type[style]')?.textContent;
+        if(desc && desc !== type) modalContent += `<div><b>Description:</b> ${desc}</div>`;
+        document.getElementById('modalDetailsContent').innerHTML = modalContent;
+        document.getElementById('bookingDetailsModal').style.display = 'flex';
+      });
+    });
+    document.getElementById('closeModalBtn').onclick = function() {
+      document.getElementById('bookingDetailsModal').style.display = 'none';
+    };
+    window.onclick = function(event) {
+      var modal = document.getElementById('bookingDetailsModal');
+      if(event.target === modal) modal.style.display = 'none';
+    };
     // Search and filter
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
