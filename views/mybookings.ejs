@@ -212,8 +212,16 @@
           var card = document.querySelector(`[data-booking-id="${bookingId}"]`).closest('.booking-card');
           card.setAttribute('data-type', service);
           card.setAttribute('data-date', date);
+          card.setAttribute('data-search', service + ' ' + card.getAttribute('data-status') + ' ' + date);
+          // Update service badge
           card.querySelector('.service-badge').textContent = service;
+          // Update service type display
           card.querySelector('.service-type[style]').textContent = description;
+          // Update date display
+          var dateDisplay = card.querySelector('.booking-date');
+          var newDate = new Date(date);
+          var options = { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+          dateDisplay.textContent = newDate.toLocaleDateString(undefined, options) + (date.length > 10 ? ' at ' + newDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '');
           // Close modal
           document.getElementById('bookingDetailsModal').style.display = 'none';
         } else {

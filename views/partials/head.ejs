@@ -23,6 +23,18 @@
                   <a class="nav-link" href="/booking/mybookings">My Bookings</a>
                 </li>
               <% } %>
+              <% if(session.user && session.user.usertype == 2){ %>
+                <li class="nav-item">
+                  <a class="nav-link" href="/admin">Dashboard</a>
+                </li>
+                <% }else{ %>
+                <% } %>
+                <% if(session.user && session.user.usertype == 3){ %>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/plumber">Dashboard</a>
+                  </li>
+                  <% }else{ %>
+                  <% } %>
               <li class="nav-item">
                 <a class="nav-link" href="/index/about"> About</a>
               </li>
