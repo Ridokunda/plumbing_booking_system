@@ -71,7 +71,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
+        const btn_adduser = document.getElementById('btn_adduser');
+        if(btn_adduser){
+            btn_adduser.addEventListener('click', async function(){
+                try {
+                    const response = await fetch('/register/registeruser');
+                    if(response.ok){
+                        const content = await response.text();
+                        contentDiv.innerHTML = content;
+                        attachEventListeners();
+                    }else{
+                        contentDiv.innerHTML = '<p>Failure while loading content</p>';
+                    }
+                } catch (error) {
+                    contentDiv.innerHTML = '<p>Error while loading content</p>';
+                    console.error('error', error);
+                }
+            });
+        }
         const usertype = document.getElementById('usertype');
         if(usertype!==null){
             usertype.addEventListener('change', function() {

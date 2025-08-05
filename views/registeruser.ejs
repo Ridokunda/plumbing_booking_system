@@ -44,10 +44,9 @@
     </style>
 </head>
 <body>
-    <%- include('./partials/head.ejs') %>
     
     <div class="mybookings-container" style="justify-content: center; align-items: center;">
-        <div class="form-container" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 40px; width: 100%; max-width: 600px;">
+        <div class="form-container" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 40px; width: 100%; max-width: 600px; margin-top: 100px;">
             <h1 style="color: rgb(15, 126, 148); font-size: 2.5rem; font-weight: bold; margin-bottom: 30px; text-align: center;">Register User</h1>
             
             <form action="/register/registeruser" method="post" style="display: flex; flex-direction: column; gap: 20px;">
@@ -192,6 +191,5 @@
         });
     </script>
     
-    <%- include('./partials/footer.ejs') %>
 </body>
 </html>
