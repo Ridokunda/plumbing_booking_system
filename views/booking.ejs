@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
     <!-- Basic -->
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -25,33 +24,72 @@
     <link href="/stylesheets/style.css" rel="stylesheet" />
     <!-- responsive style -->
     <link href="/stylesheets/responsive.css" rel="stylesheet" />
-      
-      
-    <link rel="stylesheet" href="/stylesheets/custom.css">
+    <link rel='stylesheet' href='/stylesheets/custom.css' />
 </head>
 <body>
     <%- include('./partials/head') %>
-    <div class="container" style="margin-top: 100px;">
-        <form class="form book" id="bookingForm" action="/booking/book" method="post">
-            <h2>Booking Details</h2>
-            <label for="service" >Select service type</label>
-            <select type="text" name="service" id="service" style="height: 40px;">
-                <option value="Installation">Installation</option>
-                <option value="Fix">Fix</option>
-            </select>
-            <label for="description">Description</label>
-            <textarea name="description" id="description" cols="30" rows="10" required></textarea>
-            <label for="date_start">Date you will be available:</label>
-            <input type="date" name="date_start" id="date_start" required>
-            <label for="location">Your location</label>
-            <input type="text" name="location" id="location">
-            <button id="btn_submit" type="submit">Book</button>
-            <div id="booking-message" style="margin-top:20px; display:none; padding:10px; border-radius:5px;"></div>
-        </form>
-        
+    
+    <div class="mybookings-container" style="justify-content: center; align-items: center; padding-top: 40px;">
+        <div class="form-container" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 40px; width: 100%; max-width: 600px; margin-top: 100px;">
+            <h1 style="color: rgb(15, 126, 148); font-size: 2.5rem; font-weight: bold; margin-bottom: 30px; text-align: center;">Booking Details</h1>
+            
+            <form id="bookingForm" action="/booking/book" method="post" style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Select Service Type</label>
+                    <select name="service" id="service" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background-color: white;">
+                        <option value="Installation">Installation</option>
+                        <option value="Fix">Fix</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Description</label>
+                    <textarea 
+                        name="description" 
+                        id="description" 
+                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; min-height: 120px; resize: vertical;"
+                        required
+                    ></textarea>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Date You Will Be Available</label>
+                    <input 
+                        type="date" 
+                        name="date_start" 
+                        id="date_start"
+                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;"
+                        required
+                    >
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Your Location</label>
+                    <input 
+                        type="text" 
+                        name="location" 
+                        id="location"
+                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;"
+                    >
+                </div>
+                
+                <button 
+                    id="btn_submit" 
+                    type="submit"
+                    style="background-color: rgb(15, 126, 148); color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; margin-top: 10px;"
+                    onmouseover="this.style.backgroundColor='#0d5a6a'" 
+                    onmouseout="this.style.backgroundColor='rgb(15, 126, 148)'"
+                >
+                    Book Service
+                </button>
+                
+                <div id="booking-message" style="display: none; padding: 15px 20px; border-radius: 8px; margin-top: 10px;"></div>
+            </form>
+        </div>
     </div>
     
     <%- include('./partials/footer') %>
+    
     <script>
         // Restrict date input to today and future dates only
         document.addEventListener('DOMContentLoaded', function() {
@@ -71,6 +109,7 @@
                 var formData = new FormData(bookingForm);
                 var data = {};
                 formData.forEach((value, key) => { data[key] = value; });
+                
                 fetch('/booking/book', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -81,22 +120,16 @@
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = result.message;
                     if(result.success) {
-                        messageDiv.style.backgroundColor = '#d4edda';
-                        messageDiv.style.color = '#155724';
-                        messageDiv.style.border = '1px solid #c3e6cb';
+                        messageDiv.className = 'message success';
                         bookingForm.reset();
                     } else {
-                        messageDiv.style.backgroundColor = '#f8d7da';
-                        messageDiv.style.color = '#721c24';
-                        messageDiv.style.border = '1px solid #f5c6cb';
+                        messageDiv.className = 'message error';
                     }
                 })
                 .catch(err => {
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = 'An error occurred. Please try again.';
-                    messageDiv.style.backgroundColor = '#f8d7da';
-                    messageDiv.style.color = '#721c24';
-                    messageDiv.style.border = '1px solid #f5c6cb';
+                    messageDiv.className = 'message error';
                 });
             });
         });
