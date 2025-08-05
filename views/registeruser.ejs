@@ -2,92 +2,196 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <!-- Mobile Metas -->
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <!-- Site Metas -->
-        <meta name="keywords" content="" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
-        
-        <title>WeFixIt | <%= title %></title>
-        
-        <!-- slider stylesheet -->
-        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
-        <!-- bootstrap core css -->
-        <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.css" />
-        <!-- font awesome style -->
-        <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome.min.css" />
-        
-        <!-- Custom styles for this template -->
-        <link href="/stylesheets/style.css" rel="stylesheet" />
-        <!-- responsive style -->
-        <link href="/stylesheets/responsive.css" rel="stylesheet" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Mobile Metas -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <!-- Site Metas -->
+    <meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    
+    <title>WeFixIt | <%= title %></title>
+    
+    <!-- slider stylesheet -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <!-- bootstrap core css -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.css" />
+    <!-- font awesome style -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome.min.css" />
+    
+    <!-- Custom styles for this template -->
+    <link href="/stylesheets/style.css" rel="stylesheet" />
+    <!-- responsive style -->
+    <link href="/stylesheets/responsive.css" rel="stylesheet" />
     <link rel='stylesheet' href='/stylesheets/custom.css' />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+        .additional-fields {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+            background-color: white;
+        }
+    </style>
 </head>
 <body>
-
-    <div class="container">
-        <form class="form reg" action="/register/registeruser" method="post">
-            <h2>Register user</h2>
-            <style>
-                .additional-fields {
-                    display: none;
-                }
-            </style>
-            <fieldset>
-                <label for="cus_name">First Name</label>
-                <input type="text" value="John" name="name" id="cus_name">
-            </fieldset>
-            <fieldset>
-                <label for="cus_lastname">Last Name</label>
-                <input type="text" value="Doe" name="surname" id="cus_lastname">
-            </fieldset>
-            <fieldset>
-                <label for="usertype">User Type</label>
-                <select type="number" name="usertype" id="usertype">
-                    <option value="1">Customer</option>
-                    <option value="2">Admin</option>
-                    <option value="3">Plumber</option>
-                </select>
-            </fieldset>
-             <!-- Additional fields for Admin -->
-            <div id="adminFields" class="additional-fields">
-                <fieldset>
-                    <label for="admin_code">Admin Code</label>
-                    <input type="text" id="admin_code" name="admin_code">
-                </fieldset>
-            </div>
-
-            <!-- Additional fields for Plumber -->
-            <div id="plumberFields" class="additional-fields">
-                <fieldset>
-                    <label for="plumber_license">License</label>
-                    <input type="text" id="plumber_license" name="plumber_license">
-                </fieldset>
-                <fieldset>
-                    <label for="experience">Years of Experience</label>
-                    <input type="number" id="experience" name="experience">
-                </fieldset>
-            </div>
-            <fieldset>
-                <label for="birthdate">Date of Birth</label>
-                <input type="date" id="birthdate" name="birthdate">
-            </fieldset>
-            <fieldset>
-                <label for="email">Email</label>
-                <input type="email" name="email" id="email">
-            </fieldset>
+    <%- include('./partials/head.ejs') %>
     
-            <fieldset>
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password">
-            </fieldset>
-            <button type="submit" id="btn_submit">Sign Up</button>
-        </form>
-    
+    <div class="mybookings-container" style="justify-content: center; align-items: center;">
+        <div class="form-container" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 40px; width: 100%; max-width: 600px;">
+            <h1 style="color: rgb(15, 126, 148); font-size: 2.5rem; font-weight: bold; margin-bottom: 30px; text-align: center;">Register User</h1>
+            
+            <form action="/register/registeruser" method="post" style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-weight: 600; color: #333; font-size: 0.9rem;">First Name</label>
+                        <input 
+                            type="text" 
+                            name="name" 
+                            id="cus_name"
+                            value="John"
+                            style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                            required
+                        >
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Last Name</label>
+                        <input 
+                            type="text" 
+                            name="surname" 
+                            id="cus_lastname"
+                            value="Doe"
+                            style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                            required
+                        >
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">User Type</label>
+                    <select name="usertype" id="usertype" onchange="toggleAdditionalFields()">
+                        <option value="1">Customer</option>
+                        <option value="2">Admin</option>
+                        <option value="3">Plumber</option>
+                    </select>
+                </div>
+                
+                <!-- Additional fields for Admin -->
+                <div id="adminFields" class="additional-fields">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Admin Code</label>
+                        <input 
+                            type="text" 
+                            id="admin_code" 
+                            name="admin_code"
+                            style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                        >
+                    </div>
+                </div>
+
+                <!-- Additional fields for Plumber -->
+                <div id="plumberFields" class="additional-fields">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label style="font-weight: 600; color: #333; font-size: 0.9rem;">License Number</label>
+                            <input 
+                                type="text" 
+                                id="plumber_license" 
+                                name="plumber_license"
+                                style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                            >
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Years of Experience</label>
+                            <input 
+                                type="number" 
+                                id="experience" 
+                                name="experience"
+                                style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                            >
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Date of Birth</label>
+                    <input 
+                        type="date" 
+                        id="birthdate" 
+                        name="birthdate"
+                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                        required
+                    >
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Email</label>
+                    <input 
+                        type="email" 
+                        name="email" 
+                        id="email"
+                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                        required
+                    >
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password"
+                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                        required
+                    >
+                </div>
+                
+                <button 
+                    type="submit" 
+                    id="btn_submit"
+                    style="background-color: rgb(15, 126, 148); color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; margin-top: 10px;"
+                    onmouseover="this.style.backgroundColor='#0d5a6a'" 
+                    onmouseout="this.style.backgroundColor='rgb(15, 126, 148)'"
+                >
+                    Register
+                </button>
+            </form>
+        </div>
     </div>
     
+    <script>
+        function toggleAdditionalFields() {
+            const userType = document.getElementById('usertype').value;
+            const adminFields = document.getElementById('adminFields');
+            const plumberFields = document.getElementById('plumberFields');
+            
+            adminFields.style.display = 'none';
+            plumberFields.style.display = 'none';
+            
+            if (userType === '2') {
+                adminFields.style.display = 'block';
+            } else if (userType === '3') {
+                plumberFields.style.display = 'block';
+            }
+        }
+        
+        // Initialize fields on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleAdditionalFields();
+        });
+    </script>
+    
+    <%- include('./partials/footer.ejs') %>
 </body>
 </html>

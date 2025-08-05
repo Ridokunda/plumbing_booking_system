@@ -2,74 +2,136 @@
 <html lang="en">
 <head>
     <!-- Basic -->
-        <meta charset="utf-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <!-- Mobile Metas -->
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <!-- Site Metas -->
-        <meta name="keywords" content="" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
-        
-        <title>WeFixIt | <%= title %></title>
-        
-        <!-- slider stylesheet -->
-        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
-        <!-- bootstrap core css -->
-        <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.css" />
-        <!-- font awesome style -->
-        <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome.min.css" />
-        
-        <!-- Custom styles for this template -->
-        <link href="/stylesheets/style.css" rel="stylesheet" />
-        <!-- responsive style -->
-        <link href="/stylesheets/responsive.css" rel="stylesheet" />
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Mobile Metas -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <!-- Site Metas -->
+    <meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    
+    <title>WeFixIt | <%= title %></title>
+    
+    <!-- slider stylesheet -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <!-- bootstrap core css -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.css" />
+    <!-- font awesome style -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome.min.css" />
+    
+    <!-- Custom styles for this template -->
+    <link href="/stylesheets/style.css" rel="stylesheet" />
+    <!-- responsive style -->
+    <link href="/stylesheets/responsive.css" rel="stylesheet" />
     <link rel='stylesheet' href='/stylesheets/custom.css' />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <style>
-        .error {
-            color: red;
-        }
-    </style>
 </head>
 <body>
     <%- include('./partials/head.ejs') %>
-    <div class="container">
-        <form class="form reg" action="/register/register" method="post" onsubmit="return validateForm()">
-            <h2>Sign Up</h2>
-            <fieldset>
-                <label for="cus_name">First Name</label>
-                <input type="text" value="John" name="name" id="cus_name">
-            </fieldset>
-            <fieldset>
-                <label for="cus_lastname">Last Name</label>
-                <input type="text" value="Doe" name="surname" id="cus_lastname">
-            </fieldset>
-            <fieldset>
-                <label for="address">Physical Address</label>
-                <input type="text" id="address" name="address">
-            </fieldset>
-            <fieldset>
-                <label for="email">Email</label>
-                <input type="email" name="email" id="email">
-            </fieldset>
-            <fieldset>
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password">
-            </fieldset>
-            <fieldset>
-                <label for="confirm_password">Confirm Password</label>
-                <input type="password" id="confirm_password" name="confirm_password">
-            </fieldset>
-            <div id="passwordError" class="error"></div>
+    <div class="mybookings-container" style="justify-content: center; align-items: center;">
+        <div class="form-container" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 40px; width: 100%; max-width: 600px;">
+            <h1 style="color: rgb(15, 126, 148); font-size: 2.5rem; font-weight: bold; margin-bottom: 30px; text-align: center;">Create Account</h1>
             
-            
-            <button type="submit" id="btn_submit">Sign Up</button>
-            <% if(message){ %>
-                <div><%= message %></div>
-            <% } %>
-        </form>
+            <form action="/register/register" method="post" onsubmit="return validateForm()" style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-weight: 600; color: #333; font-size: 0.9rem;">First Name</label>
+                        <input 
+                            type="text" 
+                            name="name" 
+                            id="cus_name"
+                            value="John"
+                            style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                            required
+                        >
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Last Name</label>
+                        <input 
+                            type="text" 
+                            name="surname" 
+                            id="cus_lastname"
+                            value="Doe"
+                            style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                            required
+                        >
+                    </div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Physical Address</label>
+                    <input 
+                        type="text" 
+                        id="address" 
+                        name="address"
+                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                        required
+                    >
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Email</label>
+                    <input 
+                        type="email" 
+                        name="email" 
+                        id="email"
+                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                        required
+                    >
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password"
+                            style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                            required
+                        >
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            id="confirm_password" 
+                            name="confirm_password"
+                            style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
+                            required
+                        >
+                    </div>
+                </div>
+                
+                <div id="passwordError" style="color: #d32f2f; font-size: 0.9rem; margin-top: -10px;"></div>
+                
+                <button 
+                    type="submit" 
+                    id="btn_submit"
+                    style="background-color: rgb(15, 126, 148); color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; margin-top: 10px;"
+                    onmouseover="this.style.backgroundColor='#0d5a6a'" 
+                    onmouseout="this.style.backgroundColor='rgb(15, 126, 148)'"
+                >
+                    Sign Up
+                </button>
+                
+                <% if(message){ %>
+                    <div class="message <%= message.includes('successfully') ? 'success' : 'error' %>" 
+                         style="position: static; max-width: 100%; margin-top: 10px; padding: 15px 20px; border-radius: 8px;">
+                        <%= message %>
+                    </div>
+                <% } %>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <p style="color: #666;">Already have an account? <a href="/login" style="color: rgb(15, 126, 148); font-weight: 500;">Log in</a></p>
+                </div>
+            </form>
+        </div>
     </div>
+    
     <script>
         function validateForm() {
             var password = document.getElementById('password').value;
@@ -84,6 +146,7 @@
             return true;
         }
     </script>
+    
     <%- include('./partials/footer.ejs') %>
 </body>
 </html>
