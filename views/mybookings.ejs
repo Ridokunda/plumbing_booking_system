@@ -20,8 +20,13 @@
 </head>
 <body>
     <%- include('./partials/head') %>
-    <div class="mybookings-container" ">
-        <div class="mybookings-header">My Bookings</div>
+    <div class="mybookings-container">
+        <div style="width:100%; display:flex; align-items:center; justify-content:space-between;">
+          <div class="mybookings-header">My Bookings</div>
+          <div>
+            <a href="/booking" class="add-booking-btn" style="background:#0355cc; color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; font-weight:600;">+ Add Booking</a>
+          </div>
+        </div>
         <div class="search-filter-bar">
             <input type="text" id="searchInput" class="search-input" placeholder="Search & Search">
             <select id="statusFilter" class="status-filter">

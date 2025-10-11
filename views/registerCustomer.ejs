@@ -30,8 +30,8 @@
 <body>
     <%- include('./partials/head.ejs') %>
     <div class="mybookings-container" style="justify-content: center; align-items: center;">
-        <div class="form-container" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 40px; width: 100%; max-width: 600px;">
-            <h1 style="color: rgb(15, 126, 148); font-size: 2.5rem; font-weight: bold; margin-bottom: 30px; text-align: center;">Create Account</h1>
+        <div class="form-container" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 40px; width: 100%; max-width: 600px; ">
+            <h1 style="color: #0355cc; font-size: 2.5rem; font-weight: bold; margin-bottom: 30px; text-align: center;">Create Account</h1>
             
             <form action="/register/register" method="post" onsubmit="return validateForm()" style="display: flex; flex-direction: column; gap: 20px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -111,9 +111,9 @@
                 <button 
                     type="submit" 
                     id="btn_submit"
-                    style="background-color: rgb(15, 126, 148); color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; margin-top: 10px;"
+                    style="background-color: #0355cc; color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; margin-top: 10px;"
                     onmouseover="this.style.backgroundColor='#0d5a6a'" 
-                    onmouseout="this.style.backgroundColor='rgb(15, 126, 148)'"
+                    onmouseout="this.style.backgroundColor='#0355cc'"
                 >
                     Sign Up
                 </button>
@@ -126,7 +126,7 @@
                 <% } %>
                 
                 <div style="text-align: center; margin-top: 20px;">
-                    <p style="color: #666;">Already have an account? <a href="/login" style="color: rgb(15, 126, 148); font-weight: 500;">Log in</a></p>
+                    <p style="color: #666;">Already have an account? <a href="/login" style="color: #0355cc; font-weight: 500;">Log in</a></p>
                 </div>
             </form>
         </div>

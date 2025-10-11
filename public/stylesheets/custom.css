@@ -11,7 +11,7 @@ body{
 header{
   display: flex;
   justify-content: space-between;
-  background-color: rgb(15, 126, 148);
+  background-color: #0355cc;
   box-shadow: 2px 3px 4px;
 }
 
@@ -46,7 +46,7 @@ header{
 }
 
 .box1 button{
-  background-color: rgb(15, 126, 148);
+  background-color: #0355cc;
   color: aliceblue;
   margin-left: 100px;
   height:50px;
@@ -83,7 +83,7 @@ header{
 
 .service .s-head{
   display: flex;
-  color: rgb(15, 126, 148);
+  color: #0355cc;
 }
 .testimonias{
   padding: 100px;
@@ -91,7 +91,7 @@ header{
 }
 .testimonias h2{
   text-align: center;
-  color: rgb(15, 126, 148);
+  color: #0355cc;
 }
 .testimonias .clients{
   display: flex;
@@ -136,7 +136,7 @@ header{
 }
 .form h2{
   text-align: center;
-  color: rgb(15, 126, 148);
+  color: #0355cc;
 }
 .form input{
   height: 25px;
@@ -152,7 +152,7 @@ fieldset{
 
 #btn_submit{
   color: white;
-  background-color: rgb(15, 126, 148);
+  background-color: #0355cc;
   border: 0px;
   border-radius: 10px;
   height:30px;
@@ -217,7 +217,7 @@ footer span{
   font-weight: bold;
   margin: 20px 0 20px 0;
   text-align: left;
-  color: rgb(15, 126, 148);
+  color: #0355cc;
   display: block;
   position: relative;
   z-index: 1;
@@ -320,7 +320,7 @@ footer span{
   margin: 0%;
 }
 .sidebar{
-  background-color: rgb(15, 126, 148);
+  background-color: #0355cc;
   color: white;
   width: 250px;
   height: 100vh;
@@ -375,7 +375,7 @@ footer span{
 }
 
 thead th {
-  background-color: rgb(15, 126, 148);
+  background-color: #0355cc;
   color: white;
   padding: 20px;
   text-align: left;
@@ -386,7 +386,7 @@ thead th {
 
 
 #btn_assign_plumber{
-  background-color: rgb(15, 126, 148);
+  background-color: #0355cc;
   color: aliceblue;
   margin-left: 100px;
   border: 0px;
@@ -461,7 +461,7 @@ thead th {
   text-decoration: none;
 }
 .stats a:hover{
-  color: rgb(15, 126, 148);
+  color: #0355cc;
   text-decoration: none;
 }
 
@@ -480,7 +480,7 @@ thead th {
 }
 
 .profile-header h1 {
-  color: rgb(15, 126, 148);
+  color: #0355cc;
   font-size: 2.5rem;
   font-weight: bold;
   margin: 0;
@@ -594,7 +594,7 @@ thead th {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: rgb(15, 126, 148);
+  border-color: #0355cc;
 }
 
 .form-group input[readonly] {
@@ -620,7 +620,7 @@ thead th {
 }
 
 .save-btn {
-  background-color: rgb(15, 126, 148);
+  background-color: #0355cc;
   color: white;
 }
 
@@ -646,7 +646,7 @@ thead th {
 }
 
 .profile-stats h3 {
-  color: rgb(15, 126, 148);
+  color: #0355cc;
   margin-bottom: 20px;
   font-size: 1.5rem;
 }
@@ -668,7 +668,7 @@ thead th {
 .stat-number {
   font-size: 2rem;
   font-weight: bold;
-  color: rgb(15, 126, 148);
+  color: #0355cc;
   margin-bottom: 5px;
 }
 
