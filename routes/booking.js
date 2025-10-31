@@ -17,7 +17,7 @@ router.post('/book', (req,res, next) => {
   }
    
   var service = req.body.service;
-  var date_start = req.body.date_start; // may be a string or an array of dates (YYYY-MM-DD)
+  var date_start = req.body.date_start;
   var des = req.body.description;
 
   // Basic validation
@@ -28,9 +28,9 @@ router.post('/book', (req,res, next) => {
   // Normalize dates to an array
   let dates = [];
   if (Array.isArray(date_start)) {
-    dates = date_start.filter(d => d); // remove empty
+    dates = date_start.filter(d => d);
   } else if (typeof date_start === 'string') {
-    // Could be a single date string or a JSON-encoded array
+    
     try {
       const parsed = JSON.parse(date_start);
       if (Array.isArray(parsed)) dates = parsed;
@@ -43,15 +43,6 @@ router.post('/book', (req,res, next) => {
   if (dates.length === 0) {
     return res.status(400).json({ success: false, message: 'Please provide at least one valid date.' });
   }
-
-  // Insert booking first (booking metadata). We'll store individual dates in a separate table booking_dates.
-  // SQL to create the required table (run once):
-  // CREATE TABLE booking_dates (
-  //   id INT AUTO_INCREMENT PRIMARY KEY,
-  //   booking_id INT NOT NULL,
-  //   date_start DATE NOT NULL,
-  //   FOREIGN KEY (booking_id) REFERENCES bookings(idbookings) ON DELETE CASCADE
-  // );
 
   const insertBookingQuery = 'INSERT INTO bookings (idUser,type,des,status) VALUES(?,?,?,?)';
   connection.query(insertBookingQuery, [req.session.user.idusers, service, des, 'NEW'], (err, result) => {
@@ -80,12 +71,10 @@ router.get('/mybookings', function(req, res, next){
   const user = req.session.user;
 
   if (!user) {
-      return res.redirect('/login'); // Redirect if user is not logged in
+      return res.redirect('/login'); 
   }
 
-  // Retrieve bookings made by the current customer and aggregate their dates
-  // We use GROUP_CONCAT to combine multiple dates per booking. The template expects booking.booking_date or booking.date_start,
-  // so we add a 'date_start' property with the earliest date for compatibility and a 'dates' CSV string.
+  // Retrieve bookings made by the current customer
   const query = `SELECT b.*, GROUP_CONCAT(d.date_start ORDER BY d.date_start SEPARATOR ',') AS dates, MIN(d.date_start) AS first_date
                  FROM bookings b
                  LEFT JOIN booking_dates d ON b.idbookings = d.booking_id
@@ -97,10 +86,10 @@ router.get('/mybookings', function(req, res, next){
           console.error('Error executing MySQL query to fetch customer bookings: ' + err.stack);
           return res.status(500).send('Error fetching your bookings');
       }
-      // Attach a datesArray and date_start (first date) for template compatibility
+      
       const processed = results.map(r => {
         r.datesArray = r.dates ? r.dates.split(',') : [];
-        r.date_start = r.first_date || r.date_start; // preserve existing if present
+        r.date_start = r.first_date || r.date_start; 
         return r;
       });
       res.render('mybookings', { bookings: processed, title : 'My Bookings' });
@@ -148,7 +137,7 @@ router.post('/cancel-booking', function(req, res, next) {
 // Edit a booking (customer)
 router.post('/edit-booking', function(req, res, next) {
   const user = req.session.user;
-  const { booking_id, service, date_start, description } = req.body; // date_start may be array or string
+  const { booking_id, service, date_start, description } = req.body;
 
   if (!user) {
     return res.status(401).json({ success: false, message: 'Not logged in' });
