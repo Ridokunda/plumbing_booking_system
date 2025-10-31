@@ -5,49 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeFixIt | <%= title %></title>
     <link rel="stylesheet" href="/stylesheets/custom.css">
+    <!-- slider stylesheet -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <!-- bootstrap core css -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.css" />
+    <!-- font awesome style -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome.min.css" />
+    <!-- Custom styles for this template -->
+    <link href="/stylesheets/style.css" rel="stylesheet" />
+    <!-- responsive style -->
+    <link href="/stylesheets/responsive.css" rel="stylesheet" />
 </head>
 <body>
-    <div class="bookings-container">
-        <h2>My Assigned Bookings</h2>
-        <div class="container-bookings-tables">
-            <% if (bookings.length === 0) { %>
-                <p>No bookings assigned to you yet.</p>
+    <div class="mybookings-container">
+        <div style="width:100%; display:flex; align-items:center; justify-content:space-between;">
+          <div class="mybookings-header">My Assigned Bookings</div>
+        </div>
+        <div class="search-filter-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search bookings">
+            <select id="statusFilter" class="status-filter">
+                <option value="ALL">ALL STATUS</option>
+                <option value="NEW">NEW</option>
+                <option value="ASSIGNED">ASSIGNED</option>
+                <option value="CANCELLED">CANCELLED</option>
+                <option value="DECLINED">DECLINED</option>
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="IN_PROGRESS">IN PROGRESS</option>
+            </select>
+        </div>
+        <div class="bookings-grid" id="bookingsGrid">
+            <% if (bookings && bookings.length) { %>
+                <% bookings.forEach(booking => { %>
+                    <div class="booking-card" data-status="<%= booking.status %>" data-type="<%= booking.type || booking.service_type %>" data-date="<%= booking.date_start %>" data-search="<%= (booking.customer_name || booking.customer_fullname || '') %> <%= booking.type || booking.service_type %> <%= booking.status %> <%= booking.date_start %>">
+                        <div class="card-row card-row-top">
+                            <div class="service-type">Service Type</div>
+                            <span class="service-badge"><%= booking.type || booking.service_type %></span>
+                        </div>
+                        <div class="service-type" style="font-size:1.25em; margin-bottom:2px;"><%= booking.customer_name ? (booking.customer_name + ' ' + (booking.customer_surname || '')) : (booking.customer_fullname || 'Customer') %></div>
+                        <div class="booking-date" data-date="<%= booking.date_start %>"></div>
+                        <div class="card-row card-row-bottom">
+                            <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
+                        </div>
+                        <div style="margin-top:8px; color:#666; font-size:0.9em;">
+                            <strong>Description:</strong> <%= booking.des || booking.description || '' %>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:10px;">
+                            <% if (booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED') { %>
+                                <button class="complete-booking-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Mark as Complete</button>
+                            <% } else { %>
+                                <span style="color:#666; font-style:italic;">No actions available</span>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
             <% } else { %>
-                <table class="booking-table">
-                    <thead>
-                        <tr>
-                            <th>Booking Date</th>
-                            <th>Service Type</th>
-                            <th>Status</th>
-                            <th>Description</th>
-                            <th>Customer Name</th>
-                            <th>Customer Email</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% bookings.forEach(booking => { %>
-                            <tr>
-                                <td class="booking-date" data-date="<%= booking.date_start %>"></td>
-                                <td><%= booking.service_type %></td>
-                                <td class="booking-status"><%= booking.status %></td>
-                                <td><%= booking.description %></td>
-                                <td><%= booking.customer_name %> <%= booking.customer_surname %></td>
-                                <td><%= booking.customer_email %></td>
-                                <td>
-                                  <% if (booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED') { %>
-                                    <button class="complete-booking-btn" data-booking-id="<%= booking.idbookings %>">Mark as Complete</button>
-                                  <% } else { %>
-                                    <span>-</span>
-                                  <% } %>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+                <div style="padding:20px; color:#666;">No bookings assigned to you yet.</div>
             <% } %>
         </div>
+
         <div id="complete-message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
     </div>
+
+    <script>
+      // Format booking dates
+      document.querySelectorAll('.booking-date').forEach(function(el) {
+          var dateStr = el.getAttribute('data-date');
+          if (dateStr) {
+              var date = new Date(dateStr);
+              var options = { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit' };
+              el.textContent = date.toLocaleDateString(undefined, options);
+          }
+      });
+
+      // Search and filter (client-side)
+      const searchInput = document.getElementById('searchInput');
+      const statusFilter = document.getElementById('statusFilter');
+      const bookingsGrid = document.getElementById('bookingsGrid');
+      function filterBookings() {
+          const searchVal = searchInput.value.toLowerCase();
+          const statusVal = statusFilter.value;
+          bookingsGrid.querySelectorAll('.booking-card').forEach(card => {
+              const cardSearch = card.getAttribute('data-search').toLowerCase();
+              const cardStatus = card.getAttribute('data-status');
+              let show = cardSearch.includes(searchVal);
+              if (statusVal !== 'ALL') {
+                  show = show && cardStatus === statusVal;
+              }
+              card.style.display = show ? '' : 'none';
+          });
+      }
+      searchInput.addEventListener('input', filterBookings);
+      statusFilter.addEventListener('change', filterBookings);
+
+      // Mark complete action (AJAX)
+      document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('complete-booking-btn')) {
+          const bookingId = e.target.getAttribute('data-booking-id');
+          if (!confirm('Mark this booking as completed?')) return;
+          fetch('/plumber/complete-booking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: bookingId })
+          }).then(r => r.json()).then(res => {
+            const msg = document.getElementById('complete-message');
+            msg.style.display = 'block';
+            msg.textContent = res.message;
+            if (res.success) {
+              msg.style.backgroundColor = '#d4edda'; msg.style.color = '#155724'; msg.style.border = '1px solid #c3e6cb';
+              // update UI
+              const btn = document.querySelector(`button.complete-booking-btn[data-booking-id="${bookingId}"]`);
+              if (btn) {
+                const card = btn.closest('.booking-card');
+                card.querySelector('.status-label').textContent = 'COMPLETED';
+                card.querySelector('.status-label').className = 'status-label status_COMPLETED';
+                btn.remove();
+              }
+            } else {
+              msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; msg.style.border = '1px solid #f5c6cb';
+            }
+          }).catch(() => {
+            const msg = document.getElementById('complete-message');
+            msg.style.display = 'block'; msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; msg.style.border = '1px solid #f5c6cb';
+            msg.textContent = 'An error occurred';
+          });
+        }
+      });
+    </script>
 </body>
-</html> 
+</html>
