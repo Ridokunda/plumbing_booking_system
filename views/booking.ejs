@@ -54,13 +54,19 @@
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Date You Will Be Available</label>
-                    <input 
-                        type="date" 
-                        name="date_start" 
-                        id="date_start"
-                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;"
-                        required
-                    >
+                    <div id="dateInputs" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                      <input 
+                          type="date" 
+                          name="date_start" 
+                          class="date-input"
+                          id="date_start"
+                          style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;"
+                          required
+                      >
+                    </div>
+                    <div style="margin-top:6px;">
+                      <button type="button" id="addDateBtn" style="background:#0355cc; color:#fff; border:none; border-radius:6px; padding:8px 12px; cursor:pointer;">+ Add date</button>
+                    </div>
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -76,7 +82,7 @@
                 <button 
                     id="btn_submit" 
                     type="submit"
-                    style="background-color: #0355cc; color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; margin-top: 10px;"
+                    style="background-color: #0355cc; color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; margin-top: 10px; position:relative; z-index:9999; pointer-events:auto;"
                     onmouseover="this.style.backgroundColor='#0d5a6a'" 
                     onmouseout="this.style.backgroundColor='#0355cc'"
                 >
@@ -104,11 +110,25 @@
             // AJAX booking form submission
             var bookingForm = document.getElementById('bookingForm');
             var messageDiv = document.getElementById('booking-message');
-            bookingForm.addEventListener('submit', function(e) {
+                bookingForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 var formData = new FormData(bookingForm);
                 var data = {};
-                formData.forEach((value, key) => { data[key] = value; });
+                // Build data object, preserving multiple date_start entries as arrays
+                formData.forEach((value, key) => {
+                    if (key === 'date_start') {
+                        if (!data[key]) data[key] = [];
+                        data[key].push(value);
+                    } else {
+                        // if multiple fields with same name (other than dates) exist, convert to array
+                        if (data[key] !== undefined) {
+                            if (!Array.isArray(data[key])) data[key] = [data[key]];
+                            data[key].push(value);
+                        } else {
+                            data[key] = value;
+                        }
+                    }
+                });
                 
                 fetch('/booking/book', {
                     method: 'POST',
@@ -131,6 +151,28 @@
                     messageDiv.textContent = 'An error occurred. Please try again.';
                     messageDiv.className = 'message error';
                 });
+            });
+            // Add date button logic: clone a date input
+            document.getElementById('addDateBtn').addEventListener('click', function() {
+                var container = document.getElementById('dateInputs');
+                var newInput = document.createElement('input');
+                newInput.type = 'date';
+                newInput.name = 'date_start';
+                newInput.className = 'date-input';
+                newInput.style = 'padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;';
+                // set min to today (todayStr is defined above in this scope)
+                try { if (typeof todayStr !== 'undefined') newInput.setAttribute('min', todayStr); } catch(e) {}
+                // add a remove button next to it
+                var removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = 'Remove';
+                removeBtn.style = 'background:#6c757d; color:#fff; border:none; border-radius:6px; padding:8px 10px; cursor:pointer; margin-left:4px;';
+                var wrapper = document.createElement('div');
+                wrapper.style = 'display:flex; gap:8px; align-items:center;';
+                wrapper.appendChild(newInput);
+                wrapper.appendChild(removeBtn);
+                container.appendChild(wrapper);
+                removeBtn.addEventListener('click', function() { container.removeChild(wrapper); });
             });
         });
     </script>

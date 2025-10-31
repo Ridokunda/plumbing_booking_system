@@ -17,23 +17,60 @@ router.post('/book', (req,res, next) => {
   }
    
   var service = req.body.service;
-  var date_start = req.body.date_start;
+  var date_start = req.body.date_start; // may be a string or an array of dates (YYYY-MM-DD)
   var des = req.body.description;
 
   // Basic validation
   if (!service || !date_start || !des) {
-      return res.status(400).json({ success: false, message: 'Please provide service type, date, and description.' });
+      return res.status(400).json({ success: false, message: 'Please provide service type, at least one date, and description.' });
   }
 
-  const query = 'INSERT INTO bookings (idUser,type,date_start,des,status) VALUES(?,?,?,?,?)';
+  // Normalize dates to an array
+  let dates = [];
+  if (Array.isArray(date_start)) {
+    dates = date_start.filter(d => d); // remove empty
+  } else if (typeof date_start === 'string') {
+    // Could be a single date string or a JSON-encoded array
+    try {
+      const parsed = JSON.parse(date_start);
+      if (Array.isArray(parsed)) dates = parsed;
+      else dates = [date_start];
+    } catch (e) {
+      dates = [date_start];
+    }
+  }
 
-  connection.query(query, [req.session.user.idusers,service,date_start,des,'NEW'], (err, result) =>{
-    if(err){
+  if (dates.length === 0) {
+    return res.status(400).json({ success: false, message: 'Please provide at least one valid date.' });
+  }
+
+  // Insert booking first (booking metadata). We'll store individual dates in a separate table booking_dates.
+  // SQL to create the required table (run once):
+  // CREATE TABLE booking_dates (
+  //   id INT AUTO_INCREMENT PRIMARY KEY,
+  //   booking_id INT NOT NULL,
+  //   date_start DATE NOT NULL,
+  //   FOREIGN KEY (booking_id) REFERENCES bookings(idbookings) ON DELETE CASCADE
+  // );
+
+  const insertBookingQuery = 'INSERT INTO bookings (idUser,type,des,status) VALUES(?,?,?,?)';
+  connection.query(insertBookingQuery, [req.session.user.idusers, service, des, 'NEW'], (err, result) => {
+    if (err) {
       console.error('Error inserting booking in the database', err);
       return res.status(500).json({ success: false, message: 'Internal server error' });
     }
-    console.log('booking added');
-    res.status(200).json({ success: true, message: 'Booking added successfully!' });
+    const bookingId = result.insertId;
+    // Prepare multi-row insert for booking_dates
+    const values = dates.map(d => [bookingId, d]);
+    const insertDatesQuery = 'INSERT INTO booking_dates (booking_id, date_start) VALUES ?';
+    connection.query(insertDatesQuery, [values], (err2) => {
+      if (err2) {
+        console.error('Error inserting booking dates', err2);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+      }
+      console.log('booking and dates added');
+      res.status(200).json({ success: true, message: 'Booking added successfully!' });
+    });
   });
 });
 
@@ -46,13 +83,27 @@ router.get('/mybookings', function(req, res, next){
       return res.redirect('/login'); // Redirect if user is not logged in
   }
 
-  // Retrieve bookings made by the current customer
-  connection.query("SELECT * FROM bookings WHERE idUser = ? ORDER BY date_start DESC", [user.idusers], (err, results) => {
+  // Retrieve bookings made by the current customer and aggregate their dates
+  // We use GROUP_CONCAT to combine multiple dates per booking. The template expects booking.booking_date or booking.date_start,
+  // so we add a 'date_start' property with the earliest date for compatibility and a 'dates' CSV string.
+  const query = `SELECT b.*, GROUP_CONCAT(d.date_start ORDER BY d.date_start SEPARATOR ',') AS dates, MIN(d.date_start) AS first_date
+                 FROM bookings b
+                 LEFT JOIN booking_dates d ON b.idbookings = d.booking_id
+                 WHERE b.idUser = ?
+                 GROUP BY b.idbookings
+                 ORDER BY first_date DESC`;
+  connection.query(query, [user.idusers], (err, results) => {
       if (err) {
           console.error('Error executing MySQL query to fetch customer bookings: ' + err.stack);
           return res.status(500).send('Error fetching your bookings');
       }
-      res.render('mybookings', { bookings: results, title : 'My Bookings' });
+      // Attach a datesArray and date_start (first date) for template compatibility
+      const processed = results.map(r => {
+        r.datesArray = r.dates ? r.dates.split(',') : [];
+        r.date_start = r.first_date || r.date_start; // preserve existing if present
+        return r;
+      });
+      res.render('mybookings', { bookings: processed, title : 'My Bookings' });
   });
 });
 
@@ -97,7 +148,7 @@ router.post('/cancel-booking', function(req, res, next) {
 // Edit a booking (customer)
 router.post('/edit-booking', function(req, res, next) {
   const user = req.session.user;
-  const { booking_id, service, date_start, description } = req.body;
+  const { booking_id, service, date_start, description } = req.body; // date_start may be array or string
 
   if (!user) {
     return res.status(401).json({ success: false, message: 'Not logged in' });
@@ -120,9 +171,9 @@ router.post('/edit-booking', function(req, res, next) {
     if (booking.status === 'CANCELLED' || booking.status === 'COMPLETED' || booking.status === 'DECLINED') {
       return res.status(400).json({ success: false, message: 'Booking cannot be edited.' });
     }
-    // Update the booking
-    const updateQuery = 'UPDATE bookings SET type = ?, date_start = ?, des = ? WHERE idbookings = ? AND idUser = ?';
-    connection.query(updateQuery, [service, date_start, description, booking_id, user.idusers], (err, result) => {
+    // Update the booking metadata (type, description). Dates are stored in booking_dates table.
+    const updateQuery = 'UPDATE bookings SET type = ?, des = ? WHERE idbookings = ? AND idUser = ?';
+    connection.query(updateQuery, [service, description, booking_id, user.idusers], (err, result) => {
       if (err) {
         console.error('Error updating booking:', err);
         return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -130,7 +181,38 @@ router.post('/edit-booking', function(req, res, next) {
       if (result.affectedRows === 0) {
         return res.status(404).json({ success: false, message: 'Booking not found or not updated.' });
       }
-      return res.json({ success: true, message: 'Booking updated successfully.' });
+      // Normalize incoming dates and replace existing booking_dates rows
+      let dates = [];
+      if (Array.isArray(date_start)) dates = date_start.filter(d => d);
+      else if (typeof date_start === 'string') {
+        try {
+          const parsed = JSON.parse(date_start);
+          if (Array.isArray(parsed)) dates = parsed;
+          else dates = [date_start];
+        } catch (e) {
+          dates = [date_start];
+        }
+      }
+      // Delete existing dates
+      const deleteQuery = 'DELETE FROM booking_dates WHERE booking_id = ?';
+      connection.query(deleteQuery, [booking_id], (delErr) => {
+        if (delErr) {
+          console.error('Error deleting old booking dates:', delErr);
+          return res.status(500).json({ success: false, message: 'Internal server error' });
+        }
+        if (dates.length === 0) {
+          return res.json({ success: true, message: 'Booking updated successfully.' });
+        }
+        const values = dates.map(d => [booking_id, d]);
+        const insertDatesQuery = 'INSERT INTO booking_dates (booking_id, date_start) VALUES ?';
+        connection.query(insertDatesQuery, [values], (insErr) => {
+          if (insErr) {
+            console.error('Error inserting updated booking dates:', insErr);
+            return res.status(500).json({ success: false, message: 'Internal server error' });
+          }
+          return res.json({ success: true, message: 'Booking updated successfully.' });
+        });
+      });
     });
   });
 });
