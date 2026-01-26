@@ -19,11 +19,14 @@
                     
                 </ul>
             </div>
+            <div class="logout-section">
+                <a href="/login/logout">Logout</a>
+            </div>
         </div>
         <div class="content"></div>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', (e) => {
             const contentDiv = document.querySelector('.content');
 
             document.querySelectorAll('.admin-pages a').forEach(link => {
@@ -54,6 +57,22 @@
                         console.error('error', error);
                     }
                 });
+            });
+
+            // Load default page (Assigned bookings)
+            const defaultUrl = 'plumber/my-bookings';
+            fetch(defaultUrl).then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('Failed to load default content');
+                }
+            }).then(content => {
+                contentDiv.innerHTML = content;
+                attachEventListeners();
+            }).catch(error => {
+                contentDiv.innerHTML = '<p>Error loading default content</p>';
+                console.error(error);
             });
 
             function attachEventListeners() {
@@ -105,6 +124,55 @@
                         });
                     });
                 });
+               document.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('complete-booking-btn')) {
+                const bookingId = e.target.getAttribute('data-booking-id');
+                if (!confirm('Mark this booking as completed?')) return;
+                fetch('/plumber/update-booking-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ booking_id: bookingId, status: 'COMPLETED' })
+                }).then(r => r.json()).then(res => {
+                    const msg = document.getElementById('complete-message');
+                    msg.style.display = 'block';
+                    msg.textContent = res.message;
+                    if (res.success) {
+                    msg.style.backgroundColor = '#d4edda'; msg.style.color = '#155724'; msg.style.border = '1px solid #c3e6cb';
+                    // update UI
+                    const btn = document.querySelector(`button.complete-booking-btn[data-booking-id="${bookingId}"]`);
+                    if (btn) {
+                        const card = btn.closest('.booking-card');
+                        card.querySelector('.status-label').textContent = 'COMPLETED';
+                        card.querySelector('.status-label').className = 'status-label status_COMPLETED';
+                        btn.remove();
+                    }
+                    } else {
+                    msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; msg.style.border = '1px solid #f5c6cb';
+                    }
+                }).catch(() => {
+                    const msg = document.getElementById('complete-message');
+                    msg.style.display = 'block'; msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; msg.style.border = '1px solid #f5c6cb';
+                    msg.textContent = 'An error occurred';
+                });
+                }
+                if (e.target && e.target.classList.contains('update-amount-btn')) {
+                console.log('Update amount button clicked');
+                const bookingId = e.target.getAttribute('data-booking-id');
+                const amount = document.querySelector(`.amount-input[data-booking-id="${bookingId}"]`).value;
+                console.log('Booking ID:', bookingId, 'Amount:', amount);
+                fetch('/plumber/update-amount', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ booking_id: bookingId, amount: parseFloat(amount) })
+                }).then(r => r.json()).then(res => {
+                    console.log('Response:', res);
+                    alert(res.message);
+                }).catch(err => {
+                    console.error('Error:', err);
+                    alert('An error occurred');
+                });
+                }
+            });
             }
         });
     </script>

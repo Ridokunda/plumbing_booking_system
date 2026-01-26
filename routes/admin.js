@@ -195,4 +195,25 @@ router.post('/declinebooking', function(req, res, next){
     });
 });
 
+/* POST update booking amount */
+router.post('/update-amount', function(req, res, next){
+    const { booking_id, amount } = req.body;
+
+    if (!booking_id || amount === undefined) {
+        return res.status(400).json({ message: 'Booking ID and amount are required.' });
+    }
+
+    const query = 'UPDATE bookings SET amount = ? WHERE idbookings = ?';
+    connection.query(query, [amount, booking_id], function(err, result){
+        if(err){
+            console.error('error while updating amount', err);
+            return res.status(500).json({message:'Internal server error'});
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Booking not found.' });
+        }
+        res.json({message:'Amount updated successfully'});
+    });
+});
+
 module.exports = router;

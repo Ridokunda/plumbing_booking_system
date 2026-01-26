@@ -33,6 +33,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Load default page (Dashboard Analytics)
+    const defaultUrl = '/admin/stats';
+    fetch(defaultUrl).then(response => {
+        if (response.ok) {
+            return response.text();
+        } else {
+            throw new Error('Failed to load default content');
+        }
+    }).then(content => {
+        contentDiv.innerHTML = content;
+        attachEventListeners();
+    }).catch(error => {
+        contentDiv.innerHTML = '<p>Error loading default content</p>';
+        console.error(error);
+    });
+
     function attachEventListeners() {
         //eventlisteners for manageuser page
         const contentDiv = document.querySelector('.content');

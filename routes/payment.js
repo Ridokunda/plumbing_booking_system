@@ -12,8 +12,7 @@ router.get('/', (req, res) => {
     const query = 'SELECT * FROM bookings WHERE idbookings = ? AND status = "COMPLETED"';
     connection.query(query, [bookingId], (err, results) => {
         if (err || results.length === 0) return res.status(404).send('Booking not found or not completed');
-        const booking = results[0];
-        booking.amount = 50; 
+        const booking = results[0]; 
         res.render('payment', { title: 'Payment', booking });
     });
 });

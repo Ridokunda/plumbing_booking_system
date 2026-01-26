@@ -55,6 +55,11 @@
                             <span style="color:#666; font-style:italic;">No actions available</span>
                         <% } %>
                     </div>
+                    <div style="margin-top:10px;">
+                        <label>Amount: $</label>
+                        <input type="number" class="amount-input" data-booking-id="<%= booking.idbookings %>" value="<%= booking.amount || 50 %>" step="0.01" min="0" style="width:80px; padding:4px;">
+                        <button class="update-amount-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">Update Amount</button>
+                    </div>
                 </div>
             <% }); %>
         </div>
@@ -77,5 +82,71 @@
         </div>
     </div>
 
+    <script>
+        // Format booking dates
+        document.querySelectorAll('.booking-date').forEach(function(el) {
+            var dateStr = el.getAttribute('data-date');
+            if (dateStr) {
+                var date = new Date(dateStr);
+                var options = { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit' };
+                el.textContent = date.toLocaleDateString(undefined, options);
+            }
+        });
+
+        // Assign plumber
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('assign-btn')) {
+                const bookingId = e.target.getAttribute('data-booking-id');
+                document.getElementById('assignModal').style.display = 'flex';
+                document.querySelectorAll('.assign-plumber-btn').forEach(btn => {
+                    btn.setAttribute('data-booking-id', bookingId);
+                });
+            }
+            if (e.target.classList.contains('assign-plumber-btn')) {
+                const bookingId = e.target.getAttribute('data-booking-id');
+                const plumberId = e.target.getAttribute('data-plumber-id');
+                fetch('/admin/assign-booking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ booking_id: bookingId, plumber_id: plumberId })
+                }).then(r => r.json()).then(res => {
+                    alert(res.message);
+                    if (res.message.includes('successfully')) {
+                        document.getElementById('assignModal').style.display = 'none';
+                        location.reload();
+                    }
+                });
+            }
+            if (e.target.classList.contains('decline-btn')) {
+                const bookingId = e.target.getAttribute('data-booking-id');
+                if (confirm('Decline this booking?')) {
+                    fetch('/admin/declinebooking', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ booking_id: bookingId })
+                    }).then(r => r.json()).then(res => {
+                        alert(res.message);
+                        if (res.message.includes('declined')) location.reload();
+                    });
+                }
+            }
+            if (e.target.classList.contains('update-amount-btn')) {
+                const bookingId = e.target.getAttribute('data-booking-id');
+                const amount = document.querySelector(`.amount-input[data-booking-id="${bookingId}"]`).value;
+                fetch('/admin/update-amount', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ booking_id: bookingId, amount: parseFloat(amount) })
+                }).then(r => r.json()).then(res => {
+                    alert(res.message);
+                });
+            }
+        });
+
+        // Close modal
+        document.getElementById('closeAssignModal').addEventListener('click', function() {
+            document.getElementById('assignModal').style.display = 'none';
+        });
+    </script>
 </body>
 </html>

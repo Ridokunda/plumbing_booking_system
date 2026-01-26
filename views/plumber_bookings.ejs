@@ -56,6 +56,11 @@
                                 <span style="color:#666; font-style:italic;">No actions available</span>
                             <% } %>
                         </div>
+                        <div style="margin-top:10px;">
+                            <label>Amount: $</label>
+                            <input type="number" class="amount-input" data-booking-id="<%= booking.idbookings %>" value="<%= booking.amount || 50 %>" step="0.01" min="0" style="width:80px; padding:4px;">
+                            <button class="update-amount-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">Update Amount</button>
+                        </div>
                     </div>
                 <% }); %>
             <% } else { %>
@@ -102,10 +107,10 @@
         if (e.target && e.target.classList.contains('complete-booking-btn')) {
           const bookingId = e.target.getAttribute('data-booking-id');
           if (!confirm('Mark this booking as completed?')) return;
-          fetch('/plumber/complete-booking', {
+          fetch('/plumber/update-booking-status', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ booking_id: bookingId })
+            body: JSON.stringify({ booking_id: bookingId, status: 'COMPLETED' })
           }).then(r => r.json()).then(res => {
             const msg = document.getElementById('complete-message');
             msg.style.display = 'block';
@@ -127,6 +132,23 @@
             const msg = document.getElementById('complete-message');
             msg.style.display = 'block'; msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; msg.style.border = '1px solid #f5c6cb';
             msg.textContent = 'An error occurred';
+          });
+        }
+        if (e.target && e.target.classList.contains('update-amount-btn')) {
+          console.log('Update amount button clicked');
+          const bookingId = e.target.getAttribute('data-booking-id');
+          const amount = document.querySelector(`.amount-input[data-booking-id="${bookingId}"]`).value;
+          console.log('Booking ID:', bookingId, 'Amount:', amount);
+          fetch('/plumber/update-amount', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: bookingId, amount: parseFloat(amount) })
+          }).then(r => r.json()).then(res => {
+            console.log('Response:', res);
+            alert(res.message);
+          }).catch(err => {
+            console.error('Error:', err);
+            alert('An error occurred');
           });
         }
       });

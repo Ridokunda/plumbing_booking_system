@@ -47,6 +47,7 @@
                     </div>
                     <div class="service-type" style="font-size:1.25em; margin-bottom:2px;"><%= booking.type %></div>
                     <div class="booking-date" data-date="<%= booking.booking_date || booking.date_start %>"></div>
+                    <div><%= booking.description %></div>
                     <div class="card-row card-row-bottom">
                         <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
                     </div>
