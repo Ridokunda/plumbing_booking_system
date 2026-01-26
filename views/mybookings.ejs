@@ -55,6 +55,9 @@
                             <button class="edit-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Edit</button>
                             <button class="cancel-btn" data-booking-id="<%= booking.idbookings %>">Cancel Booking</button>
                         <% } %>
+                        <% if (booking.status === 'COMPLETED') { %>
+                            <button class="pay-btn" data-booking-id="<%= booking.idbookings %>" style="background:#007bff; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Make Payment</button>
+                        <% } %>
                     </div>
                 </div>
             <% }); %>
@@ -146,10 +149,28 @@
             });
         });
     });
+    // Payment button
+
+    document.querySelectorAll('.pay-btn').forEach(function(btn) {
+
+        btn.addEventListener('click', function() {
+
+            var bookingId = this.getAttribute('data-booking-id');
+
+            // Example: Redirect to payment page
+
+            window.location.href = '/payment?booking_id=' + bookingId;
+
+            // Or open a modal, etc.
+
+        });
+
+    });
+
     // Booking details modal logic
     document.querySelectorAll('.booking-card').forEach(function(card) {
       card.addEventListener('click', function(e) {
-        if(e.target.classList.contains('cancel-btn') || e.target.classList.contains('edit-btn')) return; // Don't open modal on buttons
+        if(e.target.classList.contains('cancel-btn') || e.target.classList.contains('edit-btn') || e.target.classList.contains('pay-btn')) return; // Don't open modal on buttons
         var type = card.getAttribute('data-type');
         var status = card.getAttribute('data-status');
         var dateStr = card.getAttribute('data-date');

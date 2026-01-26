@@ -40,7 +40,7 @@ router.post('/log', (req, res) =>{
       res.redirect('/');
     }
     if(user.usertype === 2){
-      res.redirect('/');
+      res.render('admindashboard', {title:'Admin Dashboard'});
     }
     if(user.usertype === 1){
       res.redirect('/');

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WeFixIt | <%= title %></title>
+</head>
+<body>
+    <h1>Pay for Booking #<%= booking.idbookings %></h1>
+    <p>Amount: $<%= booking.amount %></p>
+    <form id="payment-form">
+        
+        <button type="submit">Pay Now</button>
+    </form>
+    <script>
+        
+        const form = document.getElementById('payment-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            fetch('/payment/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ booking_id: '<%= booking.idbookings %>'})
+            }).then(res => res.json()).then(data => {
+                if (data.success) window.location.href = '/payment/success?booking_id=<%= booking.idbookings %>';
+                else alert(data.message);
+            });
+            
+        });
+    </script>
+</body>
+</html>
