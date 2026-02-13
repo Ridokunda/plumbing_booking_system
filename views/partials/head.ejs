@@ -54,12 +54,12 @@
                 <a class="nav-link" href="/index/contact">Contact Us</a>
               </li>
               <% if(session.user){ %>
-                <li class="nav-item"></li>
-                  <a class="nav-link" href="/login/logout">logout</a>
+                <li class="nav-item">
+                  <a class="nav-link" href="/login/logout">Logout</a>
                 </li>
-              <% }else{ %>
-                <li class="nav-item"></li>
-                  <a class="nav-link" href="/login">login</a>
+              <% } else { %>
+                <li class="nav-item">
+                  <a class="nav-link" href="/login">Login</a>
                 </li>
               <% } %>
             </ul>
@@ -69,3 +69,4 @@
     </div>
   </header>
 </div>
+<script src="/javascripts/jwt-handler.js"></script>

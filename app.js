@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const BodyParser = require('body-parser');
 const session = require('express-session');
+const { verifyToken, isAdmin, isPlumber, isCustomer } = require('./middleware/auth');
 
 var app = express();
 
@@ -21,13 +22,6 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
-
-//middleware that sets the session variable
-app.use((req,res,next)=>{
-  res.locals.session = req.session;
-  next();
-});
-
 
 var registerRouter = require('./routes/register');
 var loginRouter = require('./routes/login');
@@ -54,6 +48,26 @@ app.use(BodyParser.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(BodyParser.urlencoded({ extended: false }));
+
+// Middleware to set session and JWT user
+app.use((req,res,next)=>{
+  res.locals.session = req.session;
+  
+  // Check for JWT token in cookies or Authorization header
+  const token = req.cookies.token;
+  if (token) {
+    try {
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      res.locals.session = { user: decoded };
+      req.user = decoded;
+    } catch (err) {
+      // Token invalid or expired
+    }
+  }
+  next();
+});
+
 app.use(function(req, res, next) {
   res.locals.session = req.session;
   next();
@@ -82,7 +96,6 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 

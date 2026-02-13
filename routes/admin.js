@@ -1,28 +1,10 @@
 var express = require('express');
 var router = express.Router();
 const connection = require('../database/connection');
+const { verifyToken, isAdmin } = require('../middleware/auth');
 
-// Middleware to check if the user is an admin (usertype = 2)
-
-function isAdmin(req, res, next) {
-    if (req.session.user) {
-        connection.query('SELECT usertype FROM users WHERE idusers = ?', [req.session.user.idusers], function(err, results) {
-            if (err) {
-                console.error('Error querying user type:', err);
-                return res.status(500).send('Internal server error');
-            }
-            if (results.length > 0 && results[0].usertype === 2) { // Assuming usertype 2 is admin
-                next(); // User is admin, proceed
-            } else {
-                res.status(403).send('Access Denied: Not an Admin');
-            }
-        });
-    } else {
-        res.redirect('/login'); // Not logged in
-    }
-}
-
-// Apply admin middleware to all admin routes
+// Apply JWT verification and admin check to all admin routes
+router.use(verifyToken);
 router.use(isAdmin);
 
 router.get('/', function(req,res,next){

@@ -4,6 +4,7 @@ const connection = require('../database/connection');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { verifyToken } = require('../middleware/auth');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -40,18 +41,9 @@ const upload = multer({
     }
 });
 
-// Middleware to check if user is logged in
-function isAuthenticated(req, res, next) {
-    if (req.session.user) {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-}
-
 // GET profile page
-router.get('/', isAuthenticated, function(req, res) {
-    const userId = req.session.user.idusers;
+router.get('/', verifyToken, function(req, res) {
+    const userId = req.user.idusers;
     
     // Get user data
     const userQuery = 'SELECT * FROM users WHERE idusers = ?';
@@ -101,8 +93,8 @@ router.get('/', isAuthenticated, function(req, res) {
 });
 
 // POST update profile
-router.post('/update', isAuthenticated, function(req, res) {
-    const userId = req.session.user.idusers;
+router.post('/update', verifyToken, function(req, res) {
+    const userId = req.user.idusers;
     const { name, surname, email, phone, address } = req.body;
     
     // Validate required fields
@@ -141,13 +133,6 @@ router.post('/update', isAuthenticated, function(req, res) {
                 return res.status(500).json({ success: false, message: 'Database error' });
             }
             
-            // Update session user data
-            req.session.user.name = name;
-            req.session.user.surname = surname;
-            req.session.user.email = email;
-            req.session.user.phone = phone;
-            req.session.user.address = address;
-            
             res.json({ 
                 success: true, 
                 message: 'Profile updated successfully' 
@@ -157,8 +142,8 @@ router.post('/update', isAuthenticated, function(req, res) {
 });
 
 // POST upload profile picture
-router.post('/upload-picture', isAuthenticated, upload.single('profile_picture'), function(req, res) {
-    const userId = req.session.user.idusers;
+router.post('/upload-picture', verifyToken, upload.single('profile_picture'), function(req, res) {
+    const userId = req.user.idusers;
     
     if (!req.file) {
         return res.status(400).json({ 
@@ -176,9 +161,6 @@ router.post('/upload-picture', isAuthenticated, upload.single('profile_picture')
             console.error('Error updating profile picture:', err);
             return res.status(500).json({ success: false, message: 'Database error' });
         }
-        
-        // Update session user data
-        req.session.user.profile_picture = profilePictureUrl;
         
         res.json({ 
             success: true, 

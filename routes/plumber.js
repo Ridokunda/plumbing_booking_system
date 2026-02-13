@@ -1,27 +1,10 @@
 var express = require('express');
 var router = express.Router();
 const connection = require('../database/connection');
+const { verifyToken, isPlumber } = require('../middleware/auth');
 
-// Middleware to check if the user is a plumber (usertype = 3)
-function isPlumber(req, res, next) {
-    if (req.session.user.usertype == 3) {
-        connection.query('SELECT usertype FROM users WHERE idusers = ?', [req.session.user.idusers], function(err, results) {
-            if (err) {
-                console.error('Error querying user type:', err);
-                return res.status(500).send('Internal server error');
-            }
-            if (results.length > 0 && results[0].usertype === 3) { // Assuming usertype 3 is plumber
-                next(); // User is plumber, proceed
-            } else {
-                res.status(403).send('Access Denied: Not a Plumber');
-            }
-        });
-    } else {
-        res.redirect('/login'); // Not logged in
-    }
-}
-
-// Apply plumber middleware to all plumber routes
+// Apply JWT verification and plumber check to all plumber routes
+router.use(verifyToken);
 router.use(isPlumber);
 
 router.get('/', function(req,res,next){
@@ -30,7 +13,7 @@ router.get('/', function(req,res,next){
 
 /* GET assigned bookings for the logged-in plumber */
 router.get('/my-bookings', function(req, res, next){
-    const plumberId = req.session.user.idusers;
+    const plumberId = req.user.idusers;
     
     if (!plumberId) {
         return res.status(401).send('Plumber not authenticated.');
@@ -73,7 +56,7 @@ router.get('/my-bookings', function(req, res, next){
 /* POST to update the status of an assigned booking by the plumber */
 router.post('/update-booking-status', function(req, res, next){
     const { booking_id, status } = req.body;
-    const plumberId = req.session.user.idusers;
+    const plumberId = req.user.idusers;
 
     if (!booking_id || !status) {
         return res.status(400).json({ message: 'Booking ID and Status are required.' });
@@ -119,7 +102,7 @@ router.post('/update-booking-status', function(req, res, next){
 /* POST update booking amount by plumber */
 router.post('/update-amount', function(req, res, next){
     const { booking_id, amount } = req.body;
-    const plumberId = req.session.user.idusers;
+    const plumberId = req.user.idusers;
 
     if (!booking_id || amount === undefined) {
         return res.status(400).json({ message: 'Booking ID and amount are required.' });

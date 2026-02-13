@@ -25,6 +25,7 @@
     <!-- responsive style -->
     <link href="/stylesheets/responsive.css" rel="stylesheet" />
     <link rel='stylesheet' href='/stylesheets/custom.css' />
+    <script src="/javascripts/jwt-handler.js"></script>
   </head>
   <body>
     <%- include('./partials/head.ejs') %>
@@ -32,7 +33,7 @@
       <div class="form-container" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 40px; width: 100%; max-width: 500px;">
         <h1 style="color: #0355cc; font-size: 2.5rem; font-weight: bold; margin-bottom: 30px; text-align: center;">Log in</h1>
         
-        <form action="/login/log" method="post" style="display: flex; flex-direction: column; gap: 20px;">
+        <form id="loginForm" style="display: flex; flex-direction: column; gap: 20px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Email</label>
             <input 
@@ -63,11 +64,7 @@
             Log in
           </button>
           
-          <% if(error) { %>
-            <div class="message error" style="position: static; max-width: 100%; margin-top: 10px;">
-              <%= error %>
-            </div>
-          <% } %>
+          <div id="errorMessage" class="message error" style="position: static; max-width: 100%; margin-top: 10px; display: none;"></div>
           
           <div style="text-align: center; margin-top: 20px;">
             <a href="/register/register" style="color: #0355cc; font-weight: 500;">Don't have an account? Sign up</a>
@@ -76,5 +73,65 @@
       </div>
     </div>
     <%- include('./partials/footer') %>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Show error from query parameters if any
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        if (error) {
+          errorMessage.textContent = decodeURIComponent(error);
+          errorMessage.style.display = 'block';
+        }
+        
+        loginForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          // Clear previous error messages
+          errorMessage.style.display = 'none';
+          errorMessage.textContent = '';
+          
+          const email = loginForm.elements['email'].value;
+          const password = loginForm.elements['password'].value;
+          
+          try {
+            const response = await fetch('/login/log', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ email, password })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.token) {
+              // Store token for client-side use
+              jwtHandler.setToken(data.token);
+              
+              // Also store user data
+              const decoded = jwtHandler.decodeToken(data.token);
+              if (decoded) {
+                jwtHandler.setUser(decoded);
+              }
+              
+              // Redirect to appropriate dashboard
+              window.location.href = data.redirectUrl || '/';
+            } else {
+              // Show error message
+              errorMessage.textContent = data.message || 'Login failed';
+              errorMessage.style.display = 'block';
+            }
+          } catch (error) {
+            console.error('Login error:', error);
+            errorMessage.textContent = 'An error occurred during login. Please try again.';
+            errorMessage.style.display = 'block';
+          }
+        });
+      });
+    </script>
   </body>
 </html>

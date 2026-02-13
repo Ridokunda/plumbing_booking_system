@@ -16,8 +16,8 @@ router.get('/register', function(req, res, next) {
 
 /* POST add a user*/
 router.post('/register', async (req, res) =>{
-    const { name, surname , address, email, password} = req.body;
-    const query1 = "INSERT INTO users (name,surname,address,email,password) VALUES (?,?,?,?,?)";
+    const { name, surname , address, email, phone, password} = req.body;
+    const query1 = "INSERT INTO users (name,surname,address,email,phone,password) VALUES (?,?,?,?,?,?)";
     
     const query2 = `SELECT * FROM users WHERE email='${email}'`;
     try{

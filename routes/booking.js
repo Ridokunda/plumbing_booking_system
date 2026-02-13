@@ -2,19 +2,14 @@ var express = require('express');
 var router = express.Router();
 
 const connection = require("../database/connection");
+const { verifyToken } = require('../middleware/auth');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  if(!req.session.user){
-    return res.redirect('/login');
-  }
+router.get('/', verifyToken, function(req, res, next) {
   res.render('booking', { title: 'Book Us' });
 });
 
-router.post('/book', (req,res, next) => {
-  if(!req.session.user){
-    return res.status(401).json({ success: false, message: 'Not logged in' });
-  }
+router.post('/book', verifyToken, (req,res, next) => {
    
   var service = req.body.service;
   var date_start = req.body.date_start;
@@ -45,7 +40,7 @@ router.post('/book', (req,res, next) => {
   }
 
   const insertBookingQuery = 'INSERT INTO bookings (idUser,type,des,status) VALUES(?,?,?,?)';
-  connection.query(insertBookingQuery, [req.session.user.idusers, service, des, 'NEW'], (err, result) => {
+  connection.query(insertBookingQuery, [req.user.idusers, service, des, 'NEW'], (err, result) => {
     if (err) {
       console.error('Error inserting booking in the database', err);
       return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -67,8 +62,8 @@ router.post('/book', (req,res, next) => {
 
 
 /* GET customer bookings page*/
-router.get('/mybookings', function(req, res, next){
-  const user = req.session.user;
+router.get('/mybookings', verifyToken, function(req, res, next){
+  const user = req.user;
 
   if (!user) {
       return res.redirect('/login'); 
@@ -97,13 +92,10 @@ router.get('/mybookings', function(req, res, next){
 });
 
 // Cancel a booking (customer)
-router.post('/cancel-booking', function(req, res, next) {
-  const user = req.session.user;
+router.post('/cancel-booking', verifyToken, function(req, res, next) {
+  const user = req.user;
   const { booking_id } = req.body;
 
-  if (!user) {
-    return res.status(401).json({ success: false, message: 'Not logged in' });
-  }
   if (!booking_id) {
     return res.status(400).json({ success: false, message: 'Booking ID is required.' });
   }
@@ -135,13 +127,10 @@ router.post('/cancel-booking', function(req, res, next) {
 });
 
 // Edit a booking (customer)
-router.post('/edit-booking', function(req, res, next) {
-  const user = req.session.user;
+router.post('/edit-booking', verifyToken, function(req, res, next) {
+  const user = req.user;
   const { booking_id, service, date_start, description } = req.body;
 
-  if (!user) {
-    return res.status(401).json({ success: false, message: 'Not logged in' });
-  }
   if (!booking_id || !service || !date_start || !description) {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
