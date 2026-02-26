@@ -7,13 +7,20 @@ const verifyToken = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1] || req.cookies.token;
 
   if (!token) {
-    // If no token found, check if it's a public route or redirect to login
+    // For browser navigation (HTML), redirect to login
+    if (req.accepts('html')) {
+      return res.redirect('/login');
+    }
     return res.status(401).json({ success: false, message: 'No token provided' });
   }
 
   jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, decoded) => {
     if (err) {
       console.error('Token verification failed:', err);
+      // invalid/expired token
+      if (req.accepts('html')) {
+        return res.redirect('/login');
+      }
       return res.status(403).json({ success: false, message: 'Invalid or expired token' });
     }
     

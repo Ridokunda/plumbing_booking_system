@@ -82,6 +82,7 @@
                         <option value="1">Customer</option>
                         <option value="2">Admin</option>
                         <option value="3">Plumber</option>
+                        <option value="4">Electrician</option>
                     </select>
                 </div>
                 
@@ -180,7 +181,7 @@
             
             if (userType === '2') {
                 adminFields.style.display = 'block';
-            } else if (userType === '3') {
+            } else if (userType === '3' || userType === '4') {
                 plumberFields.style.display = 'block';
             }
         }
