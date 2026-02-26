@@ -49,6 +49,7 @@ jspm_packages/
 # Uploaded files
 public/uploads/
 !public/uploads/.gitkeep
+/uploads/
 
 # IDE files
 .vscode/

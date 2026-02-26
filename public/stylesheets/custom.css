@@ -294,6 +294,18 @@ footer span{
 .booking-card .card-row-bottom { justify-content: flex-start; gap: 12px; }
 .booking-card .card-row .label { font-size: 0.98em; color: #888; }
 .booking-card .card-row .value { font-weight: 500; color: #222; }
+.booking-photo {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-width: 100%;
+  height: auto;
+}
+.photo-form input[type=file] {
+  font-size: 0.9rem;
+}
+.photo-form button {
+  font-size: 0.9rem;
+}
 @media (max-width: 1200px) { 
   .bookings-grid { 
     grid-template-columns: repeat(2, 1fr); 

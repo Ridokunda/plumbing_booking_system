@@ -2,6 +2,22 @@ var express = require('express');
 var router = express.Router();
 const connection = require('../database/connection');
 const { verifyToken, isPlumber } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+
+// configure multer storage for booking photos
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '..', 'uploads', 'booking_photos'));
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const filename = `${Date.now()}-${Math.round(Math.random()*1e9)}${ext}`;
+    cb(null, filename);
+  }
+});
+const upload = multer({ storage });
+
 
 // Apply JWT verification and plumber check to all plumber routes
 router.use(verifyToken);
@@ -27,6 +43,8 @@ router.get('/my-bookings', function(req, res, next){
             b.des AS description,
             b.status,
             b.amount,
+            b.before_photo,
+            b.after_photo,
             c.name AS customer_name,
             c.surname AS customer_surname,
             c.email AS customer_email
@@ -132,6 +150,41 @@ router.post('/update-amount', function(req, res, next){
                 return res.status(404).json({ message: 'Booking not found.' });
             }
             res.json({ message: 'Amount updated successfully!' });
+        });
+    });
+});
+
+
+// Endpoint for uploading before/after photos
+router.post('/upload-photo', upload.single('photo'), (req, res, next) => {
+    const plumberId = req.user.idusers;
+    const { booking_id, type } = req.body; // type should be 'before' or 'after'
+
+    if (!booking_id || !type || !req.file) {
+        return res.status(400).json({ success: false, message: 'Booking ID, type and photo file are required.' });
+    }
+    if (!['before','after'].includes(type)) {
+        return res.status(400).json({ success: false, message: 'Type must be before or after.' });
+    }
+    // check plumber assignment
+    const checkQuery = 'SELECT plumberid FROM bookings WHERE idbookings = ?';
+    connection.query(checkQuery, [booking_id], (err, results) => {
+        if (err) {
+            console.error('Error checking booking for photo upload', err);
+            return res.status(500).json({ success: false, message: 'Internal server error' });
+        }
+        if (results.length === 0 || results[0].plumberid !== plumberId) {
+            return res.status(403).json({ success: false, message: 'Not authorized to upload photos for this booking.' });
+        }
+        const column = type === 'before' ? 'before_photo' : 'after_photo';
+        const filePath = `/uploads/booking_photos/${req.file.filename}`;
+        const updateQuery = `UPDATE bookings SET ${column} = ? WHERE idbookings = ?`;
+        connection.query(updateQuery, [filePath, booking_id], (updErr) => {
+            if (updErr) {
+                console.error('Error saving photo path in database', updErr);
+                return res.status(500).json({ success: false, message: 'Internal server error' });
+            }
+            res.json({ success: true, message: 'Photo uploaded successfully!', path: filePath });
         });
     });
 });

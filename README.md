@@ -126,6 +126,8 @@ CREATE TABLE bookings (
   date_start DATE NOT NULL,
   description TEXT,
   status VARCHAR(20) DEFAULT 'NEW',
+  before_photo VARCHAR(255) NULL,
+  after_photo VARCHAR(255) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (idUser) REFERENCES users(idusers),
   FOREIGN KEY (idPlumber) REFERENCES users(idusers)

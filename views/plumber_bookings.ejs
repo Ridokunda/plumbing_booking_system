@@ -49,6 +49,25 @@
                         <div style="margin-top:8px; color:#666; font-size:0.9em;">
                             <strong>Description:</strong> <%= booking.des || booking.description || '' %>
                         </div>
+                        <!-- photo section -->
+                        <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+                            <% if (booking.before_photo) { %>
+                                <div>Before:<br><img src="<%= booking.before_photo %>" class="booking-photo" style="max-width:150px; max-height:150px; display:block;"/></div>
+                            <% } else if (booking.status !== 'NEW' && booking.status !== 'CANCELLED') { %>
+                                <form class="photo-form" data-booking-id="<%= booking.idbookings %>" data-type="before" enctype="multipart/form-data" style="display:flex; gap:4px; align-items:center;">
+                                    <input type="file" name="photo" accept="image/*" required />
+                                    <button type="submit" style="background:#007bff;color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;">Upload Before</button>
+                                </form>
+                            <% } %>
+                            <% if (booking.after_photo) { %>
+                                <div>After:<br><img src="<%= booking.after_photo %>" class="booking-photo" style="max-width:150px; max-height:150px; display:block;"/></div>
+                            <% } else if (booking.status === 'COMPLETED') { %>
+                                <form class="photo-form" data-booking-id="<%= booking.idbookings %>" data-type="after" enctype="multipart/form-data" style="display:flex; gap:4px; align-items:center;">
+                                    <input type="file" name="photo" accept="image/*" required />
+                                    <button type="submit" style="background:#007bff;color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;">Upload After</button>
+                                </form>
+                            <% } %>
+                        </div>
                         <div style="display:flex; gap:8px; margin-top:10px;">
                             <% if (booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED') { %>
                                 <button class="complete-booking-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Mark as Complete</button>
@@ -149,6 +168,34 @@
           }).catch(err => {
             console.error('Error:', err);
             alert('An error occurred');
+          });
+        }
+        // handle photo uploads
+        if (e.target && e.target.closest('.photo-form')) {
+          e.preventDefault();
+          const form = e.target.closest('.photo-form');
+          const bookingId = form.getAttribute('data-booking-id');
+          const type = form.getAttribute('data-type');
+          const fileInput = form.querySelector('input[type=file]');
+          if (!fileInput.files.length) return;
+          const fd = new FormData();
+          fd.append('photo', fileInput.files[0]);
+          fd.append('booking_id', bookingId);
+          fd.append('type', type);
+          fetch('/plumber/upload-photo', {
+            method: 'POST',
+            body: fd
+          }).then(r => r.json()).then(res => {
+            if (res.success) {
+              alert(res.message);
+              // reload page to show photo
+              window.location.reload();
+            } else {
+              alert('Upload failed: ' + res.message);
+            }
+          }).catch(err => {
+            console.error('Photo upload error', err);
+            alert('An error occurred while uploading the photo');
           });
         }
       });

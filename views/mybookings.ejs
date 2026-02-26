@@ -48,6 +48,12 @@
                     <div class="service-type" style="font-size:1.25em; margin-bottom:2px;"><%= booking.type %></div>
                     <div class="booking-date" data-date="<%= booking.booking_date || booking.date_start %>"></div>
                     <div><%= booking.description %></div>
+                    <% if (booking.before_photo) { %>
+                        <div>Before:<br><img src="<%= booking.before_photo %>" class="booking-photo" style="max-width:120px; max-height:120px;" /></div>
+                    <% } %>
+                    <% if (booking.after_photo) { %>
+                        <div>After:<br><img src="<%= booking.after_photo %>" class="booking-photo" style="max-width:120px; max-height:120px;" /></div>
+                    <% } %>
                     <div class="card-row card-row-bottom">
                         <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
                     </div>

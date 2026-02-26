@@ -47,6 +47,8 @@ app.use(BodyParser.json());
 //app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+// serve uploaded files (e.g. plumber before/after photos)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(BodyParser.urlencoded({ extended: false }));
 
 // Middleware to set session and JWT user
