@@ -3,26 +3,57 @@
   <head>
     <title>WeFixIt | <%= title %></title>
     <link rel='stylesheet' href='/stylesheets/custom.css' />
+    <style>
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 30px 40px;
+            min-width: 220px;
+            text-align: center;
+        }
+        .stat-title {
+            font-size: 1.2em;
+            color: #0f7e94;
+            margin-bottom: 10px;
+        }
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
   </head>
   <body>
   
     <div class="container-manage">
         <div class="head">
-            <h3>Manage Users Page</h3>
+            <h3 style="margin-left: 200px;">Manage Users Page</h3>
             <button id="btn_adduser"
-            style="display: flex; background-color: rgb(15, 126, 148); color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; margin-top: 10px;"
             data-url="/register/registeruser"
             >Add user</button>
-            <hr>
-            
-        <div>
+             
+        </div>
+        
         <div class="body">
-            <div class="stats">
-                <a href="#" id="customers-link"><div class="data">Number of active customers<br><%= customerCount %></div></a>
-                <a href="#" id="plumbers-link"><div class="data">Number of active plumbers<br><%= plumberCount %></div></a>
+            <div class="stats-container">
+                <a href="#" id="customers-link" class="stat-card">
+                    <div class="stat-title">Number of active customers</div>
+                    <div class="stat-value"><%= customerCount %></div>
+                </a>
+                <a href="#" id="plumbers-link" class="stat-card">
+                    <div class="stat-title">Number of active plumbers</div>
+                    <div class="stat-value"><%= plumberCount %></div>
+                </a>
             </div>
         </div>
-      
     </div>
     
   </body>
