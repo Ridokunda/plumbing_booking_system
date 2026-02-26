@@ -213,11 +213,8 @@ footer span{
   overflow-x: hidden;
 }
 .mybookings-header{
-  font-size: 2.5rem;
-  font-weight: bold;
   margin: 20px 0 20px 0;
-  text-align: left;
-  color: #0355cc;
+  text-align: center;
   display: block;
   position: relative;
   z-index: 1;
@@ -320,7 +317,7 @@ footer span{
   margin: 0%;
 }
 .sidebar{
-  background-color: #0355cc;
+  background-color: rgb(15, 126, 148);
   color: white;
   width: 250px;
   height: 100vh;
@@ -383,6 +380,7 @@ footer span{
 /*----------------------------------bookings page---------------------------------------*/
 .bookings-container{
   padding: 20px;
+  font-family: Arial, sans-serif;
 }
 .container-bookings-tables{
   display: flex;
@@ -461,12 +459,16 @@ thead th {
 }
 /*-------------------------------Manage users page--------------*/
 .container-manage{
+  display:block;
   height:100vh;
   padding: 0px;
   margin: 0px;
+  font-family: Arial, sans-serif;
 }
 .head{
+  display: flex;
   text-align: center;
+  justify-content: space-between;
 }
 .body{
   padding: 20px;
@@ -491,6 +493,20 @@ thead th {
   color: #0355cc;
   text-decoration: none;
 }
+#btn_adduser{
+  display: flex; 
+  background-color: rgb(15, 126, 148); 
+  color: white; 
+  border: none; 
+  border-radius: 8px; 
+  padding: 12px 24px; 
+  font-size: 1rem; 
+  cursor: pointer; 
+  transition: background-color 0.3s; 
+  margin-top: 10px;
+  margin-right: 20px;
+}
+
 
 /*------------------------------Profile Page---------------------------------*/
 .profile-container {
