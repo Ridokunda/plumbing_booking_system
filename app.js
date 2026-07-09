@@ -8,6 +8,10 @@ const BodyParser = require('body-parser');
 const session = require('express-session');
 const { verifyToken, isAdmin, isPlumber, isCustomer } = require('./middleware/auth');
 
+if (!process.env.JWT_SECRET) {
+  throw new Error('Missing required JWT_SECRET environment variable');
+}
+
 var app = express();
 
 
@@ -60,18 +64,13 @@ app.use((req,res,next)=>{
   if (token) {
     try {
       const jwt = require('jsonwebtoken');
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       res.locals.session = { user: decoded };
       req.user = decoded;
     } catch (err) {
       // Token invalid or expired
     }
   }
-  next();
-});
-
-app.use(function(req, res, next) {
-  res.locals.session = req.session;
   next();
 });
 

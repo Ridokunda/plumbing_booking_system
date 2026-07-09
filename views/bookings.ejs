@@ -47,7 +47,7 @@
                         <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
                     </div>
                     <div style="margin-top:8px; color:#666; font-size:0.9em;">
-                        <strong>Description:</strong> <%= booking.des %>
+                        <strong>Description:</strong> <%= booking.des || booking.description || '' %>
                     </div>
                     <div style="display:flex; gap:8px; margin-top:10px;">
                         <% if (booking.status === 'NEW' || booking.status === 'PENDING') { %>

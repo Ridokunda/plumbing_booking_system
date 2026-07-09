@@ -1,4 +1,9 @@
 const jwt = require('jsonwebtoken');
+const jwtSecret = process.env.JWT_SECRET;
+
+if (!jwtSecret) {
+  throw new Error('Missing required JWT_SECRET environment variable');
+}
 
 // Middleware to verify JWT token from Authorization header or cookies
 const verifyToken = (req, res, next) => {
@@ -14,7 +19,7 @@ const verifyToken = (req, res, next) => {
     return res.status(401).json({ success: false, message: 'No token provided' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, decoded) => {
+  jwt.verify(token, jwtSecret, (err, decoded) => {
     if (err) {
       console.error('Token verification failed:', err);
       // invalid/expired token

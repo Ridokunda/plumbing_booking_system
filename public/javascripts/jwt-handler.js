@@ -182,10 +182,17 @@ class JWTHandler {
     async logout() {
         try {
             const response = await this.authenticatedFetch('/login/logout', {
-                method: 'GET'
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json'
+                }
             });
 
-            const data = await response.json();
+            let data = { success: response.ok };
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                data = await response.json();
+            }
             this.clearAuth();
             
             return { success: true, data };

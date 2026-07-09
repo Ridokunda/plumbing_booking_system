@@ -3,6 +3,11 @@ var router = express.Router();
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 const connection = require('../database/connection');
+const jwtSecret = process.env.JWT_SECRET;
+
+if (!jwtSecret) {
+  throw new Error('Missing required JWT_SECRET environment variable');
+}
 
 
 /* GET Login page. */
@@ -44,7 +49,7 @@ router.post('/log', (req, res) =>{
         usertype: user.usertype,
         name: user.name 
       },
-      process.env.JWT_SECRET || 'your-secret-key',
+      jwtSecret,
       { expiresIn: '24h' }
     );
 
@@ -81,11 +86,25 @@ router.post('/log', (req, res) =>{
   });
 });
 
-router.get('/logout', (req, res) =>{
- 
-  req.session.destroy();
+function logoutHandler(req, res) {
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session during logout', err);
+      }
+    });
+  }
+
   res.clearCookie('token');
-  res.redirect('/');
-})
+
+  if (req.accepts('json')) {
+    return res.json({ success: true, message: 'Logged out successfully' });
+  }
+
+  return res.redirect('/');
+}
+
+router.get('/logout', logoutHandler);
+router.post('/logout', logoutHandler);
 
 module.exports = router;

@@ -18,20 +18,29 @@ router.get('/register', function(req, res, next) {
 router.post('/register', async (req, res) =>{
     const { name, surname , address, email, phone, password} = req.body;
     const query1 = "INSERT INTO users (name,surname,address,email,phone,password) VALUES (?,?,?,?,?,?)";
-    
-    const query2 = `SELECT * FROM users WHERE email='${email}'`;
+
+    const query2 = 'SELECT idusers FROM users WHERE email = ? LIMIT 1';
     try{
 
       const hash = await bcrypt.hash(password,10);
-      connection.query(query1, [name,surname,address,email,hash], (err,result) =>{
-        if(err){
-          console.error('Error while searching for user in the database', err);
-          return res.status(501).send('internal server error');
+      connection.query(query2, [email], (checkErr, existing) => {
+        if (checkErr) {
+          console.error('Error while checking existing user email', checkErr);
+          return res.status(500).send('internal server error');
         }
-        
-        res.render('registerCustomer', { title: 'Register Page', message: "Registration successful" });
-        
-  
+
+        if (existing.length > 0) {
+          return res.status(409).render('registerCustomer', { title: 'Register Page', message: 'Email already registered' });
+        }
+
+        connection.query(query1, [name, surname, address, email, phone, hash], (err,result) =>{
+          if(err){
+            console.error('Error while inserting user in the database', err);
+            return res.status(500).send('internal server error');
+          }
+
+          res.render('registerCustomer', { title: 'Register Page', message: "Registration successful" });
+        });
       });
     }catch(err){
       console.error('error hashing password', err);
@@ -43,20 +52,29 @@ router.post('/register', async (req, res) =>{
 router.post('/registeruser', async (req, res) =>{
   const { name, surname , usertype, email, password} = req.body;
   const query1 = "INSERT INTO users (name,surname,usertype,email,password) VALUES (?,?,?,?,?)";
-  
-  const query2 = `SELECT * FROM users WHERE email='${email}'`;
+
+  const query2 = 'SELECT idusers FROM users WHERE email = ? LIMIT 1';
   try{
 
     const hash = await bcrypt.hash(password,10);
-    connection.query(query1, [name,surname,usertype,email,hash], (err,result) =>{
-      if(err){
-        console.error('Error while searching for user in the database', err);
-        return res.status(501).send('internal server error');
+    connection.query(query2, [email], (checkErr, existing) => {
+      if (checkErr) {
+        console.error('Error while checking existing user email', checkErr);
+        return res.status(500).send('internal server error');
       }
-      
-      res.status(200).send('User successfully registered');
-      
 
+      if (existing.length > 0) {
+        return res.status(409).send('Email already registered');
+      }
+
+      connection.query(query1, [name,surname,usertype,email,hash], (err,result) =>{
+        if(err){
+          console.error('Error while inserting user in the database', err);
+          return res.status(500).send('internal server error');
+        }
+
+        res.status(200).send('User successfully registered');
+      });
     });
   }catch(err){
     console.error('error hashing password', err);

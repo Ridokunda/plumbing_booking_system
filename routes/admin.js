@@ -77,7 +77,7 @@ router.get('/bookings', function(req, res, next) {
     console.log('bookings found');
 
     // Get plumbers
-    const plumbersQuery = "SELECT * FROM fixit_db.users WHERE status = 'AVAILABLE' AND usertype = 3";
+    const plumbersQuery = "SELECT * FROM users WHERE usertype = 3";
     console.log('retrieving plumbers');
     connection.query(plumbersQuery, (error, result) => {
       if (error) {
@@ -142,17 +142,24 @@ router.post('/assign-booking', function(req, res, next){
         }
 
         // Proceed with assignment
-        const assignQuery = 'UPDATE bookings SET plumberid = ?, status = ? WHERE idbookings = ?';
-        connection.query(assignQuery, [plumber_id, 'ASSIGNED', booking_id], function(err, result){
-            if(err){
-                console.error('Error while assigning plumber to booking:', err);
-                return res.status(500).json({ message:'Internal server error' });
-            }
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ message: 'Booking not found or not updated.' });
-            }
-            res.json({ message: 'Plumber assigned successfully!' });
-        });
+        const tryAssign = (columnName) => {
+            const assignQuery = `UPDATE bookings SET ${columnName} = ?, status = ? WHERE idbookings = ?`;
+            connection.query(assignQuery, [plumber_id, 'ASSIGNED', booking_id], function(err, result){
+                if (err && err.code === 'ER_BAD_FIELD_ERROR' && columnName === 'plumberid') {
+                    return tryAssign('idPlumber');
+                }
+                if(err){
+                    console.error('Error while assigning plumber to booking:', err);
+                    return res.status(500).json({ message:'Internal server error' });
+                }
+                if (result.affectedRows === 0) {
+                    return res.status(404).json({ message: 'Booking not found or not updated.' });
+                }
+                res.json({ message: 'Plumber assigned successfully!' });
+            });
+        };
+
+        tryAssign('plumberid');
     });
 });
 

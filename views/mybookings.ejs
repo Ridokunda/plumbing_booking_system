@@ -40,14 +40,14 @@
         </div>
         <div class="bookings-grid" id="bookingsGrid">
             <% bookings.forEach(booking => { %>
-                <div class="booking-card" data-status="<%= booking.status %>" data-type="<%= booking.type %>" data-date="<%= booking.booking_date || booking.date_start %>" data-search="<%= booking.type %> <%= booking.status %> <%= booking.booking_date || booking.date_start %>">
+                <div class="booking-card" data-booking-id="<%= booking.idbookings %>" data-status="<%= booking.status %>" data-type="<%= booking.type %>" data-date="<%= booking.booking_date || booking.date_start %>" data-search="<%= booking.type %> <%= booking.status %> <%= booking.booking_date || booking.date_start %>">
                     <div class="card-row card-row-top">
                         <div class="service-type">Service Type</div>
                         <span class="service-badge"><%= booking.type %></span>
                     </div>
                     <div class="service-type" style="font-size:1.25em; margin-bottom:2px;"><%= booking.type %></div>
                     <div class="booking-date" data-date="<%= booking.booking_date || booking.date_start %>"></div>
-                    <div><%= booking.description %></div>
+                    <div class="booking-description"><%= booking.description %></div>
                     <% if (booking.before_photo) { %>
                         <div>Before:<br><img src="<%= booking.before_photo %>" class="booking-photo" style="max-width:120px; max-height:120px;" /></div>
                     <% } %>
@@ -190,7 +190,7 @@
           <div><b>Date:</b> ${formattedDate}</div>
         `;
         // Add more fields if available (e.g., description, location)
-        var desc = card.querySelector('.service-type[style]')?.textContent;
+        var desc = card.querySelector('.booking-description')?.textContent || '';
         if(desc && desc !== type) modalContent += `<div><b>Description:</b> ${desc}</div>`;
         document.getElementById('modalDetailsContent').innerHTML = modalContent;
         document.getElementById('editForm').style.display = 'none';
@@ -204,7 +204,7 @@
         var card = this.closest('.booking-card');
         var type = card.getAttribute('data-type');
         var dateStr = card.getAttribute('data-date');
-        var desc = card.querySelector('.service-type[style]')?.textContent || '';
+        var desc = card.querySelector('.booking-description')?.textContent || '';
         // Populate edit form
         document.getElementById('editService').value = type;
         document.getElementById('editDate').value = dateStr;
@@ -249,7 +249,10 @@
           // Update service badge
           card.querySelector('.service-badge').textContent = service;
           // Update service type display
-          card.querySelector('.service-type[style]').textContent = description;
+          var descriptionEl = card.querySelector('.booking-description');
+          if (descriptionEl) {
+            descriptionEl.textContent = description;
+          }
           // Update date display
           var dateDisplay = card.querySelector('.booking-date');
           var newDate = new Date(date);
