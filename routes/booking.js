@@ -3,6 +3,8 @@ var router = express.Router();
 
 const connection = require("../database/connection");
 const { verifyToken } = require('../middleware/auth');
+const { createNotifications, createNotification } = require('../utils/notifications');
+const { getBookingLifecycle } = require('../utils/bookingLifecycle');
 
 /* GET home page. */
 router.get('/', verifyToken, function(req, res, next) {
@@ -71,6 +73,24 @@ router.post('/book', verifyToken, (req,res, next) => {
           return res.status(500).json({ success: false, message: 'Internal server error' });
         }
         console.log('booking and dates added');
+        connection.query('SELECT idusers FROM users WHERE usertype = 2', (adminErr, adminRows) => {
+          const adminIds = adminErr ? [] : adminRows.map(row => row.idusers);
+          createNotification({
+            userId: req.user.idusers,
+            role: 'customer',
+            bookingId,
+            type: 'booking_created',
+            title: 'Booking submitted',
+            message: `Your ${service} request has been submitted and is waiting for assignment.`
+          });
+          createNotifications(adminIds, {
+            role: 'admin',
+            bookingId,
+            type: 'booking_created',
+            title: 'New booking to review',
+            message: `A new ${service} request has been submitted and needs assignment.`
+          });
+        });
         res.status(200).json({ success: true, message: 'Booking added successfully!' });
       });
     });
@@ -121,6 +141,7 @@ router.get('/mybookings', verifyToken, function(req, res, next){
         r.datesArray = r.dates ? r.dates.split(',') : [];
         r.date_start = r.first_date || r.date_start;
         r.description = r.description || r.des || '';
+        r.lifecycle = getBookingLifecycle('customer', r.status);
         return r;
       });
       res.render('mybookings', { bookings: processed, title : 'My Bookings' });
@@ -157,6 +178,14 @@ router.post('/cancel-booking', verifyToken, function(req, res, next) {
         console.error('Error cancelling booking:', err);
         return res.status(500).json({ success: false, message: 'Internal server error' });
       }
+      createNotification({
+        userId: user.idusers,
+        role: 'customer',
+        bookingId: booking_id,
+        type: 'booking_cancelled',
+        title: 'Booking cancelled',
+        message: 'Your booking has been cancelled successfully.'
+      });
       return res.json({ success: true, message: 'Booking cancelled successfully.' });
     });
   });
@@ -221,6 +250,14 @@ router.post('/edit-booking', verifyToken, function(req, res, next) {
                 console.error('Error updating fallback booking date:', fallbackErr);
                 return res.status(500).json({ success: false, message: 'Internal server error' });
               }
+              createNotification({
+                userId: user.idusers,
+                role: 'customer',
+                bookingId: booking_id,
+                type: 'booking_updated',
+                title: 'Booking updated',
+                message: 'Your booking details were updated successfully.'
+              });
               return res.json({ success: true, message: 'Booking updated successfully.' });
             });
           }
@@ -238,6 +275,14 @@ router.post('/edit-booking', verifyToken, function(req, res, next) {
               console.error('Error inserting updated booking dates:', insErr);
               return res.status(500).json({ success: false, message: 'Internal server error' });
             }
+            createNotification({
+              userId: user.idusers,
+              role: 'customer',
+              bookingId: booking_id,
+              type: 'booking_updated',
+              title: 'Booking updated',
+              message: 'Your booking details were updated successfully.'
+            });
             return res.json({ success: true, message: 'Booking updated successfully.' });
           });
         });

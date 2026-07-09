@@ -7,6 +7,7 @@ var logger = require('morgan');
 const BodyParser = require('body-parser');
 const session = require('express-session');
 const { verifyToken, isAdmin, isPlumber, isCustomer } = require('./middleware/auth');
+const { getUnreadCount, getNotificationsForUser } = require('./utils/notifications');
 
 if (!process.env.JWT_SECRET) {
   throw new Error('Missing required JWT_SECRET environment variable');
@@ -37,6 +38,7 @@ var plumberRouter = require('./routes/plumber');
 var customerRouter = require('./routes/customer');
 var profileRouter = require('./routes/profile');
 var paymentRouter = require('./routes/payment');
+var notificationsRouter = require('./routes/notifications');
 
 
 
@@ -71,6 +73,15 @@ app.use((req,res,next)=>{
       // Token invalid or expired
     }
   }
+
+  const activeUser = req.user || req.session?.user;
+  if (activeUser && activeUser.idusers) {
+    res.locals.notificationCount = getUnreadCount(activeUser.idusers);
+    res.locals.recentNotifications = getNotificationsForUser(activeUser.idusers, 3);
+  } else {
+    res.locals.notificationCount = 0;
+    res.locals.recentNotifications = [];
+  }
   next();
 });
 
@@ -86,6 +97,7 @@ app.use('/customer', customerRouter);
 app.use('/plumber', plumberRouter);
 app.use('/profile', profileRouter);
 app.use('/payment', paymentRouter);
+app.use('/notifications', notificationsRouter);
 
 
 // catch 404 and forward to error handler

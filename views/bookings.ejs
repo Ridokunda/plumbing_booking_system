@@ -46,21 +46,28 @@
                     <div class="card-row card-row-bottom">
                         <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
                     </div>
+                    <div class="status-roadmap">
+                        <% booking.lifecycle.steps.forEach(step => { %>
+                            <span class="status-chip <%= step.current ? 'is-current' : step.completed ? 'is-complete' : '' %>"><%= step.label %></span>
+                        <% }); %>
+                    </div>
+                    <div class="status-note"><strong>Next:</strong> <%= booking.lifecycle.nextAction %></div>
                     <div style="margin-top:8px; color:#666; font-size:0.9em;">
                         <strong>Description:</strong> <%= booking.des || booking.description || '' %>
                     </div>
-                    <div style="display:flex; gap:8px; margin-top:10px;">
+                    <div class="role-action-bar">
+                        <div class="role-action-label">Recommended actions</div>
                         <% if (booking.status === 'NEW' || booking.status === 'PENDING') { %>
-                            <button class="assign-btn" data-booking-id="<%= booking.idbookings %>" style="background:#007bff; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Assign Plumber</button>
-                            <button class="decline-btn" data-booking-id="<%= booking.idbookings %>" style="background:#dc3545; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Decline</button>
+                            <button class="assign-btn role-action-btn assign" data-booking-id="<%= booking.idbookings %>">Assign Plumber</button>
+                            <button class="decline-btn role-action-btn decline" data-booking-id="<%= booking.idbookings %>">Decline</button>
                         <% } else { %>
                             <span style="color:#666; font-style:italic;">No actions available</span>
                         <% } %>
                     </div>
-                    <div style="margin-top:10px;">
-                        <label>Amount: $</label>
-                        <input type="number" class="amount-input" data-booking-id="<%= booking.idbookings %>" value="<%= booking.amount || 50 %>" step="0.01" min="0" style="width:80px; padding:4px;">
-                        <button class="update-amount-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">Update Amount</button>
+                    <div class="booking-amount-row">
+                        <label class="booking-amount-label">Amount: $</label>
+                        <input type="number" class="amount-input booking-amount-input" data-booking-id="<%= booking.idbookings %>" value="<%= booking.amount || 50 %>" step="0.01" min="0">
+                        <button class="update-amount-btn booking-mini-btn success" data-booking-id="<%= booking.idbookings %>">Update Amount</button>
                     </div>
                 </div>
             <% }); %>
@@ -75,9 +82,9 @@
             <h3 style="margin-top:0; color:#0f7e94;">Assign Plumber</h3>
             <div id="plumbersList">
                 <% plumbers.forEach(plumber => { %>
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;">
+                    <div class="assign-modal-row">
                         <span><%= plumber.name %> <%= plumber.surname %></span>
-                        <button class="assign-plumber-btn" data-plumber-id="<%= plumber.idusers %>" data-booking-id="" style="background:#28a745; color:#fff; border:none; border-radius:4px; padding:6px 12px; cursor:pointer;">Assign</button>
+                        <button class="assign-plumber-btn modal-assign-btn" data-plumber-id="<%= plumber.idusers %>" data-booking-id="">Assign</button>
                     </div>
                 <% }); %>
             </div>

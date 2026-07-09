@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1783605777369-870453457",
+    "userId": "5",
+    "role": "customer",
+    "bookingId": "22",
+    "type": "booking_created",
+    "title": "Booking submitted",
+    "message": "Your Plumbing_Installation request has been submitted and is waiting for assignment.",
+    "isRead": true,
+    "createdAt": "2026-07-09T14:02:57.370Z"
+  },
+  {
+    "id": "1783605777372-809770302",
+    "userId": "4",
+    "role": "admin",
+    "bookingId": "22",
+    "type": "booking_created",
+    "title": "New booking to review",
+    "message": "A new Plumbing_Installation request has been submitted and needs assignment.",
+    "isRead": false,
+    "createdAt": "2026-07-09T14:02:57.372Z"
+  },
+  {
+    "id": "1783605777373-565971077",
+    "userId": "6",
+    "role": "admin",
+    "bookingId": "22",
+    "type": "booking_created",
+    "title": "New booking to review",
+    "message": "A new Plumbing_Installation request has been submitted and needs assignment.",
+    "isRead": false,
+    "createdAt": "2026-07-09T14:02:57.374Z"
+  }
+]

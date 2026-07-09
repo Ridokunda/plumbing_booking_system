@@ -29,102 +29,207 @@
 <body>
     <%- include('./partials/head') %>
     
-    <div class="mybookings-container" style="justify-content: center; align-items: center; padding-top: 40px;">
-        <div class="form-container" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 40px; width: 100%; max-width: 600px; margin-top: 100px;">
-            <h1 style="color: #0355cc; font-size: 2.5rem; font-weight: bold; margin-bottom: 30px; text-align: center;">Booking Details</h1>
-            
-            <form id="bookingForm" action="/booking/book" method="post" style="display: flex; flex-direction: column; gap: 20px;">
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Select Service Type</label>
-                    <select name="service" id="service" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background-color: white;">
-                        <option value="Plumbing_Installation">Plumbing Installation</option>
-                        <option value="Plumbing_Fix">Plumbing Fix</option>
-                        <option value="Plumbing_Maintenance">Plumbing Maintenance</option>
-                        <option value="Electrical_Fix">Electrical Fix</option>
-                        <option value="Electrical_Installation">Electrical Installation</option>
-                        <option value="Electrical_Maintenance">Electrical Maintenance</option>
-                    </select>
-                </div>
-                
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Description</label>
-                    <textarea 
-                        name="description" 
-                        id="description" 
-                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; min-height: 120px; resize: vertical;"
-                        required
-                    ></textarea>
-                </div>
-                
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Date You Will Be Available</label>
-                    <div id="dateInputs" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                      <input 
-                          type="date" 
-                          name="date_start" 
-                          class="date-input"
-                          id="date_start"
-                          style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;"
-                          required
-                      >
+        <div class="booking-stepper-shell">
+            <div class="booking-stepper-card">
+                <div class="booking-stepper-header">
+                    <div>
+                        <p class="booking-stepper-eyebrow">Service request</p>
+                        <h1>Book a plumbing or electrical visit</h1>
+                        <p class="booking-stepper-subtitle">Move through the request in short steps so the job details stay clear and complete.</p>
                     </div>
-                    <div style="margin-top:6px;">
-                      <button type="button" id="addDateBtn" style="background:#0355cc; color:#fff; border:none; border-radius:6px; padding:8px 12px; cursor:pointer;">+ Add date</button>
+                    <div class="stepper-steps">
+                        <span class="step-pill is-active" data-step-pill="1">1 Service</span>
+                        <span class="step-pill" data-step-pill="2">2 Date</span>
+                        <span class="step-pill" data-step-pill="3">3 Location</span>
+                        <span class="step-pill" data-step-pill="4">4 Details</span>
+                        <span class="step-pill" data-step-pill="5">5 Review</span>
                     </div>
                 </div>
-                
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Your Location</label>
-                    <input 
-                        type="text" 
-                        name="location" 
-                        id="location"
-                        style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;"
-                    >
-                </div>
-                
-                <button 
-                    id="btn_submit" 
-                    type="submit"
-                    style="background-color: #0355cc; color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; margin-top: 10px; position:relative; z-index:9999; pointer-events:auto;"
-                    onmouseover="this.style.backgroundColor='#0d5a6a'" 
-                    onmouseout="this.style.backgroundColor='#0355cc'"
-                >
-                    Book Service
-                </button>
-                
-                <div id="booking-message" style="display: none; padding: 15px 20px; border-radius: 8px; margin-top: 10px;"></div>
-            </form>
+
+                <form id="bookingForm" action="/booking/book" method="post">
+                    <div class="booking-step is-active" data-step="1">
+                        <label for="service">Select service type</label>
+                        <select name="service" id="service" style="margin-top:10px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background-color: white;">
+                            <option value="Plumbing_Installation">Plumbing Installation</option>
+                            <option value="Plumbing_Fix">Plumbing Fix</option>
+                            <option value="Plumbing_Maintenance">Plumbing Maintenance</option>
+                            <option value="Electrical_Fix">Electrical Fix</option>
+                            <option value="Electrical_Installation">Electrical Installation</option>
+                            <option value="Electrical_Maintenance">Electrical Maintenance</option>
+                        </select>
+                    </div>
+
+                    <div class="booking-step" data-step="2">
+                        <label>Date you will be available</label>
+                        <div id="dateInputs" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;">
+                            <input type="date" name="date_start" class="date-input" id="date_start" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" required>
+                        </div>
+                        <div style="margin-top:12px;">
+                            <button type="button" id="addDateBtn" class="step-btn secondary">+ Add date</button>
+                        </div>
+                    </div>
+
+                    <div class="booking-step" data-step="3">
+                        <label for="location">Your location</label>
+                        <input type="text" name="location" id="location" placeholder="Street, suburb, or landmark" style="margin-top:10px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                    </div>
+
+                    <div class="booking-step" data-step="4">
+                        <label for="description">Describe the problem</label>
+                        <textarea name="description" id="description" placeholder="Tell us what needs to be fixed, installed, or inspected." style="margin-top:10px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; min-height: 140px; resize: vertical;" required></textarea>
+                    </div>
+
+                    <div class="booking-step" data-step="5">
+                        <label>Review your request</label>
+                        <div class="booking-step-review" id="reviewSummary" style="margin-top:12px;"></div>
+                    </div>
+
+                    <div class="booking-step-actions">
+                        <button type="button" class="step-btn secondary" id="backStepBtn" disabled>Back</button>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button type="button" class="step-btn primary" id="nextStepBtn">Next</button>
+                            <button type="submit" class="step-btn success" id="submitBookingBtn" style="display:none;">Submit booking</button>
+                        </div>
+                    </div>
+
+                    <div id="stepError" class="booking-feedback error"></div>
+                    <div id="booking-message" class="booking-feedback" style="display:none;"></div>
+                </form>
+            </div>
         </div>
-    </div>
     
     <%- include('./partials/footer') %>
     
     <script>
         // Restrict date input to today and future dates only
         document.addEventListener('DOMContentLoaded', function() {
-            var dateInput = document.getElementById('date_start');
+            var bookingForm = document.getElementById('bookingForm');
+            var messageDiv = document.getElementById('booking-message');
+            var stepError = document.getElementById('stepError');
+            var nextStepBtn = document.getElementById('nextStepBtn');
+            var backStepBtn = document.getElementById('backStepBtn');
+            var submitBookingBtn = document.getElementById('submitBookingBtn');
+            var currentStep = 1;
             var today = new Date();
             var yyyy = today.getFullYear();
             var mm = String(today.getMonth() + 1).padStart(2, '0');
             var dd = String(today.getDate()).padStart(2, '0');
             var todayStr = yyyy + '-' + mm + '-' + dd;
-            dateInput.setAttribute('min', todayStr);
 
-            // AJAX booking form submission
-            var bookingForm = document.getElementById('bookingForm');
-            var messageDiv = document.getElementById('booking-message');
-                bookingForm.addEventListener('submit', function(e) {
+            function setDateBounds(input) {
+                input.setAttribute('min', todayStr);
+            }
+
+            function createDateInput(value) {
+                var wrapper = document.createElement('div');
+                wrapper.style = 'display:flex; gap:8px; align-items:center; flex-wrap:wrap;';
+                var input = document.createElement('input');
+                input.type = 'date';
+                input.name = 'date_start';
+                input.className = 'date-input';
+                input.style = 'padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;';
+                setDateBounds(input);
+                if (value) {
+                  input.value = value;
+                }
+                var removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = 'Remove';
+                removeBtn.className = 'step-btn secondary';
+                removeBtn.addEventListener('click', function() {
+                  wrapper.remove();
+                });
+                wrapper.appendChild(input);
+                wrapper.appendChild(removeBtn);
+                return wrapper;
+            }
+
+            document.getElementById('date_start').setAttribute('min', todayStr);
+
+            document.getElementById('addDateBtn').addEventListener('click', function() {
+                var container = document.getElementById('dateInputs');
+                container.appendChild(createDateInput(''));
+            });
+
+            function showStep(step) {
+                currentStep = step;
+                document.querySelectorAll('.booking-step').forEach(function(panel) {
+                    panel.classList.toggle('is-active', Number(panel.getAttribute('data-step')) === step);
+                });
+                document.querySelectorAll('.step-pill').forEach(function(pill) {
+                    pill.classList.toggle('is-active', Number(pill.getAttribute('data-step-pill')) === step);
+                });
+                backStepBtn.disabled = step === 1;
+                nextStepBtn.style.display = step === 5 ? 'none' : 'inline-flex';
+                submitBookingBtn.style.display = step === 5 ? 'inline-flex' : 'none';
+                stepError.style.display = 'none';
+                if (step === 5) {
+                  updateReview();
+                }
+            }
+
+            function showStepError(message) {
+                stepError.textContent = message;
+                stepError.style.display = 'block';
+            }
+
+            function getSelectedDates() {
+                return Array.from(document.querySelectorAll('input[name="date_start"]'))
+                  .map(function(input) { return input.value; })
+                  .filter(Boolean);
+            }
+
+            function updateReview() {
+                var service = document.getElementById('service').value;
+                var location = document.getElementById('location').value.trim() || 'Not provided';
+                var description = document.getElementById('description').value.trim();
+                var dates = getSelectedDates();
+                var review = document.getElementById('reviewSummary');
+                review.innerHTML = [
+                  '<div class="booking-review-item"><strong>Service:</strong> ' + service.replace(/_/g, ' ') + '</div>',
+                  '<div class="booking-review-item"><strong>Available dates:</strong> ' + (dates.length ? dates.join(', ') : 'None selected') + '</div>',
+                  '<div class="booking-review-item"><strong>Location:</strong> ' + location + '</div>',
+                  '<div class="booking-review-item"><strong>Description:</strong> ' + (description || 'No details provided') + '</div>'
+                ].join('');
+            }
+
+            nextStepBtn.addEventListener('click', function() {
+                if (currentStep === 1 && !document.getElementById('service').value) {
+                  showStepError('Please select a service type.');
+                  return;
+                }
+                if (currentStep === 2 && !getSelectedDates().length) {
+                  showStepError('Please add at least one available date.');
+                  return;
+                }
+                if (currentStep === 3 && !document.getElementById('location').value.trim()) {
+                  showStepError('Please add your location.');
+                  return;
+                }
+                if (currentStep === 4 && !document.getElementById('description').value.trim()) {
+                  showStepError('Please describe the issue.');
+                  return;
+                }
+                if (currentStep < 5) {
+                  showStep(currentStep + 1);
+                }
+            });
+
+            backStepBtn.addEventListener('click', function() {
+                if (currentStep > 1) {
+                  showStep(currentStep - 1);
+                }
+            });
+
+            bookingForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 var formData = new FormData(bookingForm);
                 var data = {};
-                // Build data object, preserving multiple date_start entries as arrays
                 formData.forEach((value, key) => {
                     if (key === 'date_start') {
                         if (!data[key]) data[key] = [];
                         data[key].push(value);
                     } else {
-                        // if multiple fields with same name (other than dates) exist, convert to array
                         if (data[key] !== undefined) {
                             if (!Array.isArray(data[key])) data[key] = [data[key]];
                             data[key].push(value);
@@ -133,7 +238,10 @@
                         }
                     }
                 });
-                
+
+                submitBookingBtn.disabled = true;
+                submitBookingBtn.textContent = 'Submitting...';
+
                 fetch('/booking/book', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -144,40 +252,45 @@
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = result.message;
                     if(result.success) {
-                        messageDiv.className = 'message success';
+                        messageDiv.classList.remove('error');
+                        messageDiv.classList.add('success');
                         bookingForm.reset();
+                        document.getElementById('dateInputs').innerHTML = '';
+                        document.getElementById('dateInputs').appendChild(createDateInput(''));
+                        setTimeout(function() {
+                          window.location.href = '/booking/mybookings';
+                        }, 900);
                     } else {
-                        messageDiv.className = 'message error';
+                        messageDiv.classList.remove('success');
+                        messageDiv.classList.add('error');
                     }
                 })
                 .catch(err => {
                     messageDiv.style.display = 'block';
                     messageDiv.textContent = 'An error occurred. Please try again.';
-                    messageDiv.className = 'message error';
+                    messageDiv.classList.remove('success');
+                    messageDiv.classList.add('error');
+                })
+                .finally(() => {
+                    submitBookingBtn.disabled = false;
+                    submitBookingBtn.textContent = 'Submit booking';
                 });
             });
-            // Add date button logic: clone a date input
-            document.getElementById('addDateBtn').addEventListener('click', function() {
-                var container = document.getElementById('dateInputs');
-                var newInput = document.createElement('input');
-                newInput.type = 'date';
-                newInput.name = 'date_start';
-                newInput.className = 'date-input';
-                newInput.style = 'padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;';
-                // set min to today (todayStr is defined above in this scope)
-                try { if (typeof todayStr !== 'undefined') newInput.setAttribute('min', todayStr); } catch(e) {}
-                // add a remove button next to it
-                var removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.textContent = 'Remove';
-                removeBtn.style = 'background:#6c757d; color:#fff; border:none; border-radius:6px; padding:8px 10px; cursor:pointer; margin-left:4px;';
-                var wrapper = document.createElement('div');
-                wrapper.style = 'display:flex; gap:8px; align-items:center;';
-                wrapper.appendChild(newInput);
-                wrapper.appendChild(removeBtn);
-                container.appendChild(wrapper);
-                removeBtn.addEventListener('click', function() { container.removeChild(wrapper); });
+
+            document.querySelectorAll('.booking-step input, .booking-step select, .booking-step textarea').forEach(function(field) {
+                field.addEventListener('input', function() {
+                    if (currentStep === 5) {
+                        updateReview();
+                    }
+                });
+                field.addEventListener('change', function() {
+                    if (currentStep === 5) {
+                        updateReview();
+                    }
+                });
             });
+
+            showStep(1);
         });
     </script>
 </body>

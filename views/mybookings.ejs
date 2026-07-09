@@ -48,6 +48,12 @@
                     <div class="service-type" style="font-size:1.25em; margin-bottom:2px;"><%= booking.type %></div>
                     <div class="booking-date" data-date="<%= booking.booking_date || booking.date_start %>"></div>
                     <div class="booking-description"><%= booking.description %></div>
+                    <div class="status-roadmap">
+                      <% booking.lifecycle.steps.forEach(step => { %>
+                        <span class="status-chip <%= step.current ? 'is-current' : step.completed ? 'is-complete' : '' %>"><%= step.label %></span>
+                      <% }); %>
+                    </div>
+                    <div class="status-note"><strong>Next:</strong> <%= booking.lifecycle.nextAction %></div>
                     <% if (booking.before_photo) { %>
                         <div>Before:<br><img src="<%= booking.before_photo %>" class="booking-photo" style="max-width:120px; max-height:120px;" /></div>
                     <% } %>
@@ -58,13 +64,17 @@
                         <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
                     </div>
                     <div style="display:flex; gap:8px; margin-top:10px;">
-                        <% if (booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && booking.status !== 'DECLINED') { %>
-                            <button class="edit-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Edit</button>
-                            <button class="cancel-btn" data-booking-id="<%= booking.idbookings %>">Cancel Booking</button>
+                      <% booking.lifecycle.actions.forEach(action => { %>
+                        <% if (action.key === 'edit') { %>
+                          <button class="edit-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Edit</button>
+                        <% } else if (action.key === 'cancel') { %>
+                          <button class="cancel-btn" data-booking-id="<%= booking.idbookings %>">Cancel Booking</button>
+                        <% } else if (action.key === 'pay') { %>
+                          <button class="pay-btn" data-booking-id="<%= booking.idbookings %>" style="background:#007bff; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Make Payment</button>
+                        <% } else if (action.key === 'new') { %>
+                          <a href="/booking" class="step-btn primary" style="display:inline-flex; align-items:center; text-decoration:none;">Create new request</a>
                         <% } %>
-                        <% if (booking.status === 'COMPLETED') { %>
-                            <button class="pay-btn" data-booking-id="<%= booking.idbookings %>" style="background:#007bff; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Make Payment</button>
-                        <% } %>
+                      <% }); %>
                     </div>
                 </div>
             <% }); %>

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const connection = require('../database/connection');
 const { verifyToken } = require('../middleware/auth');
+const { createNotification } = require('../utils/notifications');
 // Remove Stripe require and env variable
 
 router.use(verifyToken);
@@ -29,7 +30,7 @@ router.post('/process', (req, res) => {
     }
 
     const updateQuery = 'UPDATE bookings SET status = "PAID" WHERE idbookings = ? AND idUser = ? AND status = "COMPLETED"';
-    connection.query(updateQuery, [booking_id, req.user.idusers], (err, result) => {
+        connection.query(updateQuery, [booking_id, req.user.idusers], (err, result) => {
         if (err) {
             console.error('Error processing payment', err);
             return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -38,6 +39,37 @@ router.post('/process', (req, res) => {
         if (!result || result.affectedRows === 0) {
             return res.status(404).json({ success: false, message: 'Booking not found, not owned by user, or not payable' });
         }
+
+                const notifyParticipants = (plumberColumn) => {
+                        connection.query(`SELECT idUser, ${plumberColumn} AS assignedPlumber FROM bookings WHERE idbookings = ?`, [booking_id], (bookingErr, rows) => {
+                                if (bookingErr && bookingErr.code === 'ER_BAD_FIELD_ERROR' && plumberColumn === 'plumberid') {
+                                        return notifyParticipants('idPlumber');
+                                }
+                                if (!bookingErr && rows.length > 0) {
+                                    const booking = rows[0];
+                                    createNotification({
+                                        userId: booking.idUser,
+                                        role: 'customer',
+                                        bookingId: booking_id,
+                                        type: 'booking_paid',
+                                        title: 'Payment completed',
+                                        message: 'Your payment was processed successfully.'
+                                    });
+                                    if (booking.assignedPlumber) {
+                                        createNotification({
+                                            userId: booking.assignedPlumber,
+                                            role: 'plumber',
+                                            bookingId: booking_id,
+                                            type: 'booking_paid',
+                                            title: 'Customer payment received',
+                                            message: 'A customer has paid for a completed booking.'
+                                        });
+                                    }
+                                }
+                        });
+                };
+
+                notifyParticipants('plumberid');
 
         res.json({ success: true, message: 'Payment simulated successfully' });
     });

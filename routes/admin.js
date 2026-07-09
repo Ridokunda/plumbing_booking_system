@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 const connection = require('../database/connection');
 const { verifyToken, isAdmin } = require('../middleware/auth');
+const { createNotifications, createNotification } = require('../utils/notifications');
+const { getBookingLifecycle } = require('../utils/bookingLifecycle');
 
 // Apply JWT verification and admin check to all admin routes
 router.use(verifyToken);
@@ -68,7 +70,7 @@ router.get('/bookings', function(req, res, next) {
     ORDER BY bookings.idbookings DESC
   `;
 
-  connection.query(bookingsQuery, (err, results) => {
+        connection.query(bookingsQuery, (err, results) => {
     if (err) {
       console.error('Error executing MySQL query: ' + err.stack);
       res.status(500).send('Error fetching bookings');
@@ -87,7 +89,10 @@ router.get('/bookings', function(req, res, next) {
       }
 
       res.render('bookings', {
-        bookings: results,
+                bookings: results.map(booking => ({
+                    ...booking,
+                    lifecycle: getBookingLifecycle('admin', booking.status)
+                })),
         plumbers: result,
         title: 'Bookings'
       });
@@ -128,7 +133,7 @@ router.post('/assign-booking', function(req, res, next){
     }
 
     // Check if the booking exists and is not already assigned/declined
-    const checkBookingQuery = 'SELECT status FROM bookings WHERE idbookings = ?';
+    const checkBookingQuery = 'SELECT idUser, status FROM bookings WHERE idbookings = ?';
     connection.query(checkBookingQuery, [booking_id], (err, bookingResults) => {
         if (err) {
             console.error('Error checking booking status:', err);
@@ -140,6 +145,8 @@ router.post('/assign-booking', function(req, res, next){
         if (bookingResults[0].status !== 'NEW' && bookingResults[0].status !== 'PENDING') { // Assuming 'NEW' or 'PENDING' are assignable states
             return res.status(400).json({ message: `Booking is already ${bookingResults[0].status}. Cannot assign.` });
         }
+
+        const customerId = bookingResults[0].idUser;
 
         // Proceed with assignment
         const tryAssign = (columnName) => {
@@ -155,6 +162,13 @@ router.post('/assign-booking', function(req, res, next){
                 if (result.affectedRows === 0) {
                     return res.status(404).json({ message: 'Booking not found or not updated.' });
                 }
+                                createNotifications([customerId, plumber_id], {
+                                    role: 'booking_participant',
+                                    bookingId: booking_id,
+                                    type: 'booking_assigned',
+                                    title: 'Booking assigned',
+                                    message: 'A plumber has been assigned to your booking.'
+                                });
                 res.json({ message: 'Plumber assigned successfully!' });
             });
         };
@@ -171,8 +185,19 @@ router.post('/declinebooking', function(req, res, next){
         return res.status(400).json({ message: 'Booking ID is required.' });
     }
 
-    const query = 'UPDATE bookings SET status = ? WHERE idbookings = ?';
-    connection.query(query, ['DECLINED', booking_id], function(err, result){
+    const query = 'SELECT idUser FROM bookings WHERE idbookings = ?';
+    connection.query(query, [booking_id], function(err, rows){
+        if(err){
+            console.error('error while querying the database', err);
+            return res.status(500).json({message:'Internal server error'});
+        }
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Booking not found.' });
+        }
+
+        const customerId = rows[0].idUser;
+        const updateQuery = 'UPDATE bookings SET status = ? WHERE idbookings = ?';
+        connection.query(updateQuery, ['DECLINED', booking_id], function(err, result){
         if(err){
             console.error('error while querying the database', err);
             return res.status(500).json({message:'Internal server error'});
@@ -180,7 +205,16 @@ router.post('/declinebooking', function(req, res, next){
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Booking not found or already declined.' });
         }
+        createNotification({
+          userId: customerId,
+          role: 'customer',
+          bookingId: booking_id,
+          type: 'booking_declined',
+          title: 'Booking declined',
+          message: 'Your booking request was declined by admin.'
+        });
         res.json({message:'Booking declined'});
+    });
     });
 });
 
@@ -192,8 +226,19 @@ router.post('/update-amount', function(req, res, next){
         return res.status(400).json({ message: 'Booking ID and amount are required.' });
     }
 
-    const query = 'UPDATE bookings SET amount = ? WHERE idbookings = ?';
-    connection.query(query, [amount, booking_id], function(err, result){
+    const query = 'SELECT idUser FROM bookings WHERE idbookings = ?';
+    connection.query(query, [booking_id], function(err, rows){
+        if(err){
+            console.error('error while updating amount', err);
+            return res.status(500).json({message:'Internal server error'});
+        }
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Booking not found.' });
+        }
+
+        const customerId = rows[0].idUser;
+        const updateQuery = 'UPDATE bookings SET amount = ? WHERE idbookings = ?';
+        connection.query(updateQuery, [amount, booking_id], function(err, result){
         if(err){
             console.error('error while updating amount', err);
             return res.status(500).json({message:'Internal server error'});
@@ -201,7 +246,16 @@ router.post('/update-amount', function(req, res, next){
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Booking not found.' });
         }
+        createNotification({
+          userId: customerId,
+          role: 'customer',
+          bookingId: booking_id,
+          type: 'booking_amount_updated',
+          title: 'Booking amount updated',
+          message: `The booking amount has been updated to $${amount}.`
+        });
         res.json({message:'Amount updated successfully'});
+    });
     });
 });
 

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeFixIt | <%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/custom.css">
+    <!-- slider stylesheet -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <!-- bootstrap core css -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.css" />
+    <!-- font awesome style -->
+    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome.min.css" />
+    <link href="/stylesheets/style.css" rel="stylesheet" />
+    <link href="/stylesheets/responsive.css" rel="stylesheet" />
+</head>
+<body>
+  <%- include('./partials/head') %>
+  <div class="notification-page">
+    <div class="notification-header">
+      <div>
+        <p class="booking-stepper-eyebrow">Activity feed</p>
+        <h1 style="margin:0; color:#10233f;">Notifications</h1>
+        <p class="booking-stepper-subtitle">Stay on top of booking creation, assignment, updates, completion, and payment events.</p>
+      </div>
+      <button type="button" class="step-btn secondary" id="markAllReadBtn">Mark all read</button>
+    </div>
+
+    <% if (notifications && notifications.length) { %>
+      <div class="notification-list">
+        <% notifications.forEach(notification => { %>
+          <div class="notification-card <%= notification.isRead ? '' : 'is-unread' %>">
+            <div class="notification-title-row">
+              <h3 class="notification-title"><%= notification.title %></h3>
+              <div class="notification-meta"><%= new Date(notification.createdAt).toLocaleString() %></div>
+            </div>
+            <p style="margin:10px 0 12px; color:#334155;"><%= notification.message %></p>
+            <div class="notification-meta">
+              <span style="text-transform:uppercase; font-weight:700; color:#0355cc;"><%= notification.type.replace(/_/g, ' ') %></span>
+              <% if (notification.bookingId) { %>
+                <span style="margin-left:10px;">Booking #<%= notification.bookingId %></span>
+              <% } %>
+              <% if (!notification.isRead) { %>
+                <span class="notification-badge" style="vertical-align:middle;">New</span>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <div class="notification-empty">
+        No notifications yet. Booking updates will appear here.
+      </div>
+    <% } %>
+  </div>
+  <%- include('./partials/footer') %>
+  <script src="/javascripts/jquery-3.4.1.min.js"></script>
+  <script src="/javascripts/bootstrap.js"></script>
+  <script src="/javascripts/custom.js"></script>
+  <script>
+    document.getElementById('markAllReadBtn').addEventListener('click', function() {
+      fetch('/notifications/mark-all-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }).then(function() {
+        window.location.reload();
+      });
+    });
+  </script>
+</body>
+</html>

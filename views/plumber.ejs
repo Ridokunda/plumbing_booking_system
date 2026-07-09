@@ -15,6 +15,13 @@
             <div class="admin-pages">
                 <ul>
                     <li><a href="/">Home</a></li>
+                    <li>
+                        <a href="/notifications">Notifications
+                            <% if (notificationCount && notificationCount > 0) { %>
+                                <span class="notification-badge"><%= notificationCount %></span>
+                            <% } %>
+                        </a>
+                    </li>
                     <li><a href="#" id="bookings-link">Assigned bookings</a></li>
                     
                 </ul>
@@ -29,7 +36,7 @@
         document.addEventListener('DOMContentLoaded', (e) => {
             const contentDiv = document.querySelector('.content');
 
-            document.querySelectorAll('.admin-pages a').forEach(link => {
+            document.querySelectorAll('.admin-pages a[id]').forEach(link => {
                 link.addEventListener('click', async event => {
                     event.preventDefault();
 

@@ -4,6 +4,8 @@ const connection = require('../database/connection');
 const { verifyToken, isPlumber } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const { createNotification } = require('../utils/notifications');
+const { getBookingLifecycle } = require('../utils/bookingLifecycle');
 
 // configure multer storage for booking photos
 const storage = multer.diskStorage({
@@ -71,7 +73,10 @@ router.get('/my-bookings', function(req, res, next){
             }
             res.render('plumber_bookings', {
                 title: 'My Assigned Bookings',
-                bookings: results
+                bookings: results.map(booking => ({
+                    ...booking,
+                    lifecycle: getBookingLifecycle('plumber', booking.status)
+                }))
             });
         });
     };
@@ -124,6 +129,18 @@ router.post('/update-booking-status', function(req, res, next){
                 if (result.affectedRows === 0) {
                     return res.status(404).json({ message: 'Booking not found or not updated.' });
                 }
+                connection.query('SELECT idUser FROM bookings WHERE idbookings = ?', [booking_id], (customerErr, rows) => {
+                    if (!customerErr && rows.length > 0) {
+                        createNotification({
+                            userId: rows[0].idUser,
+                            role: 'customer',
+                            bookingId: booking_id,
+                            type: `booking_${status.toLowerCase()}`,
+                            title: 'Booking progress updated',
+                            message: `Your booking is now marked as ${status.replace('_', ' ').toLowerCase()}.`
+                        });
+                    }
+                });
                 res.json({ message: `Booking status updated to ${status}!` });
             });
         });
@@ -168,6 +185,18 @@ router.post('/update-amount', function(req, res, next){
                 if (result.affectedRows === 0) {
                     return res.status(404).json({ message: 'Booking not found.' });
                 }
+                connection.query('SELECT idUser FROM bookings WHERE idbookings = ?', [booking_id], (customerErr, rows) => {
+                    if (!customerErr && rows.length > 0) {
+                        createNotification({
+                            userId: rows[0].idUser,
+                            role: 'customer',
+                            bookingId: booking_id,
+                            type: 'booking_amount_updated',
+                            title: 'Booking amount updated',
+                            message: `The assigned plumber updated the amount to $${amount}.`
+                        });
+                    }
+                });
                 res.json({ message: 'Amount updated successfully!' });
             });
         });
@@ -210,6 +239,18 @@ router.post('/upload-photo', upload.single('photo'), (req, res, next) => {
                     console.error('Error saving photo path in database', updErr);
                     return res.status(500).json({ success: false, message: 'Internal server error' });
                 }
+                connection.query('SELECT idUser FROM bookings WHERE idbookings = ?', [booking_id], (customerErr, rows) => {
+                    if (!customerErr && rows.length > 0) {
+                        createNotification({
+                            userId: rows[0].idUser,
+                            role: 'customer',
+                            bookingId: booking_id,
+                            type: `booking_${type}_photo_uploaded`,
+                            title: `${type === 'before' ? 'Before' : 'After'} photo uploaded`,
+                            message: `The plumber uploaded a ${type} photo for your booking.`
+                        });
+                    }
+                });
                 res.json({ success: true, message: 'Photo uploaded successfully!', path: filePath });
             });
         });

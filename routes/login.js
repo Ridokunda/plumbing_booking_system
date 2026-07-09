@@ -87,21 +87,27 @@ router.post('/log', (req, res) =>{
 });
 
 function logoutHandler(req, res) {
-  if (req.session) {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Error destroying session during logout', err);
-      }
-    });
+  const finishLogout = () => {
+    res.clearCookie('token');
+
+    if (req.method === 'POST') {
+      return res.json({ success: true, message: 'Logged out successfully' });
+    }
+
+    return res.redirect('/');
+  };
+
+  if (!req.session) {
+    return finishLogout();
   }
 
-  res.clearCookie('token');
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Error destroying session during logout', err);
+    }
 
-  if (req.accepts('json')) {
-    return res.json({ success: true, message: 'Logged out successfully' });
-  }
-
-  return res.redirect('/');
+    return finishLogout();
+  });
 }
 
 router.get('/logout', logoutHandler);

@@ -1,75 +1,51 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>WeFixIt | <%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/custom.css' />
-  </head>
-  <style>
-    .findbar{
-      display: flex;
-      justify-content: space-around;
-      margin: 20px;
-    }
-    table{
-      width: 100%;
-      padding: 20px;
-    }
-    tbody td{
-      padding: 10px;
-    }
-    table td{
-      border-bottom: solid 1px gray;
-    }
-  </style>
-  <body>
-  
-    <div class="container-manage">
-        <div class="head">
-            <h3>Manage Plumbers Page</h3>
-            <hr>
+<div class="admin-panel">
+    <div class="admin-panel-header">
         <div>
-        <div class="users-container">
-            <div class="findbar">
-              <div class="search-section">
-                <input type="search" name="search" id="search-plumber" placeholder="Search for plumber">
-              </div>
-              <div class="filter-section">
-                <select name="filter" id="filter-plumber">
-                  <option value="ALL">All</option>
-                  <option value="AVAILABLE">AVAILABLE</option>
-                  <option value="OFFLINE">NOT AVAILABLE</option>
-                </select>
-                <button type="button" id="filter-btn-plumber">Filter</button>
-              </div>
-            </div>
-
-            <div class="table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Active Jobs</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% if(plumbers.length === 0){
-
-                  }else{
-                    plumbers.forEach(plumber=>{ %>
-                      <tr>
-                        <td><%= plumber.name %> <%= plumber.surname %></td>
-                        <td><%= plumber.status %></td>
-                        <td>2</td>
-                      </tr>
-                  <% })
-                  } %>
-                </tbody>
-              </table>
-            </div>
+            <p class="admin-panel-eyebrow">User Operations</p>
+            <h2 class="admin-panel-title">Manage Plumbers</h2>
+            <p class="admin-panel-subtitle">Monitor availability and activity across the plumber team.</p>
         </div>
-      
     </div>
+
+    <div class="admin-toolbar">
+      <div class="admin-filter-row">
+        <input type="search" name="search" id="search-plumber" placeholder="Search for plumber">
+        <select name="filter" id="filter-plumber">
+          <option value="ALL">All</option>
+          <option value="AVAILABLE">AVAILABLE</option>
+          <option value="OFFLINE">NOT AVAILABLE</option>
+        </select>
+        <button type="button" id="filter-btn-plumber" class="admin-btn secondary">Filter</button>
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <table class="admin-data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Active Jobs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if(plumbers.length === 0){ %>
+            <tr>
+              <td colspan="3">No plumbers found.</td>
+            </tr>
+          <% }else{ %>
+            <% plumbers.forEach(plumber=>{ %>
+              <tr>
+                <td><%= plumber.name %> <%= plumber.surname %></td>
+                <td><%= plumber.status %></td>
+                <td>2</td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+</div>
     <script>
       // Client-side search and filter for plumbers
       document.addEventListener('DOMContentLoaded', function() {
@@ -95,5 +71,3 @@
         filterBtn.addEventListener('click', filterTable);
       });
     </script>
-  </body>
-</html>

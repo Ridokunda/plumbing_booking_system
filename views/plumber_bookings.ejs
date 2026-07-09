@@ -46,6 +46,12 @@
                         <div class="card-row card-row-bottom">
                             <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
                         </div>
+                        <div class="status-roadmap">
+                          <% booking.lifecycle.steps.forEach(step => { %>
+                            <span class="status-chip <%= step.current ? 'is-current' : step.completed ? 'is-complete' : '' %>"><%= step.label %></span>
+                          <% }); %>
+                        </div>
+                        <div class="status-note"><strong>Next:</strong> <%= booking.lifecycle.nextAction %></div>
                         <div style="margin-top:8px; color:#666; font-size:0.9em;">
                             <strong>Description:</strong> <%= booking.des || booking.description || '' %>
                         </div>
@@ -56,7 +62,7 @@
                             <% } else if (booking.status !== 'NEW' && booking.status !== 'CANCELLED') { %>
                                 <form class="photo-form" data-booking-id="<%= booking.idbookings %>" data-type="before" enctype="multipart/form-data" style="display:flex; gap:4px; align-items:center;">
                                     <input type="file" name="photo" accept="image/*" required />
-                                    <button type="submit" style="background:#007bff;color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;">Upload Before</button>
+                                  <button type="submit" class="photo-upload-btn">Upload Before</button>
                                 </form>
                             <% } %>
                             <% if (booking.after_photo) { %>
@@ -64,21 +70,22 @@
                             <% } else if (booking.status === 'COMPLETED') { %>
                                 <form class="photo-form" data-booking-id="<%= booking.idbookings %>" data-type="after" enctype="multipart/form-data" style="display:flex; gap:4px; align-items:center;">
                                     <input type="file" name="photo" accept="image/*" required />
-                                    <button type="submit" style="background:#007bff;color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;">Upload After</button>
+                                  <button type="submit" class="photo-upload-btn">Upload After</button>
                                 </form>
                             <% } %>
                         </div>
-                        <div style="display:flex; gap:8px; margin-top:10px;">
-                            <% if (booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED') { %>
-                                <button class="complete-booking-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Mark as Complete</button>
-                            <% } else { %>
-                                <span style="color:#666; font-style:italic;">No actions available</span>
+                        <div class="role-action-bar">
+                          <div class="role-action-label">Recommended actions</div>
+                          <% booking.lifecycle.actions.forEach(action => { %>
+                            <% if (action.key === 'start' || action.key === 'complete' || action.key === 'cancel') { %>
+                              <button class="status-action-btn role-action-btn <%= action.key === 'start' ? 'start' : action.key === 'complete' ? 'complete' : 'cancel' %>" data-booking-id="<%= booking.idbookings %>" data-status="<%= action.key === 'start' ? 'IN_PROGRESS' : action.key === 'complete' ? 'COMPLETED' : 'CANCELLED' %>"><%= action.label %></button>
                             <% } %>
+                          <% }); %>
                         </div>
-                        <div style="margin-top:10px;">
-                            <label>Amount: $</label>
-                            <input type="number" class="amount-input" data-booking-id="<%= booking.idbookings %>" value="<%= booking.amount || 50 %>" step="0.01" min="0" style="width:80px; padding:4px;">
-                            <button class="update-amount-btn" data-booking-id="<%= booking.idbookings %>" style="background:#28a745; color:#fff; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">Update Amount</button>
+                        <div class="booking-amount-row">
+                          <label class="booking-amount-label">Amount: $</label>
+                          <input type="number" class="amount-input booking-amount-input" data-booking-id="<%= booking.idbookings %>" value="<%= booking.amount || 50 %>" step="0.01" min="0">
+                          <button class="update-amount-btn booking-mini-btn success" data-booking-id="<%= booking.idbookings %>">Update Amount</button>
                         </div>
                     </div>
                 <% }); %>
@@ -123,6 +130,45 @@
 
       // Mark complete action (AJAX)
       document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('status-action-btn')) {
+          const bookingId = e.target.getAttribute('data-booking-id');
+          const nextStatus = e.target.getAttribute('data-status');
+          const confirmMessage = nextStatus === 'IN_PROGRESS'
+            ? 'Start work on this booking now?'
+            : nextStatus === 'COMPLETED'
+              ? 'Mark this booking as completed?'
+              : 'Cancel this booking assignment?';
+          if (!confirm(confirmMessage)) return;
+          fetch('/plumber/update-booking-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: bookingId, status: nextStatus })
+          }).then(r => r.json()).then(res => {
+            const msg = document.getElementById('complete-message');
+            msg.style.display = 'block';
+            msg.textContent = res.message;
+            if (res.message && res.message.toLowerCase().includes('updated')) {
+              msg.style.backgroundColor = '#d4edda'; msg.style.color = '#155724'; msg.style.border = '1px solid #c3e6cb';
+              const btn = document.querySelector(`button.status-action-btn[data-booking-id="${bookingId}"][data-status="${nextStatus}"]`);
+              if (btn) {
+                const card = btn.closest('.booking-card');
+                card.querySelector('.status-label').textContent = nextStatus;
+                card.querySelector('.status-label').className = 'status-label status_' + nextStatus;
+                if (nextStatus === 'IN_PROGRESS') {
+                  btn.remove();
+                } else if (nextStatus === 'COMPLETED' || nextStatus === 'CANCELLED') {
+                  card.querySelectorAll('.status-action-btn').forEach(button => button.remove());
+                }
+              }
+            } else {
+              msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; msg.style.border = '1px solid #f5c6cb';
+            }
+          }).catch(() => {
+            const msg = document.getElementById('complete-message');
+            msg.style.display = 'block'; msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; msg.style.border = '1px solid #f5c6cb';
+            msg.textContent = 'An error occurred';
+          });
+        }
         if (e.target && e.target.classList.contains('complete-booking-btn')) {
           const bookingId = e.target.getAttribute('data-booking-id');
           if (!confirm('Mark this booking as completed?')) return;

@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function attachEventListeners() {
         //eventlisteners for manageuser page
         const contentDiv = document.querySelector('.content');
-        document.querySelectorAll('.stats a').forEach(link =>{
+        document.querySelectorAll('.stats a, .stats-container a').forEach(link =>{
             link.addEventListener('click', async (event) =>{
                 event.preventDefault();
                 var url = '';
