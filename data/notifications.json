@@ -31,5 +31,49 @@
     "message": "A new Plumbing_Installation request has been submitted and needs assignment.",
     "isRead": false,
     "createdAt": "2026-07-09T14:02:57.374Z"
+  },
+  {
+    "id": "1783607673859-593945122",
+    "userId": "5",
+    "role": "customer",
+    "bookingId": "13",
+    "type": "booking_paid",
+    "title": "Payment completed",
+    "message": "Your payment was processed successfully.",
+    "isRead": true,
+    "createdAt": "2026-07-09T14:34:33.859Z"
+  },
+  {
+    "id": "1783607673860-215419110",
+    "userId": "8",
+    "role": "plumber",
+    "bookingId": "13",
+    "type": "booking_paid",
+    "title": "Customer payment received",
+    "message": "A customer has paid for a completed booking.",
+    "isRead": false,
+    "createdAt": "2026-07-09T14:34:33.860Z"
+  },
+  {
+    "id": "1783608727026-406139924",
+    "userId": "5",
+    "role": "customer",
+    "bookingId": "10",
+    "type": "booking_paid",
+    "title": "Payment completed",
+    "message": "Your payment was processed successfully.",
+    "isRead": false,
+    "createdAt": "2026-07-09T14:52:07.027Z"
+  },
+  {
+    "id": "1783608727028-454343824",
+    "userId": "8",
+    "role": "plumber",
+    "bookingId": "10",
+    "type": "booking_paid",
+    "title": "Customer payment received",
+    "message": "A customer has paid for a completed booking.",
+    "isRead": false,
+    "createdAt": "2026-07-09T14:52:07.028Z"
   }
 ]

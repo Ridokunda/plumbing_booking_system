@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1783607673856-514350359",
+    "receiptNumber": "RCPT-20260709143433-843092",
+    "bookingId": "13",
+    "userId": "5",
+    "plumberId": "8",
+    "amount": 0,
+    "serviceType": "Installation",
+    "description": "I need a geyser installed",
+    "paymentMethod": "SIMULATED",
+    "paidAt": "2026-07-09T14:34:33.857Z"
+  }
+]

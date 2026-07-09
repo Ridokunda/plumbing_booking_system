@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeFixIt | <%= title %></title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; }
+    h1 { margin-bottom: 16px; }
+    .top-actions { margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; display: inline-block; }
+    .btn-primary { background: #0f7e94; color: #fff; }
+    .btn-secondary { background: #f1f5f9; color: #333; }
+    .history-table { width: 100%; border-collapse: collapse; background: #fff; }
+    .history-table th, .history-table td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; vertical-align: top; }
+    .status { font-weight: 700; }
+    .status-paid { color: #157347; }
+    .status-pending { color: #b45309; }
+    .empty { border: 1px dashed #d1d5db; border-radius: 10px; padding: 24px; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <h1>Invoice & Receipt History</h1>
+  <div class="top-actions">
+    <a class="btn btn-secondary" href="/booking/mybookings">Back to My Bookings</a>
+  </div>
+
+  <% if (!history || history.length === 0) { %>
+    <div class="empty">No completed jobs or payments yet.</div>
+  <% } else { %>
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Booking</th>
+          <th>Service</th>
+          <th>Amount</th>
+          <th>Document</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% history.forEach(item => { %>
+          <tr>
+            <td>#<%= item.idbookings %></td>
+            <td><%= item.type || '-' %></td>
+            <td>$<%= Number(item.amount || 0).toFixed(2) %></td>
+            <td>
+              <div><strong><%= item.isPaid ? 'Receipt' : 'Invoice' %>:</strong> <%= item.invoiceNumber %></div>
+              <% if (item.description) { %>
+                <div><small><%= item.description %></small></div>
+              <% } %>
+            </td>
+            <td>
+              <% if (item.isPaid) { %>
+                <span class="status status-paid">PAID</span>
+              <% } else { %>
+                <span class="status status-pending">PENDING PAYMENT</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (item.receipt) { %>
+                <%= new Date(item.receipt.paidAt).toLocaleString() %>
+              <% } else if (item.date_start) { %>
+                <%= new Date(item.date_start).toLocaleDateString() %>
+              <% } else { %>
+                -
+              <% } %>
+            </td>
+            <td>
+              <% if (item.isPaid) { %>
+                <a class="btn btn-secondary" href="/payment/receipt/<%= item.idbookings %>">View Receipt</a>
+              <% } else { %>
+                <a class="btn btn-primary" href="/payment?booking_id=<%= item.idbookings %>">Pay Now</a>
+              <% } %>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</body>
+</html>

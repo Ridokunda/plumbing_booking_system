@@ -1,4 +1,31 @@
-
-<h1>Payment Successful!</h1>
-<p>Thank you for your payment for booking #<%= booking_id %>.</p>
-<a href="/mybookings">Back to My Bookings</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WeFixIt | <%= title %></title>
+	<style>
+		body { font-family: Arial, sans-serif; max-width: 680px; margin: 30px auto; padding: 0 16px; }
+		.card { border: 1px solid #ddd; border-radius: 10px; padding: 20px; }
+		.actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+		.btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; }
+		.btn-primary { background: #0f7e94; color: #fff; }
+		.btn-secondary { background: #f1f5f9; color: #333; }
+	</style>
+</head>
+<body>
+	<div class="card">
+		<h1>Payment Successful</h1>
+		<p>Thank you for your payment for booking #<%= booking_id %>.</p>
+		<% if (receipt) { %>
+			<p><strong>Receipt Number:</strong> <%= receipt.receiptNumber %></p>
+			<p><strong>Paid At:</strong> <%= new Date(receipt.paidAt).toLocaleString() %></p>
+		<% } %>
+		<div class="actions">
+			<a class="btn btn-primary" href="/payment/receipt/<%= booking_id %>">View Receipt</a>
+			<a class="btn btn-secondary" href="/payment/history">Invoice & Receipt History</a>
+			<a class="btn btn-secondary" href="/booking/mybookings">Back to My Bookings</a>
+		</div>
+	</div>
+</body>
+</html>

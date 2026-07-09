@@ -1,31 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeFixIt | <%= title %></title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 760px; margin: 24px auto; padding: 0 16px; }
+        .panel { border: 1px solid #ddd; border-radius: 10px; padding: 20px; background: #fff; }
+        .row { margin: 10px 0; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+        .btn { border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #0f7e94; color: #fff; }
+        .btn-secondary { background: #f0f4f8; color: #333; }
+        .status { font-weight: 700; color: #0f7e94; }
+    </style>
 </head>
 <body>
-    <h1>Pay for Booking #<%= booking.idbookings %></h1>
-    <p>Amount: $<%= booking.amount %></p>
-    <form id="payment-form">
-        
-        <button type="submit">Pay Now</button>
-    </form>
+    <h1>Payment for Booking #<%= booking.idbookings %></h1>
+    <div class="panel">
+        <div class="row"><strong>Service:</strong> <%= booking.type || 'General plumbing' %></div>
+        <div class="row"><strong>Amount:</strong> $<%= Number(booking.amount || 0).toFixed(2) %></div>
+        <div class="row"><strong>Status:</strong> <span class="status"><%= booking.status %></span></div>
+        <% if (receipt) { %>
+            <div class="row"><strong>Receipt Number:</strong> <%= receipt.receiptNumber %></div>
+        <% } %>
+
+        <div class="actions">
+            <% if (booking.status === 'COMPLETED') { %>
+                <form id="payment-form" style="margin:0;">
+                    <button type="submit" class="btn btn-primary">Pay Now</button>
+                </form>
+            <% } else { %>
+                <a href="/payment/receipt/<%= booking.idbookings %>" class="btn btn-primary">View Receipt</a>
+            <% } %>
+            <a href="/payment/history" class="btn btn-secondary">Invoice & Receipt History</a>
+            <a href="/booking/mybookings" class="btn btn-secondary">Back to My Bookings</a>
+        </div>
+    </div>
+
     <script>
-        
         const form = document.getElementById('payment-form');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            fetch('/payment/process', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ booking_id: '<%= booking.idbookings %>'})
-            }).then(res => res.json()).then(data => {
-                if (data.success) window.location.href = '/payment/success?booking_id=<%= booking.idbookings %>';
-                else alert(data.message);
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                fetch('/payment/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ booking_id: '<%= booking.idbookings %>'})
+                }).then(res => res.json()).then(data => {
+                    if (data.success) {
+                        window.location.href = '/payment/success?booking_id=<%= booking.idbookings %>';
+                    } else {
+                        alert(data.message);
+                    }
+                });
             });
-            
-        });
+        }
     </script>
 </body>
 </html>

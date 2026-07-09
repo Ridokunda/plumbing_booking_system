@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeFixIt | <%= title %></title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 720px; margin: 28px auto; padding: 0 16px; }
+    .receipt { border: 1px solid #d1d5db; border-radius: 12px; overflow: hidden; }
+    .receipt-header { background: #0f7e94; color: #fff; padding: 16px; }
+    .receipt-body { padding: 18px; }
+    .line { display: flex; justify-content: space-between; border-bottom: 1px dashed #e5e7eb; padding: 8px 0; }
+    .line:last-child { border-bottom: none; }
+    .actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; }
+    .btn-primary { background: #0f7e94; color: #fff; }
+    .btn-secondary { background: #f1f5f9; color: #333; }
+  </style>
+</head>
+<body>
+  <div class="receipt">
+    <div class="receipt-header">
+      <h1 style="margin: 0; font-size: 1.4rem;">Payment Receipt</h1>
+      <div>Receipt Number: <strong><%= receipt.receiptNumber %></strong></div>
+    </div>
+    <div class="receipt-body">
+      <div class="line"><span>Booking ID</span><strong>#<%= booking.idbookings %></strong></div>
+      <div class="line"><span>Service</span><strong><%= receipt.serviceType || booking.type || 'General plumbing' %></strong></div>
+      <div class="line"><span>Payment Method</span><strong><%= receipt.paymentMethod %></strong></div>
+      <div class="line"><span>Paid On</span><strong><%= new Date(receipt.paidAt).toLocaleString() %></strong></div>
+      <div class="line"><span>Total Paid</span><strong>$<%= Number(receipt.amount || booking.amount || 0).toFixed(2) %></strong></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a href="/payment/history" class="btn btn-secondary">Invoice & Receipt History</a>
+    <a href="/booking/mybookings" class="btn btn-secondary">Back to My Bookings</a>
+    <a href="#" class="btn btn-primary" onclick="window.print(); return false;">Print</a>
+  </div>
+</body>
+</html>
