@@ -1,0 +1,11 @@
+.git
+.github
+.env
+node_modules
+npm-debug.log
+data
+logs
+uploads
+public/uploads
+test
+coverage

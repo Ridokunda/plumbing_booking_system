@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WeFixIt | <%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/bootstrap.css">
+  <link rel="stylesheet" href="/stylesheets/custom.css">
+</head>
+<body>
+  <%- include('./partials/head') %>
+  <main class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div><p class="booking-stepper-eyebrow">Customer support</p><h1>Contact messages</h1></div>
+      <a class="btn btn-secondary" href="/admin">Back to dashboard</a>
+    </div>
+    <% if (!messages.length) { %><p class="alert alert-info">No messages yet.</p><% } %>
+    <div class="row">
+      <% messages.forEach(message => { %>
+        <article class="col-12 mb-3">
+          <div class="card"><div class="card-body">
+            <div class="d-flex justify-content-between"><h2 class="h5"><%= message.name %></h2><span class="badge badge-primary"><%= message.status %></span></div>
+            <p><a href="mailto:<%= message.email %>"><%= message.email %></a><% if (message.phone) { %> · <%= message.phone %><% } %></p>
+            <p><%= message.message %></p><small><%= new Date(message.created_at).toLocaleString() %></small>
+            <form class="contact-status-form mt-3" action="/admin/contacts/<%= message.id %>/status">
+              <label>Status <select name="status" class="form-control"><% ['NEW','IN_PROGRESS','RESOLVED','SPAM'].forEach(status => { %><option <%= message.status === status ? 'selected' : '' %>><%= status %></option><% }) %></select></label>
+              <button class="btn btn-sm btn-primary" type="submit">Update</button>
+            </form>
+          </div></div>
+        </article>
+      <% }) %>
+    </div>
+    <% if (pagination.pages > 1) { %><nav class="d-flex justify-content-between align-items-center" aria-label="Contact message pages">
+      <% if (pagination.page > 1) { %><a href="?page=<%= pagination.page - 1 %>">Previous</a><% } else { %><span></span><% } %>
+      <span>Page <%= pagination.page %> of <%= pagination.pages %></span>
+      <% if (pagination.page < pagination.pages) { %><a href="?page=<%= pagination.page + 1 %>">Next</a><% } %>
+    </nav><% } %>
+  </main>
+  <%- include('./partials/footer') %>
+  <script>
+    document.querySelectorAll('.contact-status-form').forEach(form => form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const response = await fetch(form.action, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+      if (response.ok) window.location.reload();
+    }));
+  </script>
+</body>
+</html>

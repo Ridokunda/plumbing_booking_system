@@ -1,0 +1,154 @@
+openapi: 3.1.0
+info:
+  title: WeFixIt HTTP API
+  version: 1.0.0
+  description: Session-authenticated endpoints used by the server-rendered application.
+servers:
+  - url: http://localhost:3000
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: wefixit_session
+    csrfHeader:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+  schemas:
+    Message:
+      type: object
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+paths:
+  /health/live:
+    get:
+      summary: Process liveness
+      responses:
+        '200': { description: Process is running }
+  /health/ready:
+    get:
+      summary: Database readiness
+      responses:
+        '200': { description: Database is reachable }
+        '503': { description: Database is unavailable }
+  /login/log:
+    post:
+      summary: Create a session
+      security: [{ csrfHeader: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '200': { description: Authenticated }
+        '401': { description: Invalid credentials }
+        '429': { description: Too many attempts }
+  /booking/book:
+    post:
+      summary: Create a service request
+      security: [{ sessionCookie: [], csrfHeader: [] }]
+      responses:
+        '201': { description: Booking created }
+        '400': { description: Validation failure }
+        '403': { description: Customer role required }
+  /booking/cancel-booking:
+    post:
+      summary: Cancel an eligible owned booking
+      security: [{ sessionCookie: [], csrfHeader: [] }]
+      responses:
+        '200': { description: Booking cancelled }
+        '409': { description: Invalid lifecycle transition }
+  /admin/schedule:
+    post:
+      summary: Assign an available verified plumber and time window
+      security: [{ sessionCookie: [], csrfHeader: [] }]
+      responses:
+        '200': { description: Job scheduled }
+        '409': { description: Availability or schedule conflict }
+  /quotes/{quoteId}/respond:
+    post:
+      summary: Approve or reject the active quote
+      security: [{ sessionCookie: [], csrfHeader: [] }]
+      parameters:
+        - in: path
+          name: quoteId
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Quote response recorded }
+        '409': { description: Quote is no longer pending }
+  /jobs/{bookingId}:
+    get:
+      summary: View an authorized job record, notes, photos, and completion confirmation
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Job record rendered }
+        '404': { description: Job is not visible to this user }
+  /jobs/{bookingId}/pdf:
+    get:
+      summary: Download the authorized job card as a PDF
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Job-card PDF
+          content:
+            application/pdf: {}
+  /support/disputes:
+    post:
+      summary: Open a dispute for an eligible customer booking
+      security: [{ sessionCookie: [], csrfHeader: [] }]
+      responses:
+        '201': { description: Dispute opened }
+  /support/refunds:
+    post:
+      summary: Request a refund against a paid booking
+      security: [{ sessionCookie: [], csrfHeader: [] }]
+      responses:
+        '201': { description: Refund requested }
+        '409': { description: Refund is ineligible or already active }
+  /support/reschedules:
+    post:
+      summary: Propose a new appointment window
+      security: [{ sessionCookie: [], csrfHeader: [] }]
+      responses:
+        '201': { description: Reschedule requested }
+  /payment/checkout:
+    post:
+      summary: Create a Stripe Checkout session for confirmed work
+      security: [{ sessionCookie: [], csrfHeader: [] }]
+      responses:
+        '200': { description: Checkout URL returned }
+        '409': { description: Work, quote, or confirmation is incomplete }
+  /payment/receipt/{bookingId}/pdf:
+    get:
+      summary: Download a paid booking receipt as a PDF
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Receipt PDF
+          content:
+            application/pdf: {}
+        '404': { description: Paid receipt not found }

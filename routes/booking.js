@@ -1,296 +1,230 @@
-var express = require('express');
-var router = express.Router();
-
-const connection = require("../database/connection");
-const { verifyToken } = require('../middleware/auth');
+const express = require('express');
+const router = express.Router();
+const connection = require('../database/connection');
+const { verifyToken, isCustomer } = require('../middleware/auth');
 const { createNotifications, createNotification } = require('../utils/notifications');
 const { getBookingLifecycle } = require('../utils/bookingLifecycle');
+const {
+  cleanText,
+  normalizeBookingDates,
+  isValidService,
+  canTransition,
+  normalizePagination,
+} = require('../utils/validation');
+const { recordAuditEvent } = require('../utils/audit');
 
-/* GET home page. */
-router.get('/', verifyToken, function(req, res, next) {
-  res.render('booking', { title: 'Book Us' });
-});
+router.use(verifyToken);
+router.use(isCustomer);
 
-router.post('/book', verifyToken, (req,res, next) => {
-   
-  var service = req.body.service;
-  var date_start = req.body.date_start;
-  var des = req.body.description;
+router.get('/', (req, res) => res.render('booking', { title: 'Book Us' }));
 
-  // Basic validation
-  if (!service || !date_start || !des) {
-      return res.status(400).json({ success: false, message: 'Please provide service type, at least one date, and description.' });
-  }
-
-  // Normalize dates to an array
-  let dates = [];
-  if (Array.isArray(date_start)) {
-    dates = date_start.filter(d => d);
-  } else if (typeof date_start === 'string') {
-    
-    try {
-      const parsed = JSON.parse(date_start);
-      if (Array.isArray(parsed)) dates = parsed;
-      else dates = [date_start];
-    } catch (e) {
-      dates = [date_start];
-    }
-  }
-
-  if (dates.length === 0) {
-    return res.status(400).json({ success: false, message: 'Please provide at least one valid date.' });
-  }
-
-  const tryInsertBooking = (descriptionColumn) => {
-    const insertBookingQuery = `INSERT INTO bookings (idUser,type,${descriptionColumn},status) VALUES(?,?,?,?)`;
-    connection.query(insertBookingQuery, [req.user.idusers, service, des, 'NEW'], (err, result) => {
-      if (err && err.code === 'ER_BAD_FIELD_ERROR' && descriptionColumn === 'des') {
-        return tryInsertBooking('description');
-      }
-      if (err) {
-        console.error('Error inserting booking in the database', err);
-        return res.status(500).json({ success: false, message: 'Internal server error' });
-      }
-
-      const bookingId = result.insertId;
-      // Prepare multi-row insert for booking_dates
-      const values = dates.map(d => [bookingId, d]);
-      const insertDatesQuery = 'INSERT INTO booking_dates (booking_id, date_start) VALUES ?';
-      connection.query(insertDatesQuery, [values], (err2) => {
-        if (err2 && err2.code === 'ER_NO_SUCH_TABLE') {
-          // Fallback for deployments that still store a single date on bookings.
-          const fallbackDateQuery = 'UPDATE bookings SET date_start = ? WHERE idbookings = ?';
-          return connection.query(fallbackDateQuery, [dates[0], bookingId], (fallbackErr) => {
-            if (fallbackErr) {
-              console.error('Error storing fallback booking date', fallbackErr);
-              return res.status(500).json({ success: false, message: 'Internal server error' });
-            }
-            return res.status(200).json({ success: true, message: 'Booking added successfully!' });
-          });
-        }
-        if (err2) {
-          console.error('Error inserting booking dates', err2);
-          return res.status(500).json({ success: false, message: 'Internal server error' });
-        }
-        console.log('booking and dates added');
-        connection.query('SELECT idusers FROM users WHERE usertype = 2', (adminErr, adminRows) => {
-          const adminIds = adminErr ? [] : adminRows.map(row => row.idusers);
-          createNotification({
-            userId: req.user.idusers,
-            role: 'customer',
-            bookingId,
-            type: 'booking_created',
-            title: 'Booking submitted',
-            message: `Your ${service} request has been submitted and is waiting for assignment.`
-          });
-          createNotifications(adminIds, {
-            role: 'admin',
-            bookingId,
-            type: 'booking_created',
-            title: 'New booking to review',
-            message: `A new ${service} request has been submitted and needs assignment.`
-          });
-        });
-        res.status(200).json({ success: true, message: 'Booking added successfully!' });
-      });
+router.post('/book', async (req, res, next) => {
+  const service = req.body.service;
+  const description = cleanText(req.body.description, { min: 10, max: 2000 });
+  const location = cleanText(req.body.location, { min: 3, max: 500 });
+  const dates = normalizeBookingDates(req.body.date_start);
+  if (!isValidService(service) || !description || !location || !dates) {
+    return res.status(400).json({
+      success: false,
+      message:
+        'Provide a valid service, location, future dates, and a description of 10-2000 characters.',
     });
-  };
-
-  tryInsertBooking('des');
-});
-
-
-/* GET customer bookings page*/
-router.get('/mybookings', verifyToken, function(req, res, next){
-  const user = req.user;
-
-  if (!user) {
-      return res.redirect('/login'); 
   }
 
-  // Retrieve bookings made by the current customer
-  const query = `SELECT b.*, GROUP_CONCAT(d.date_start ORDER BY d.date_start SEPARATOR ',') AS dates, MIN(d.date_start) AS first_date
-                 FROM bookings b
-                 LEFT JOIN booking_dates d ON b.idbookings = d.booking_id
-                 WHERE b.idUser = ?
-                 GROUP BY b.idbookings
-                 ORDER BY first_date DESC`;
-  connection.query(query, [user.idusers], (err, results) => {
-      if (err && err.code === 'ER_NO_SUCH_TABLE') {
-          const fallbackQuery = 'SELECT * FROM bookings WHERE idUser = ? ORDER BY date_start DESC, idbookings DESC';
-          return connection.query(fallbackQuery, [user.idusers], (fallbackErr, fallbackResults) => {
-              if (fallbackErr) {
-                  console.error('Error executing fallback MySQL query to fetch customer bookings: ' + fallbackErr.stack);
-                  return res.status(500).send('Error fetching your bookings');
-              }
-              const fallbackProcessed = fallbackResults.map(r => {
-                r.datesArray = r.date_start ? [r.date_start] : [];
-                r.description = r.description || r.des || '';
-                return r;
-              });
-              return res.render('mybookings', { bookings: fallbackProcessed, title : 'My Bookings' });
-          });
-      }
-
-      if (err) {
-          console.error('Error executing MySQL query to fetch customer bookings: ' + err.stack);
-          return res.status(500).send('Error fetching your bookings');
-      }
-
-      const processed = results.map(r => {
-        r.datesArray = r.dates ? r.dates.split(',') : [];
-        r.date_start = r.first_date || r.date_start;
-        r.description = r.description || r.des || '';
-        r.lifecycle = getBookingLifecycle('customer', r.status);
-        return r;
-      });
-      res.render('mybookings', { bookings: processed, title : 'My Bookings' });
-  });
-});
-
-// Cancel a booking (customer)
-router.post('/cancel-booking', verifyToken, function(req, res, next) {
-  const user = req.user;
-  const { booking_id } = req.body;
-
-  if (!booking_id) {
-    return res.status(400).json({ success: false, message: 'Booking ID is required.' });
-  }
-
-  // Check if the booking belongs to the user and is cancellable
-  const checkQuery = 'SELECT * FROM bookings WHERE idbookings = ? AND idUser = ?';
-  connection.query(checkQuery, [booking_id, user.idusers], (err, results) => {
-    if (err) {
-      console.error('Error checking booking:', err);
-      return res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-    if (results.length === 0) {
-      return res.status(404).json({ success: false, message: 'Booking not found or not yours.' });
-    }
-    const booking = results[0];
-    if (booking.status === 'CANCELLED' || booking.status === 'COMPLETED') {
-      return res.status(400).json({ success: false, message: 'Booking cannot be cancelled.' });
-    }
-    // Update status to CANCELLED
-    const updateQuery = 'UPDATE bookings SET status = ? WHERE idbookings = ?';
-    connection.query(updateQuery, ['CANCELLED', booking_id], (err, result) => {
-      if (err) {
-        console.error('Error cancelling booking:', err);
-        return res.status(500).json({ success: false, message: 'Internal server error' });
-      }
-      createNotification({
-        userId: user.idusers,
-        role: 'customer',
-        bookingId: booking_id,
-        type: 'booking_cancelled',
-        title: 'Booking cancelled',
-        message: 'Your booking has been cancelled successfully.'
-      });
-      return res.json({ success: true, message: 'Booking cancelled successfully.' });
+  let db;
+  try {
+    db = await connection.promise().getConnection();
+    await db.beginTransaction();
+    const [result] = await db.query(
+      "INSERT INTO bookings (idUser, type, description, location, status, date_start) VALUES (?, ?, ?, ?, 'NEW', ?)",
+      [req.user.idusers, service, description, location, dates[0]],
+    );
+    const bookingId = result.insertId;
+    await db.query('INSERT INTO booking_dates (booking_id, date_start) VALUES ?', [
+      dates.map((date) => [bookingId, date]),
+    ]);
+    await db.query(
+      'INSERT INTO booking_status_history (booking_id, from_status, to_status, changed_by, note) VALUES (?, NULL, ?, ?, ?)',
+      [bookingId, 'NEW', req.user.idusers, 'Booking requested by customer'],
+    );
+    await db.commit();
+    recordAuditEvent({
+      actorId: req.user.idusers,
+      action: 'BOOKING_CREATED',
+      entityType: 'booking',
+      entityId: bookingId,
+      metadata: { service, location, dates },
+      ipAddress: req.ip,
     });
-  });
+
+    const [admins] = await connection
+      .promise()
+      .query("SELECT idusers FROM users WHERE usertype = 2 AND account_status = 'ACTIVE'");
+    createNotification({
+      userId: req.user.idusers,
+      bookingId,
+      type: 'booking_created',
+      title: 'Booking submitted',
+      message: 'Your service request is awaiting review.',
+    });
+    createNotifications(
+      admins.map((admin) => admin.idusers),
+      {
+        bookingId,
+        type: 'booking_created',
+        title: 'New booking to review',
+        message: 'A new service request needs scheduling.',
+      },
+    );
+    res.status(201).json({ success: true, bookingId, message: 'Booking added successfully!' });
+  } catch (error) {
+    if (db) await db.rollback();
+    next(error);
+  } finally {
+    if (db) db.release();
+  }
 });
 
-// Edit a booking (customer)
-router.post('/edit-booking', verifyToken, function(req, res, next) {
-  const user = req.user;
-  const { booking_id, service, date_start, description } = req.body;
+router.get('/mybookings', async (req, res, next) => {
+  const { page, pageSize, offset } = normalizePagination(req.query);
+  try {
+    const [[rows], [countRows]] = await Promise.all([
+      connection.promise().query(
+        `SELECT b.*, GROUP_CONCAT(d.date_start ORDER BY d.date_start SEPARATOR ',') AS dates,
+          MIN(d.date_start) AS first_date
+         FROM bookings b LEFT JOIN booking_dates d ON d.booking_id = b.idbookings
+         WHERE b.idUser = ? GROUP BY b.idbookings ORDER BY b.created_at DESC LIMIT ? OFFSET ?`,
+        [req.user.idusers, pageSize, offset],
+      ),
+      connection
+        .promise()
+        .query('SELECT COUNT(*) AS total FROM bookings WHERE idUser = ?', [req.user.idusers]),
+    ]);
+    const bookings = rows.map((row) => ({
+      ...row,
+      datesArray: row.dates ? row.dates.split(',') : [row.date_start].filter(Boolean),
+      date_start: row.first_date || row.date_start,
+      lifecycle: getBookingLifecycle('customer', row.status),
+    }));
+    res.render('mybookings', {
+      bookings,
+      title: 'My Bookings',
+      pagination: {
+        page,
+        pageSize,
+        total: countRows[0].total,
+        pages: Math.ceil(countRows[0].total / pageSize),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
-  if (!booking_id || !service || !date_start || !description) {
-    return res.status(400).json({ success: false, message: 'All fields are required.' });
+router.post('/cancel-booking', async (req, res, next) => {
+  const bookingId = Number(req.body.booking_id);
+  const reason = cleanText(req.body.reason, { min: 5, max: 500 });
+  if (!Number.isInteger(bookingId) || !reason) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Provide a brief cancellation reason.' });
+  }
+  let db;
+  try {
+    db = await connection.promise().getConnection();
+    await db.beginTransaction();
+    const [rows] = await db.query(
+      'SELECT status FROM bookings WHERE idbookings = ? AND idUser = ? FOR UPDATE',
+      [bookingId, req.user.idusers],
+    );
+    if (!rows.length) {
+      await db.rollback();
+      return res.status(404).json({ success: false, message: 'Booking not found.' });
+    }
+    if (!canTransition('customer', rows[0].status, 'CANCELLED')) {
+      await db.rollback();
+      return res
+        .status(409)
+        .json({ success: false, message: `A ${rows[0].status} booking cannot be cancelled.` });
+    }
+    await db.query(
+      "UPDATE bookings SET status = 'CANCELLED', cancellation_reason = ? WHERE idbookings = ?",
+      [reason, bookingId],
+    );
+    await db.query(
+      'INSERT INTO booking_status_history (booking_id, from_status, to_status, changed_by, note) VALUES (?, ?, ?, ?, ?)',
+      [bookingId, rows[0].status, 'CANCELLED', req.user.idusers, reason],
+    );
+    await db.commit();
+    recordAuditEvent({
+      actorId: req.user.idusers,
+      action: 'BOOKING_CANCELLED',
+      entityType: 'booking',
+      entityId: bookingId,
+      metadata: { reason },
+      ipAddress: req.ip,
+    });
+    createNotification({
+      userId: req.user.idusers,
+      bookingId,
+      type: 'booking_cancelled',
+      title: 'Booking cancelled',
+      message: 'Your booking has been cancelled.',
+    });
+    res.json({ success: true, message: 'Booking cancelled successfully.' });
+  } catch (error) {
+    if (db) await db.rollback();
+    next(error);
+  } finally {
+    if (db) db.release();
+  }
+});
+
+router.post('/edit-booking', async (req, res, next) => {
+  const bookingId = Number(req.body.booking_id);
+  const service = req.body.service;
+  const description = cleanText(req.body.description, { min: 10, max: 2000 });
+  const dates = normalizeBookingDates(req.body.date_start);
+  if (!Number.isInteger(bookingId) || !isValidService(service) || !description || !dates) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Provide a valid booking details and future dates.' });
   }
 
-  // Check if the booking belongs to the user and is editable
-  const checkQuery = 'SELECT * FROM bookings WHERE idbookings = ? AND idUser = ?';
-  connection.query(checkQuery, [booking_id, user.idusers], (err, results) => {
-    if (err) {
-      console.error('Error checking booking:', err);
-      return res.status(500).json({ success: false, message: 'Internal server error' });
+  let db;
+  try {
+    db = await connection.promise().getConnection();
+    await db.beginTransaction();
+    const [result] = await db.query(
+      `UPDATE bookings SET type = ?, description = ?, date_start = ?
+      WHERE idbookings = ? AND idUser = ? AND status IN ('NEW','PENDING')`,
+      [service, description, dates[0], bookingId, req.user.idusers],
+    );
+    if (!result.affectedRows) {
+      await db.rollback();
+      return res
+        .status(409)
+        .json({ success: false, message: 'Only a new booking owned by you can be edited.' });
     }
-    if (results.length === 0) {
-      return res.status(404).json({ success: false, message: 'Booking not found or not yours.' });
-    }
-    const booking = results[0];
-    if (booking.status === 'CANCELLED' || booking.status === 'COMPLETED' || booking.status === 'DECLINED') {
-      return res.status(400).json({ success: false, message: 'Booking cannot be edited.' });
-    }
-    // Update the booking metadata (type, description). Dates are stored in booking_dates table.
-    const tryUpdateBooking = (descriptionColumn) => {
-      const updateQuery = `UPDATE bookings SET type = ?, ${descriptionColumn} = ? WHERE idbookings = ? AND idUser = ?`;
-      connection.query(updateQuery, [service, description, booking_id, user.idusers], (err, result) => {
-        if (err && err.code === 'ER_BAD_FIELD_ERROR' && descriptionColumn === 'des') {
-          return tryUpdateBooking('description');
-        }
-        if (err) {
-          console.error('Error updating booking:', err);
-          return res.status(500).json({ success: false, message: 'Internal server error' });
-        }
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ success: false, message: 'Booking not found or not updated.' });
-        }
-        // Normalize incoming dates and replace existing booking_dates rows
-        let dates = [];
-        if (Array.isArray(date_start)) dates = date_start.filter(d => d);
-        else if (typeof date_start === 'string') {
-          try {
-            const parsed = JSON.parse(date_start);
-            if (Array.isArray(parsed)) dates = parsed;
-            else dates = [date_start];
-          } catch (e) {
-            dates = [date_start];
-          }
-        }
-        // Delete existing dates
-        const deleteQuery = 'DELETE FROM booking_dates WHERE booking_id = ?';
-        connection.query(deleteQuery, [booking_id], (delErr) => {
-          if (delErr && delErr.code === 'ER_NO_SUCH_TABLE') {
-            const fallbackDateQuery = 'UPDATE bookings SET date_start = ? WHERE idbookings = ? AND idUser = ?';
-            return connection.query(fallbackDateQuery, [dates[0], booking_id, user.idusers], (fallbackErr) => {
-              if (fallbackErr) {
-                console.error('Error updating fallback booking date:', fallbackErr);
-                return res.status(500).json({ success: false, message: 'Internal server error' });
-              }
-              createNotification({
-                userId: user.idusers,
-                role: 'customer',
-                bookingId: booking_id,
-                type: 'booking_updated',
-                title: 'Booking updated',
-                message: 'Your booking details were updated successfully.'
-              });
-              return res.json({ success: true, message: 'Booking updated successfully.' });
-            });
-          }
-          if (delErr) {
-            console.error('Error deleting old booking dates:', delErr);
-            return res.status(500).json({ success: false, message: 'Internal server error' });
-          }
-          if (dates.length === 0) {
-            return res.json({ success: true, message: 'Booking updated successfully.' });
-          }
-          const values = dates.map(d => [booking_id, d]);
-          const insertDatesQuery = 'INSERT INTO booking_dates (booking_id, date_start) VALUES ?';
-          connection.query(insertDatesQuery, [values], (insErr) => {
-            if (insErr) {
-              console.error('Error inserting updated booking dates:', insErr);
-              return res.status(500).json({ success: false, message: 'Internal server error' });
-            }
-            createNotification({
-              userId: user.idusers,
-              role: 'customer',
-              bookingId: booking_id,
-              type: 'booking_updated',
-              title: 'Booking updated',
-              message: 'Your booking details were updated successfully.'
-            });
-            return res.json({ success: true, message: 'Booking updated successfully.' });
-          });
-        });
-      });
-    };
-
-    tryUpdateBooking('des');
-  });
+    await db.query('DELETE FROM booking_dates WHERE booking_id = ?', [bookingId]);
+    await db.query('INSERT INTO booking_dates (booking_id, date_start) VALUES ?', [
+      dates.map((date) => [bookingId, date]),
+    ]);
+    await db.commit();
+    createNotification({
+      userId: req.user.idusers,
+      bookingId,
+      type: 'booking_updated',
+      title: 'Booking updated',
+      message: 'Your booking details were updated.',
+    });
+    res.json({ success: true, message: 'Booking updated successfully.' });
+  } catch (error) {
+    if (db) await db.rollback();
+    next(error);
+  } finally {
+    if (db) db.release();
+  }
 });
 
 module.exports = router;

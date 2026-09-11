@@ -18,7 +18,7 @@
     "type": "booking_created",
     "title": "New booking to review",
     "message": "A new Plumbing_Installation request has been submitted and needs assignment.",
-    "isRead": false,
+    "isRead": true,
     "createdAt": "2026-07-09T14:02:57.372Z"
   },
   {
@@ -51,7 +51,7 @@
     "type": "booking_paid",
     "title": "Customer payment received",
     "message": "A customer has paid for a completed booking.",
-    "isRead": false,
+    "isRead": true,
     "createdAt": "2026-07-09T14:34:33.860Z"
   },
   {
@@ -73,7 +73,73 @@
     "type": "booking_paid",
     "title": "Customer payment received",
     "message": "A customer has paid for a completed booking.",
-    "isRead": false,
+    "isRead": true,
     "createdAt": "2026-07-09T14:52:07.028Z"
+  },
+  {
+    "id": "1783706784460-548424666",
+    "userId": "5",
+    "role": "booking_participant",
+    "bookingId": "22",
+    "type": "booking_assigned",
+    "title": "Booking assigned",
+    "message": "A plumber has been assigned to your booking.",
+    "isRead": false,
+    "createdAt": "2026-07-10T18:06:24.460Z"
+  },
+  {
+    "id": "1783706784461-970085438",
+    "userId": "8",
+    "role": "booking_participant",
+    "bookingId": "22",
+    "type": "booking_assigned",
+    "title": "Booking assigned",
+    "message": "A plumber has been assigned to your booking.",
+    "isRead": true,
+    "createdAt": "2026-07-10T18:06:24.461Z"
+  },
+  {
+    "id": "1783706784463-319380778",
+    "userId": "5",
+    "role": "booking_participant",
+    "bookingId": "22",
+    "type": "booking_assigned",
+    "title": "Booking assigned",
+    "message": "A plumber has been assigned to your booking.",
+    "isRead": false,
+    "createdAt": "2026-07-10T18:06:24.463Z"
+  },
+  {
+    "id": "1783706784465-977221766",
+    "userId": "8",
+    "role": "booking_participant",
+    "bookingId": "22",
+    "type": "booking_assigned",
+    "title": "Booking assigned",
+    "message": "A plumber has been assigned to your booking.",
+    "isRead": true,
+    "createdAt": "2026-07-10T18:06:24.465Z"
+  },
+  {
+    "id": "1783706886752-61144548",
+    "userId": "5",
+    "role": "customer",
+    "bookingId": "22",
+    "type": "booking_amount_updated",
+    "title": "Booking amount updated",
+    "message": "The assigned plumber updated the amount to $50.",
+    "isRead": false,
+    "createdAt": "2026-07-10T18:08:06.752Z"
+  },
+  {
+    "id": "1783706886754-790952951",
+    "userId": "5",
+    "role": "customer",
+    "bookingId": "22",
+    "type": "booking_amount_updated",
+    "title": "Booking amount updated",
+    "message": "The assigned plumber updated the amount to $50.",
+    "isRead": false,
+    "createdAt": "2026-07-10T18:08:06.754Z"
   }
 ]

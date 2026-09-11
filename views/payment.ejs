@@ -19,7 +19,7 @@
     <h1>Payment for Booking #<%= booking.idbookings %></h1>
     <div class="panel">
         <div class="row"><strong>Service:</strong> <%= booking.type || 'General plumbing' %></div>
-        <div class="row"><strong>Amount:</strong> $<%= Number(booking.amount || 0).toFixed(2) %></div>
+        <div class="row"><strong>Amount:</strong> R<%= Number(booking.amount || 0).toFixed(2) %></div>
         <div class="row"><strong>Status:</strong> <span class="status"><%= booking.status %></span></div>
         <% if (receipt) { %>
             <div class="row"><strong>Receipt Number:</strong> <%= receipt.receiptNumber %></div>
@@ -28,7 +28,7 @@
         <div class="actions">
             <% if (booking.status === 'COMPLETED') { %>
                 <form id="payment-form" style="margin:0;">
-                    <button type="submit" class="btn btn-primary">Pay Now</button>
+                    <button type="submit" class="btn btn-primary" <%= !stripeEnabled && !simulatedEnabled ? 'disabled' : '' %>><%= stripeEnabled ? 'Pay securely by card' : simulatedEnabled ? 'Simulate demo payment' : 'Payments unavailable' %></button>
                 </form>
             <% } else { %>
                 <a href="/payment/receipt/<%= booking.idbookings %>" class="btn btn-primary">View Receipt</a>
@@ -44,13 +44,13 @@
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                fetch('/payment/process', {
+                fetch('<%= stripeEnabled ? '/payment/checkout' : '/payment/process' %>', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ booking_id: '<%= booking.idbookings %>'})
                 }).then(res => res.json()).then(data => {
                     if (data.success) {
-                        window.location.href = '/payment/success?booking_id=<%= booking.idbookings %>';
+                        window.location.href = data.url || '/payment/success?booking_id=<%= booking.idbookings %>';
                     } else {
                         alert(data.message);
                     }

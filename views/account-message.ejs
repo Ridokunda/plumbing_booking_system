@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>WeFixIt | <%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/bootstrap.css">
+</head>
+<body>
+  <%- include('./partials/head') %>
+  <main class="container py-5">
+    <div class="alert <%= success ? 'alert-success' : 'alert-danger' %>" role="status"><%= message %></div>
+    <a class="btn btn-primary" href="/login">Go to login</a>
+  </main>
+  <%- include('./partials/footer') %>
+</body>
+</html>

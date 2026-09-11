@@ -70,6 +70,7 @@
             <a href="/register/register" style="color: #0355cc; font-weight: 500;">Don't have an account? Sign up</a>
           </div>
         </form>
+        <p class="mt-3"><a href="/account/forgot-password">Forgot your password?</a></p>
       </div>
     </div>
     <%- include('./partials/footer') %>
@@ -108,16 +109,7 @@
             
             const data = await response.json();
             
-            if (data.success && data.token) {
-              // Store token for client-side use
-              jwtHandler.setToken(data.token);
-              
-              // Also store user data
-              const decoded = jwtHandler.decodeToken(data.token);
-              if (decoded) {
-                jwtHandler.setUser(decoded);
-              }
-              
+            if (data.success) {
               // Redirect to appropriate dashboard
               window.location.href = data.redirectUrl || '/';
             } else {

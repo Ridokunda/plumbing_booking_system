@@ -29,7 +29,7 @@
           </div>
         </div>
         <div class="search-filter-bar">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search & Search">
+            <input type="search" id="searchInput" class="search-input" placeholder="Search bookings">
             <select id="statusFilter" class="status-filter">
                 <option value="ALL">STATUS</option>
                 <option value="NEW">NEW</option>
@@ -56,10 +56,10 @@
                     </div>
                     <div class="status-note"><strong>Next:</strong> <%= booking.lifecycle.nextAction %></div>
                     <% if (booking.before_photo) { %>
-                        <div>Before:<br><img src="<%= booking.before_photo %>" class="booking-photo" style="max-width:120px; max-height:120px;" /></div>
+                        <div>Before:<br><img src="<%= booking.before_photo %>" alt="Before-work evidence" class="booking-photo" style="max-width:120px; max-height:120px;" /></div>
                     <% } %>
                     <% if (booking.after_photo) { %>
-                        <div>After:<br><img src="<%= booking.after_photo %>" class="booking-photo" style="max-width:120px; max-height:120px;" /></div>
+                        <div>After:<br><img src="<%= booking.after_photo %>" alt="After-work evidence" class="booking-photo" style="max-width:120px; max-height:120px;" /></div>
                     <% } %>
                     <div class="card-row card-row-bottom">
                         <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
@@ -74,13 +74,26 @@
                           <button class="pay-btn" data-booking-id="<%= booking.idbookings %>" style="background:#007bff; color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:1rem; cursor:pointer; transition:background 0.2s;">Make Payment</button>
                         <% } else if (action.key === 'new') { %>
                           <a href="/booking" class="step-btn primary" style="display:inline-flex; align-items:center; text-decoration:none;">Create new request</a>
+                        <% } else if (action.key === 'review') { %>
+                          <a href="/reviews/booking/<%= booking.idbookings %>" class="step-btn primary">Leave a review</a>
                         <% } %>
                       <% }); %>
+                      <% if (['ASSIGNED','IN_PROGRESS','COMPLETED','PAID'].includes(booking.status)) { %>
+                        <a href="/quotes/booking/<%= booking.idbookings %>" class="step-btn secondary">View quote</a>
+                        <a href="/jobs/<%= booking.idbookings %>" class="step-btn secondary">Job record</a>
+                      <% } %>
                     </div>
                 </div>
             <% }); %>
         </div>
         <div id="cancel-message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
+        <% if (pagination && pagination.pages > 1) { %>
+          <nav aria-label="Booking pages" class="p-3 d-flex justify-content-between">
+            <% if (pagination.page > 1) { %><a class="btn btn-outline-primary" href="?page=<%= pagination.page - 1 %>">Previous</a><% } else { %><span></span><% } %>
+            <span>Page <%= pagination.page %> of <%= pagination.pages %></span>
+            <% if (pagination.page < pagination.pages) { %><a class="btn btn-outline-primary" href="?page=<%= pagination.page + 1 %>">Next</a><% } %>
+          </nav>
+        <% } %>
     </div>
     <!-- Booking Details Modal -->
     <div id="bookingDetailsModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
@@ -96,8 +109,12 @@
             <div style="margin-bottom:15px;">
               <label style="display:block; margin-bottom:5px; font-weight:bold;">Service Type:</label>
               <select id="editService" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
-                <option value="Installation">Installation</option>
-                <option value="Fix">Fix</option>
+                <option value="Plumbing_Installation">Plumbing installation</option>
+                <option value="Plumbing_Fix">Plumbing repair</option>
+                <option value="Plumbing_Maintenance">Plumbing maintenance</option>
+                <option value="Electrical_Installation">Electrical installation</option>
+                <option value="Electrical_Fix">Electrical repair</option>
+                <option value="Electrical_Maintenance">Electrical maintenance</option>
               </select>
             </div>
             <div style="margin-bottom:15px;">
@@ -131,11 +148,12 @@
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
             var bookingId = this.getAttribute('data-booking-id');
-            if (!confirm('Are you sure you want to cancel this booking?')) return;
+            const reason = prompt('Why are you cancelling this booking?');
+            if (!reason || reason.trim().length < 5) return;
             fetch('/booking/cancel-booking', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ booking_id: bookingId })
+                body: JSON.stringify({ booking_id: bookingId, reason: reason.trim() })
             })
             .then(res => res.json())
             .then(result => {

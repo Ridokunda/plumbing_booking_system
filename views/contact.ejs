@@ -81,21 +81,23 @@
       </div>
       <div class="row">
         <div class="col-md-6">
-          <form action="">
+          <% if (sent) { %><div class="alert alert-success" role="status">Thanks—your message has been received.</div><% } %>
+          <% if (error) { %><div class="alert alert-danger" role="alert"><%= error %></div><% } %>
+          <form action="/index/contact" method="post">
             <div>
-              <input type="text" placeholder="Name" />
+              <input type="text" name="name" placeholder="Name" aria-label="Name" autocomplete="name" required />
             </div>
             <div>
-              <input type="text" placeholder="Phone Number" />
+              <input type="tel" name="phone" placeholder="Phone Number" aria-label="Phone number" autocomplete="tel" />
             </div>
             <div>
-              <input type="email" placeholder="Email" />
+              <input type="email" name="email" placeholder="Email" aria-label="Email" autocomplete="email" required />
             </div>
             <div>
-              <input type="text" class="message-box" placeholder="Message" />
+              <textarea name="message" class="message-box" placeholder="How can we help?" minlength="10" maxlength="2000" required></textarea>
             </div>
             <div class="d-flex ">
-              <button>
+              <button type="submit">
                 SEND
               </button>
             </div>
@@ -132,7 +134,7 @@
                       <i class="fa fa-map-marker" aria-hidden="true"></i>
                     </div>
                     <p>
-                      Lorem Ipsum is simply dummy text
+                      Johannesburg, Gauteng
                     </p>
                   </div>
                 </a>
@@ -144,7 +146,7 @@
                       <i class="fa fa-phone" aria-hidden="true"></i>
                     </div>
                     <p>
-                      +02 1234567890
+                      +27 11 555 0142
                     </p>
                   </div>
                 </a>
@@ -156,7 +158,7 @@
                       <i class="fa fa-envelope" aria-hidden="true"></i>
                     </div>
                     <p>
-                      demo@gmail.com
+                      support@wefixit.co.za
                     </p>
                   </div>
                 </a>
@@ -196,7 +198,7 @@
     <div class="container">
       <p>
         &copy; <span id="displayDateYear"></span> All Rights Reserved By
-        <a href="https://html.design/">Free Html Templates</a>
+        WeFixIt
       </p>
     </div>
   </footer>
@@ -208,7 +210,6 @@
   </script>
   <script src="/javascripts/custom.js"></script>
   <!-- Google Map -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap"></script>
   <!-- End Google Map -->
 
 

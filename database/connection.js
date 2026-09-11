@@ -1,17 +1,23 @@
 require('dotenv').config();
-var mysql2 = require('mysql2');
+const mysql = require('mysql2');
 
-const connection = mysql2.createConnection({
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT
-  });
-  
-  connection.connect((err)=>{
-    if(err) throw err;
-    console.log("Database connected");
-  })
+const required = ['DB_HOST', 'DB_NAME', 'DB_USER'];
+const missing = required.filter((name) => !process.env[name]);
+if (missing.length > 0) {
+  throw new Error(`Missing required database configuration: ${missing.join(', ')}`);
+}
 
-  module.exports = connection;
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  port: Number(process.env.DB_PORT) || 3306,
+  waitForConnections: true,
+  connectionLimit: Number(process.env.DB_POOL_SIZE) || 10,
+  queueLimit: 0,
+  decimalNumbers: true,
+  timezone: 'Z',
+});
+
+module.exports = pool;

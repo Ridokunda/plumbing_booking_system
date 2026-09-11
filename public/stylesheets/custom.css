@@ -1,14 +1,13 @@
-body{
+body {
   /*background-image: url('../images/background.jpg');*/
   background-color: white;
   margin: 0%;
   padding: 0px;
   border: 0px;
-  font-family:Arial, Helvetica, sans-serif;
-  
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-header{
+header {
   display: flex;
   justify-content: space-between;
   background-color: #0355cc;
@@ -16,26 +15,25 @@ header{
 }
 
 /*-------------index---------------------------*/
-.opening-image{
+.opening-image {
   margin-top: 20px;
   margin-left: 80px;
   margin-bottom: 20px;
 }
-.book{
+.book {
   display: flex;
   justify-content: space-between;
   margin-left: 60px;
   margin-bottom: 100px;
 }
-.box1{
-  
+.box1 {
   background-color: aliceblue;
   color: black;
   font-size: 150%;
   width: 400px;
   height: fit-content;
-  padding:20px;
-  
+  padding: 20px;
+
   border-radius: 0px;
   margin-left: 20px;
   box-shadow: 2px 3px 4px;
@@ -45,34 +43,34 @@ header{
   padding: 20px;
 }
 
-.box1 button{
+.box1 button {
   background-color: #0355cc;
   color: aliceblue;
   margin-left: 100px;
-  height:50px;
-  width:200px;
+  height: 50px;
+  width: 200px;
   border: 0px;
   border-radius: 4px;
   font-size: large;
   box-shadow: 2px 3px 4px;
 }
 
-.book-button:hover{
+.book-button:hover {
   background-color: rgb(12, 12, 184);
 }
 
-.side-image{
+.side-image {
   margin-right: 80px;
 }
 
-.services{
+.services {
   background-color: aliceblue;
   display: flex;
   justify-content: space-around;
-  height:250px;
+  height: 250px;
   padding: 50px;
 }
-.service{
+.service {
   background-color: white;
   height: 180px;
   width: 500px;
@@ -81,81 +79,77 @@ header{
   box-shadow: 2px 3px 4px;
 }
 
-.service .s-head{
+.service .s-head {
   display: flex;
   color: #0355cc;
 }
-.testimonias{
+.testimonias {
   padding: 100px;
-
 }
-.testimonias h2{
+.testimonias h2 {
   text-align: center;
   color: #0355cc;
 }
-.testimonias .clients{
+.testimonias .clients {
   display: flex;
   justify-content: space-between;
 }
-.client{
-  
+.client {
   background-color: aliceblue;
   border: none;
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 2px 3px 4px;;
+  box-shadow: 2px 3px 4px;
 }
-.client-img img{
-  
-  width: 100px; 
-  height: 100px; 
+.client-img img {
+  width: 100px;
+  height: 100px;
   border-radius: 100%;
 }
 /*---------registerCustomer css----------*/
 
-.container{
+.container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
 }
-.form{
+.form {
   font-family: Arial, Helvetica, sans-serif;
   background-color: white;
   display: flex;
-  border:1px solid rgb(67, 62, 62);
+  border: 1px solid rgb(67, 62, 62);
   padding: 20px;
-  width:400px;
+  width: 400px;
   gap: 10px;
   justify-content: space-around;
   flex-direction: column;
   border-radius: 10px;
   box-shadow: 2px 3px 4px gray;
   border: 0px;
-
 }
-.form h2{
+.form h2 {
   text-align: center;
   color: #0355cc;
 }
-.form input{
+.form input {
   height: 25px;
   border-radius: 4px;
   border: 1px solid #ccc;
 }
-fieldset{
-  display:flex;
+fieldset {
+  display: flex;
   flex-flow: column;
   border: 0px;
   height: 50px;
 }
 
-#btn_submit{
+#btn_submit {
   color: white;
   background-color: #0355cc;
   border: 0px;
   border-radius: 10px;
-  height:30px;
+  height: 30px;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 120%;
 }
@@ -164,22 +158,22 @@ a {
   text-decoration: none;
 }
 
-.logo{
+.logo {
   color: white;
-  font-style:italic;
-  font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  font-style: italic;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
   margin-left: 20px;
 }
-.right-header{
+.right-header {
   margin-top: 25px;
 }
-.right-header a{
+.right-header a {
   color: white;
   margin-right: 30px;
   font-size: 120%;
 }
 
-footer{
+footer {
   display: flex;
   background-color: rgba(5, 40, 88, 0.797);
   height: 300px;
@@ -188,17 +182,17 @@ footer{
   align-content: center;
 }
 
-footer span{
+footer span {
   text-align: center;
 }
 
 /*----------------------------Booking---------------------------------*/
-.container{
+.container {
   width: 100%;
   justify-content: center;
 }
 /*------------------------------mybookings---------------------------------*/
-.mybookings-container{
+.mybookings-container {
   width: 100%;
   height: 100vh;
   padding: 20px;
@@ -212,85 +206,137 @@ footer span{
   font-family: Arial, sans-serif;
   overflow-x: hidden;
 }
-.mybookings-header{
+.mybookings-header {
   margin: 20px 0 20px 0;
   text-align: center;
   display: block;
   position: relative;
   z-index: 1;
 }
-.search-filter-bar { 
-  display: flex; 
-  flex-wrap: wrap; 
-  gap: 16px; 
-  align-items: center; 
-  margin-bottom: 24px; 
+.search-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 24px;
 }
-.search-input { 
-  flex: 1; 
-  min-width: 220px; 
-  padding: 10px 16px; 
-  border-radius: 8px; 
-  border: 1px solid #e0e0e0; 
-  font-size: 1rem; 
+.search-input {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-size: 1rem;
 }
-.status-filter, .date-filter, .service-filter { 
-  padding: 8px 16px; 
-  border-radius: 8px; 
-  border: 1px solid #e0e0e0; 
-  background: #fff; 
-  font-size: 1rem; 
+.status-filter,
+.date-filter,
+.service-filter {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  font-size: 1rem;
 }
-.bookings-grid { 
-  display: grid; 
-  grid-template-columns: repeat(2, 1fr); 
-  gap: 20px; 
+.bookings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
   padding: 20px 0;
   width: 100%;
   max-width: 100%;
 }
-.booking-card { 
-  background: #fff; 
-  border-radius: 16px; 
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06); 
-  padding: 28px 24px; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 12px; 
-  position: relative; }
-.booking-card .service-type { 
-  font-size: 1.1rem; 
-  font-weight: 600; 
-  color: #222; 
-  margin-bottom: 4px; 
+.booking-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
 }
-.booking-card .booking-date { 
-  color: #555; 
-  font-size: 1rem; 
-  margin-bottom: 8px; 
+.booking-card .service-type {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
 }
-.booking-card .status-label { 
-  display: inline-block; 
-  padding: 2px 12px; 
-  border-radius: 12px; 
-  font-size: 0.95em; 
-  margin-right: 6px; 
-  margin-bottom: 4px; 
+.booking-card .booking-date {
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 8px;
 }
-.status-NEW { 
-  background: #eaf1ff; 
-  color: #2563eb; 
-  border: 1px solid #b6d0ff; 
+.booking-card .status-label {
+  display: inline-block;
+  padding: 2px 12px;
+  border-radius: 12px;
+  font-size: 0.95em;
+  margin-right: 6px;
+  margin-bottom: 4px;
 }
-.status_CANCELLED, .status_DECLINED { background: #ffeaea; color: #d32f2f; border: 1px solid #ffc6c6; }
-.status_COMPLETED { background: #eaffea; color: #388e3c; border: 1px solid #b6ffc6; }
-.status_IN_PROGRESS { background: #fffbe6; color: #b59f00; border: 1px solid #ffe9a6; }
-.booking-card .cancel-btn { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
-.booking-card .cancel-btn:hover { background: #1746a2; }
-.booking-card .service-badge { position: absolute; top: 18px; right: 18px; background: #f3f6fa; color: #2563eb; border-radius: 8px; padding: 4px 12px; font-size: 0.95em; font-weight: 500; }
-.booking-card .avatar { width: 38px; height: 38px; border-radius: 50%; background: #e0e7ef; display: inline-block; vertical-align: middle; margin-right: 8px; }
-.booking-card .card-row { display: flex; align-items: center; gap: 10px; }
-.booking-card .card-row-top { justify-content: space-between; }
+.status-NEW {
+  background: #eaf1ff;
+  color: #2563eb;
+  border: 1px solid #b6d0ff;
+}
+.status_CANCELLED,
+.status_DECLINED {
+  background: #ffeaea;
+  color: #d32f2f;
+  border: 1px solid #ffc6c6;
+}
+.status_COMPLETED {
+  background: #eaffea;
+  color: #388e3c;
+  border: 1px solid #b6ffc6;
+}
+.status_IN_PROGRESS {
+  background: #fffbe6;
+  color: #b59f00;
+  border: 1px solid #ffe9a6;
+}
+.booking-card .cancel-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.2s;
+}
+.booking-card .cancel-btn:hover {
+  background: #1746a2;
+}
+.booking-card .service-badge {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: #f3f6fa;
+  color: #2563eb;
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 0.95em;
+  font-weight: 500;
+}
+.booking-card .avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e0e7ef;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.booking-card .card-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.booking-card .card-row-top {
+  justify-content: space-between;
+}
 
 /* booking stepper */
 .booking-stepper-shell {
@@ -400,7 +446,10 @@ footer span{
   padding: 12px 18px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .step-btn:hover {
@@ -620,7 +669,10 @@ footer span{
   color: #d9e7ff;
   text-decoration: none;
   font-weight: 600;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
 }
 
 .admin-pages a:hover,
@@ -714,7 +766,10 @@ footer span{
   border-radius: 14px;
   padding: 18px;
   box-shadow: 0 8px 18px rgba(16, 35, 63, 0.06);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .admin-metric-card:hover {
@@ -933,55 +988,64 @@ footer span{
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
-.booking-card .card-row-bottom { justify-content: flex-start; gap: 12px; }
-.booking-card .card-row .label { font-size: 0.98em; color: #888; }
-.booking-card .card-row .value { font-weight: 500; color: #222; }
+.booking-card .card-row-bottom {
+  justify-content: flex-start;
+  gap: 12px;
+}
+.booking-card .card-row .label {
+  font-size: 0.98em;
+  color: #888;
+}
+.booking-card .card-row .value {
+  font-weight: 500;
+  color: #222;
+}
 .booking-photo {
   border: 1px solid #ccc;
   border-radius: 4px;
   max-width: 100%;
   height: auto;
 }
-.photo-form input[type=file] {
+.photo-form input[type='file'] {
   font-size: 0.9rem;
 }
 .photo-form button {
   font-size: 0.9rem;
 }
-@media (max-width: 1200px) { 
-  .bookings-grid { 
-    grid-template-columns: repeat(2, 1fr); 
-  } 
+@media (max-width: 1200px) {
+  .bookings-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
-@media (max-width: 768px) { 
-  .bookings-grid { 
-    grid-template-columns: 1fr; 
-  } 
+@media (max-width: 768px) {
+  .bookings-grid {
+    grid-template-columns: 1fr;
+  }
 }
-@media (max-width: 768px) { 
-  .bookings-grid { 
-    grid-template-columns: 1fr; 
-  } 
+@media (max-width: 768px) {
+  .bookings-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /*----------------------------------bookings page---------------------------------------*/
-.bookings-container{
+.bookings-container {
   padding: 20px;
   font-family: Arial, sans-serif;
 }
-.container-bookings-tables{
+.container-bookings-tables {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.bookings-container h2{
+.bookings-container h2 {
   text-align: center;
 }
 
-.booking-table{
+.booking-table {
   background-color: #ddd;
-  
+
   width: 100%;
   border-collapse: collapse;
 }
@@ -995,9 +1059,7 @@ thead th {
   /*border:solid #333 1px;*/
 }
 
-
-
-#btn_assign_plumber{
+#btn_assign_plumber {
   background-color: #0355cc;
   color: aliceblue;
   margin-left: 100px;
@@ -1006,14 +1068,14 @@ thead th {
   font-size: large;
   box-shadow: 2px 3px 4px;
 }
-#btn_assign_plumber:hover{
+#btn_assign_plumber:hover {
   background-color: rgba(11, 55, 126, 0.709);
 }
-.plumbers-table{
-  border-collapse: collapse ;
+.plumbers-table {
+  border-collapse: collapse;
   width: 100%;
 }
-.assign-container{
+.assign-container {
   display: none;
   z-index: 1;
   position: fixed;
@@ -1022,7 +1084,7 @@ thead th {
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
 }
 .popup {
   background-color: #fefefe;
@@ -1030,9 +1092,9 @@ thead th {
   padding: 20px;
   border: 1px solid #888;
   width: 300px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
-.close{
+.close {
   color: #aaa;
   float: right;
   font-size: 28px;
@@ -1040,60 +1102,58 @@ thead th {
 }
 .close:hover,
 .close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
 /*-------------------------------Manage users page--------------*/
-.container-manage{
-  display:block;
-  height:100vh;
+.container-manage {
+  display: block;
+  height: 100vh;
   padding: 0px;
   margin: 0px;
   font-family: Arial, sans-serif;
 }
-.head{
+.head {
   display: flex;
   text-align: center;
   justify-content: space-between;
 }
-.body{
+.body {
   padding: 20px;
 }
-.stats{
-  
+.stats {
   display: flex;
   justify-content: space-around;
   padding: 20px;
 }
-.data{
+.data {
   background-color: aliceblue;
   width: 200px;
   padding: 20px;
   box-shadow: 2px 3px 4px;
 }
-.stats a{
+.stats a {
   color: inherit;
   text-decoration: none;
 }
-.stats a:hover{
+.stats a:hover {
   color: #0355cc;
   text-decoration: none;
 }
-#btn_adduser{
-  display: flex; 
-  background-color: rgb(15, 126, 148); 
-  color: white; 
-  border: none; 
-  border-radius: 8px; 
-  padding: 12px 24px; 
-  font-size: 1rem; 
-  cursor: pointer; 
-  transition: background-color 0.3s; 
+#btn_adduser {
+  display: flex;
+  background-color: rgb(15, 126, 148);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
   margin-top: 10px;
   margin-right: 20px;
 }
-
 
 /*------------------------------Profile Page---------------------------------*/
 .profile-container {
@@ -1127,7 +1187,7 @@ thead th {
 .profile-card {
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   padding: 30px;
   display: flex;
   gap: 30px;
@@ -1159,7 +1219,7 @@ thead th {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1270,7 +1330,7 @@ thead th {
 .profile-stats {
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   padding: 30px;
   height: fit-content;
 }
@@ -1335,18 +1395,17 @@ thead th {
   .profile-content {
     grid-template-columns: 1fr;
   }
-  
+
   .profile-card {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .profile-form {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
 }
-

@@ -1,23 +1,43 @@
 {
-  "name": "bussiness-management-app",
-  "version": "0.0.0",
+  "name": "wefixit-service-platform",
+  "version": "1.0.0",
+  "description": "A multi-role field-service booking and operations platform for local trades.",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "dev": "node --watch ./bin/www",
+    "check": "node ./scripts/check.js && node ./scripts/check-views.js",
+    "lint": "eslint . --max-warnings=0",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "node --test",
+    "smoke:auth": "node ./scripts/smoke-auth.js",
+    "smoke:workflow": "node ./scripts/smoke-workflow.js",
+    "verify": "npm run check && npm run lint && npm test && npm run format:check",
+    "db:migrate": "node ./scripts/migrate.js",
+    "db:verify": "node ./scripts/verify-schema.js",
+    "db:seed": "node ./scripts/seed.js"
+  },
+  "engines": {
+    "node": ">=20.11.0",
+    "npm": ">=10"
   },
   "dependencies": {
-    "bcrypt": "^5.1.1",
-    "cookie-parser": "~1.4.4",
-    "debug": "~2.6.9",
-    "dotenv": "^17.2.1",
-    "ejs": "^3.1.9",
-    "express": "^4.19.2",
-    "express-session": "^1.18.0",
-    "http-errors": "~1.6.3",
-    "jsonwebtoken": "^9.0.3",
-    "morgan": "~1.9.1",
-    "multer": "^2.0.2",
-    "mysql2": "^3.9.7",
-    "stripe": "^20.2.0"
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "morgan": "^1.12.0",
+    "multer": "^2.3.0",
+    "mysql2": "^3.24.4",
+    "pdfkit": "^0.20.2",
+    "stripe": "^22.6.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.6",
+    "supertest": "^7.2.2"
   }
 }

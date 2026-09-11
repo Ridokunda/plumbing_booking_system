@@ -1,315 +1,167 @@
-# WeFixIt - Business Management Application
+# WeFixIt
 
-A comprehensive web-based business management system for plumbing services, built with Node.js, Express.js, MySQL, and EJS templating.
+WeFixIt is a full-stack field-service platform for plumbing and electrical businesses.
+It demonstrates more than appointment CRUD: customers, verified tradespeople, and
+operations staff collaborate through a controlled job lifecycle from request to review.
 
-## 🏗️ Features
+> Portfolio status: production-oriented reference implementation. Real Stripe and Resend
+> integrations are optional; safe local/demo modes are documented below.
 
-### 👥 User Management
-- **Multi-role System**: Customer, Admin, and Plumber roles
-- **User Registration**: Separate registration for customers and plumbers
-- **Profile Management**: Edit personal information and upload profile pictures
-- **Authentication**: Secure login/logout system with session management
+## Product capabilities
 
-### 📅 Booking System
-- **Service Booking**: Customers can book Installation or Fix services
-- **Date Restrictions**: Only current and future dates allowed
-- **Booking Management**: View, edit, and cancel bookings
-- **Status Tracking**: NEW, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED, DECLINED
+### Customer journey
 
-### 🎯 Dashboard Features
+- Register securely, verify email, sign in, and recover a forgotten password.
+- Request one of four supported services with multiple preferred future dates and location.
+- Edit or cancel requests only while their lifecycle permits it.
+- Follow status history, assigned schedule, customer-visible job notes, and photo evidence.
+- Review itemised quotes, approve pricing, confirm completed work, pay in ZAR, download
+  PDF receipts, request reschedules/refunds, open disputes, and leave a verified review.
 
-#### Customer Dashboard
-- **My Bookings**: View all personal bookings with search and filter
-- **Booking Actions**: Edit booking details and cancel bookings
-- **Profile Management**: Update personal information and profile picture
-- **Real-time Updates**: AJAX-powered interface for seamless interactions
+### Plumber journey
 
-#### Admin Dashboard
-- **User Management**: Manage customers and plumbers
-- **Booking Management**: View all bookings, assign plumbers, decline bookings
-- **Dashboard Analytics**: Statistics and insights
-- **Search & Filter**: Advanced filtering capabilities
+- Apply with licence and experience details, then await administrator verification.
+- Publish available or unavailable time windows.
+- See only assigned work; progress it from assigned to in-progress to completed.
+- Create itemised, tax-aware quotes and attach before/after evidence and job notes.
+- Build a public rating history from verified, paid jobs.
 
-#### Plumber Dashboard
-- **My Bookings**: View assigned bookings
-- **Status Updates**: Mark bookings as complete
-- **Profile Management**: Update personal information
+### Operations journey
 
-### 📊 Analytics & Statistics
-- **Booking Statistics**: Total, completed, pending, and cancelled bookings
-- **User Statistics**: Customer and plumber counts
-- **Real-time Data**: Live updates from database
+- See booking, customer, plumber, and status metrics.
+- Approve or reject plumber applications and suspend/deactivate accounts.
+- Schedule only approved plumbers while checking availability and overlapping jobs.
+- Assign, decline, and inspect jobs; triage contact enquiries, disputes, reschedules, and
+  provider-backed refunds.
 
-### 🎨 User Interface
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **Modern UI**: Clean, professional interface with card-based layouts
-- **Interactive Elements**: Modals, forms, and dynamic content
-- **Profile Pictures**: Upload and manage profile images
+## Engineering highlights
 
-## 🛠️ Technology Stack
+- Express 5, EJS, MySQL 8, server-side sessions, and responsive Bootstrap UI.
+- Ordered database migrations covering scheduling, quotes, audit history, invoices,
+  payments, reviews, notifications, availability, and account tokens.
+- Explicit role permissions and lifecycle transition rules with transaction-safe updates.
+- Session-bound CSRF protection, rate limiting, bcrypt passwords, hashed reset tokens,
+  secure headers, restricted uploads, parameterised SQL, and revocable DB sessions.
+- Signed and idempotent Stripe payment/refund handling; email delivery through Resend when enabled.
+- Downloadable PDF job cards and receipts generated from access-controlled database records.
+- Health endpoints, Docker Compose, automated tests, linting, dependency auditing, and CI.
 
-### Backend
-- **Node.js**: JavaScript runtime environment
-- **Express.js**: Web application framework
-- **MySQL**: Relational database
-- **Multer**: File upload handling
-- **Express Session**: Session management
+See [the architecture notes](docs/architecture.md) and [OpenAPI description](docs/api.yaml).
 
-### Frontend
-- **EJS**: Embedded JavaScript templating
-- **Bootstrap**: CSS framework for responsive design
-- **Font Awesome**: Icon library
-- **Custom CSS**: Tailored styling for application
+## Quick start with Docker
 
-### Database
-- **MySQL**: Primary database
-- **Tables**: users, bookings, and related schemas
+Requirements: Docker Desktop with Compose.
 
-## 📋 Prerequisites
-
-Before running this application, make sure you have:
-
-- **Node.js** (v14 or higher)
-- **MySQL** (v8.0 or higher)
-- **npm** (Node Package Manager)
-
-## 🚀 Installation
-
-### 1. Clone the Repository
 ```bash
-git clone <repository-url>
-cd Bussiness_Management_App
+docker compose up --build
 ```
 
-### 2. Install Dependencies
+The Compose stack starts MySQL, waits for it to become healthy, applies migrations, and
+serves the app at <http://localhost:3000>.
+
+To load portfolio/demo accounts:
+
 ```bash
-npm install
+docker compose run --rm -e ALLOW_DEMO_SEED=true migrate npm run db:seed
 ```
 
-### 3. Database Setup
-Create a MySQL database and update the connection settings in `database/connection.js`:
+The default demo password is `PortfolioDemo!2026` for these local-only accounts:
 
-```javascript
-const mysql = require('mysql2');
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'your_username',
-  password: 'your_password',
-  database: 'your_database_name'
-});
-```
+- `customer@wefixit.local`
+- `plumber@wefixit.local`
+- `admin@wefixit.local`
 
-### 4. Database Schema
-Run the following SQL to create the required tables:
+Set `DEMO_PASSWORD` to replace it. Never enable demo seeding in a real deployment.
 
-```sql
--- Users table
-CREATE TABLE users (
-  idusers INT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(100) NOT NULL,
-  surname VARCHAR(100) NOT NULL,
-  email VARCHAR(100) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  usertype INT NOT NULL, -- 1=Customer, 2=Admin, 3=Plumber
-  phone VARCHAR(20) NULL,
-  address TEXT NULL,
-  profile_picture VARCHAR(255) NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+## Local development
 
--- Bookings table
-CREATE TABLE bookings (
-  idbookings INT PRIMARY KEY AUTO_INCREMENT,
-  idUser INT NOT NULL,
-  idPlumber INT NULL,
-  type VARCHAR(50) NOT NULL,
-  date_start DATE NOT NULL,
-  description TEXT,
-  status VARCHAR(20) DEFAULT 'NEW',
-  before_photo VARCHAR(255) NULL,
-  after_photo VARCHAR(255) NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (idUser) REFERENCES users(idusers),
-  FOREIGN KEY (idPlumber) REFERENCES users(idusers)
-);
-```
+Requirements: Node.js 20.11+, npm 10+, and MySQL 8.
 
-### 5. Start the Application
 ```bash
-npm start
+npm ci
+copy env.template .env
+npm run db:migrate
+npm run db:verify
+npm run dev
 ```
 
-The application will be available at `http://localhost:3000`
+On macOS/Linux, use `cp env.template .env`. Update the database values and generate a
+long random `SESSION_SECRET` before starting.
 
-## 📁 Project Structure
+Useful commands:
 
-```
-Bussiness_Management_App/
-├── app.js                          # Main application file
-├── package.json                    # Dependencies and scripts
-├── database/
-│   └── connection.js              # Database connection
-├── routes/
-│   ├── admin.js                   # Admin routes
-│   ├── booking.js                 # Booking routes
-│   ├── customer.js                # Customer routes
-│   ├── index.js                   # Main routes
-│   ├── login.js                   # Authentication routes
-│   ├── plumber.js                 # Plumber routes
-│   ├── profile.js                 # Profile routes
-│   ├── register.js                # Registration routes
-│   └── users.js                   # User management routes
-├── views/
-│   ├── partials/
-│   │   ├── head.ejs              # Navigation header
-│   │   └── footer.ejs            # Footer component
-│   ├── admindashboard.ejs        # Admin dashboard
-│   ├── booking.ejs               # Booking form
-│   ├── bookings.ejs              # Admin bookings view
-│   ├── mybookings.ejs            # Customer bookings view
-│   ├── profile.ejs               # Profile page
-│   └── ...                       # Other view files
-├── public/
-│   ├── stylesheets/
-│   │   ├── custom.css            # Custom styles
-│   │   └── ...                   # Other CSS files
-│   ├── javascripts/
-│   │   ├── admin-dashboard.js    # Admin dashboard scripts
-│   │   └── ...                   # Other JS files
-│   ├── images/                   # Static images
-│   └── uploads/
-│       └── profile-pictures/     # Profile picture uploads
-└── bin/
-    └── www                       # Application entry point
-```
-
-## 👤 User Roles
-
-### Customer (usertype: 1)
-- Book plumbing services
-- View and manage personal bookings
-- Edit booking details
-- Cancel bookings
-- Update profile information
-- Upload profile pictures
-
-### Admin (usertype: 2)
-- Manage all users (customers and plumbers)
-- View all bookings
-- Assign plumbers to bookings
-- Decline bookings
-- View dashboard analytics
-- Manage system settings
-
-### Plumber (usertype: 3)
-- View assigned bookings
-- Update booking status
-- Mark bookings as complete
-- Manage personal profile
-
-## 🔧 Configuration
-
-### Environment Variables
-Create a `.env` file in the root directory:
-
-```env
-DB_HOST=localhost
-DB_USER=your_username
-DB_PASSWORD=your_password
-DB_NAME=your_database_name
-SESSION_SECRET=your_session_secret
-PORT=3000
-```
-
-### File Upload Settings
-Profile pictures are stored in `public/uploads/profile-pictures/` with:
-- Maximum file size: 5MB
-- Allowed formats: JPEG, JPG, PNG, GIF
-- Automatic directory creation
-
-## 🚀 Usage
-
-### Starting the Application
 ```bash
-# Development mode
-npm start
-
-# With nodemon for auto-restart
-npx nodemon
+npm run check       # JavaScript and EJS compilation
+npm run lint        # correctness-focused lint rules
+npm test            # unit and HTTP integration tests
+npm audit           # dependency vulnerability report
+npm run db:seed     # optional local demo data
+npm run smoke:auth  # role-based HTTP smoke test after seeding
+npm run smoke:workflow # full booking-to-payment lifecycle smoke test
+npm run verify      # complete local static/unit quality gate
 ```
 
-### Accessing the Application
-1. Open your browser and navigate to `http://localhost:3000`
-2. Register as a customer or plumber
-3. Login with your credentials
-4. Access role-specific features
+## Configuration
 
-## 🔒 Security Features
+| Variable                                     | Required             | Purpose                                           |
+| -------------------------------------------- | -------------------- | ------------------------------------------------- |
+| `DB_HOST`, `DB_NAME`, `DB_USER`              | Yes                  | MySQL connection                                  |
+| `DB_PASSWORD`, `DB_PORT`                     | Environment-specific | MySQL credentials and port                        |
+| `SESSION_SECRET`                             | Yes                  | At least 32 characters; signs session cookies     |
+| `COOKIE_SECURE`                              | Production           | Set `true` behind HTTPS                           |
+| `APP_URL`                                    | Recommended          | Absolute callback and account-link base URL       |
+| `REQUIRE_EMAIL_VERIFICATION`                 | No                   | Require verified email before login               |
+| `EMAIL_API_KEY`, `EMAIL_FROM`                | No                   | Enables Resend transactional email                |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Production payments  | Stripe Checkout and signed webhooks               |
+| `ENABLE_SIMULATED_PAYMENTS`                  | Demo only            | Enables clearly labelled local payment simulation |
+| `TAX_RATE`                                   | No                   | Decimal quote tax rate; defaults to `0.15`        |
 
-- **Session Management**: Secure user sessions
-- **Input Validation**: Server-side validation for all forms
-- **File Upload Security**: Restricted file types and sizes
-- **SQL Injection Protection**: Parameterized queries
-- **Authentication**: Protected routes for logged-in users
+Refer to [`env.template`](env.template) for the complete example. Do not commit `.env`.
 
-## 📱 Responsive Design
+## Core lifecycle
 
-The application is fully responsive and works on:
-- Desktop computers
-- Tablets
-- Mobile phones
+```text
+NEW -> ASSIGNED -> IN_PROGRESS -> COMPLETED -> PAID
+  \-> DECLINED
+  \-> CANCELLED
+```
 
-## 🛠️ Development
+Only the responsible role can make each transition. Quote approval, customer completion
+confirmation, and provider-confirmed payment add independent evidence around the lifecycle.
 
-### Adding New Features
-1. Create route files in `routes/` directory
-2. Add view files in `views/` directory
-3. Update CSS in `public/stylesheets/custom.css`
-4. Add JavaScript files in `public/javascripts/`
+## Project layout
 
-### Database Changes
-1. Update the database schema
-2. Modify connection queries in route files
-3. Update view templates to reflect changes
+```text
+config/                 domain roles, services, and transition rules
+database/migrations/    versioned MySQL schema
+middleware/             authentication and request security
+routes/                 role-scoped application workflows
+utils/                  validation, mail, tokens, notifications, lifecycle helpers
+views/                   EJS pages and shared partials
+public/                  browser JavaScript, CSS, and images
+scripts/                 checks, migrations, and demo seed
+test/                    Node test runner unit and HTTP integration coverage
+docs/                    architecture and API documentation
+.github/workflows/       CI quality gate
+```
 
-## 🐛 Troubleshooting
+## Deployment checklist
 
-### Common Issues
+1. Use a managed MySQL database and run `npm run db:migrate` as a release step.
+2. Supply unique secrets through the host's secret manager; set `COOKIE_SECURE=true`.
+3. Configure persistent object storage for uploads rather than an ephemeral container disk.
+4. Configure Stripe's webhook to `POST /payment/webhook` and set both Stripe secrets.
+5. Enable Resend and email verification, terminate TLS at the proxy, and monitor
+   `/health/live` and `/health/ready` separately.
+6. Keep `ENABLE_SIMULATED_PAYMENTS` and `ALLOW_DEMO_SEED` disabled.
 
-**Database Connection Error**
-- Verify MySQL is running
-- Check connection credentials in `database/connection.js`
-- Ensure database exists
+## Intentional next-scale choices
 
-**File Upload Issues**
-- Check directory permissions for `public/uploads/`
-- Verify file size limits
-- Ensure allowed file types
+The modular monolith is deliberate for a portfolio-sized product. At higher volume, move
+email/notification delivery to a queue, uploads to object storage, and rate-limit counters
+to Redis. Split route persistence into repositories only when independent modules need it;
+the current transaction boundaries remain explicit and easy to inspect.
 
-**Session Issues**
-- Clear browser cookies
-- Restart the application
-- Check session configuration
+## Licence
 
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📞 Support
-
-For support and questions:
-- Create an issue in the repository
-- Contact the development team
-- Check the documentation
-
----
-
-**WeFixIt** - Making plumbing services management simple and efficient! 🛠️ 
+MIT — see [LICENSE](LICENSE).

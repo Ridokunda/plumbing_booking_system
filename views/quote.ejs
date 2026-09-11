@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeFixIt | <%= title %></title><link rel="stylesheet" href="/stylesheets/bootstrap.css"><link rel="stylesheet" href="/stylesheets/custom.css"></head>
+<body><%- include('./partials/head') %><main class="container py-5">
+  <p class="booking-stepper-eyebrow">Booking #<%= booking.idbookings %></p><h1>Itemized quote</h1>
+  <p><strong>Service:</strong> <%= booking.type.replace(/_/g, ' ') %> · <strong>Location:</strong> <%= booking.location %></p>
+  <% if (!quote) { %><div class="alert alert-info">No quote has been submitted yet.</div><% } else { %>
+    <div class="card"><div class="card-body"><div class="d-flex justify-content-between"><h2 class="h4"><%= quote.quote_number %></h2><span class="badge badge-primary"><%= quote.status %></span></div>
+    <table class="table"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Total</th></tr></thead><tbody>
+      <% items.forEach(item => { %><tr><td><%= item.description %></td><td><%= item.quantity %></td><td>R<%= Number(item.unit_price).toFixed(2) %></td><td>R<%= Number(item.line_total).toFixed(2) %></td></tr><% }) %>
+    </tbody></table><dl class="row"><dt class="col-8">Subtotal</dt><dd class="col-4">R<%= Number(quote.subtotal).toFixed(2) %></dd><dt class="col-8">Tax</dt><dd class="col-4">R<%= Number(quote.tax_amount).toFixed(2) %></dd><dt class="col-8">Total</dt><dd class="col-4"><strong>R<%= Number(quote.total_amount).toFixed(2) %></strong></dd></dl>
+    <% if (session.user.usertype === 1 && quote.status === 'SENT') { %><div class="d-flex gap-2"><button class="btn btn-success quote-response" data-decision="APPROVED">Approve</button><button class="btn btn-danger quote-response" data-decision="REJECTED">Reject</button></div><% } %>
+    </div></div>
+  <% } %><p class="mt-4"><a href="<%= session.user.usertype === 3 ? '/plumber' : session.user.usertype === 2 ? '/admin/bookings' : '/booking/mybookings' %>">Back to bookings</a></p>
+  <% if (session.user.usertype === 3 && ['ASSIGNED','IN_PROGRESS'].includes(booking.status)) { %>
+    <section class="card mt-4"><div class="card-body"><h2 class="h4">Prepare a new quote</h2>
+      <form id="quoteForm"><div id="quoteItems"><div class="form-row quote-item mb-2"><div class="col-md-6"><input class="form-control item-description" aria-label="Line item description" placeholder="Labour or material" required></div><div class="col"><input class="form-control item-quantity" aria-label="Quantity" type="number" min="0.01" step="0.01" value="1" required></div><div class="col"><input class="form-control item-price" aria-label="Unit price" type="number" min="0" step="0.01" placeholder="Unit price" required></div></div></div>
+      <button type="button" id="addItem" class="btn btn-secondary">Add item</button> <button type="submit" class="btn btn-primary">Send quote</button></form>
+    </div></section>
+  <% } %>
+</main><%- include('./partials/footer') %>
+<script>
+document.querySelectorAll('.quote-response').forEach(button => button.addEventListener('click', async () => { if (!confirm(`${button.dataset.decision.toLowerCase()} this quote?`)) return; const response = await fetch('/quotes/<%= quote ? quote.idquote : 0 %>/respond', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({decision:button.dataset.decision}) }); const data = await response.json(); if (!response.ok) return alert(data.message); location.reload(); }));
+const quoteForm = document.getElementById('quoteForm'); const quoteItems = document.getElementById('quoteItems');
+document.getElementById('addItem')?.addEventListener('click', () => { const row = quoteItems.firstElementChild.cloneNode(true); row.querySelector('.item-description').value=''; row.querySelector('.item-price').value=''; quoteItems.appendChild(row); });
+quoteForm?.addEventListener('submit', async event => { event.preventDefault(); const items=[...document.querySelectorAll('.quote-item')].map(row => ({description:row.querySelector('.item-description').value, quantity:row.querySelector('.item-quantity').value, unitPrice:row.querySelector('.item-price').value})); const response=await fetch('/quotes/booking/<%= booking.idbookings %>', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items})}); const data=await response.json(); if(!response.ok) return alert(data.message); location.reload(); });
+</script>
+</body></html>

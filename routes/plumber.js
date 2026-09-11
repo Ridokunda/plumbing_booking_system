@@ -1,262 +1,285 @@
-var express = require('express');
-var router = express.Router();
-const connection = require('../database/connection');
-const { verifyToken, isPlumber } = require('../middleware/auth');
+const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+const database = require('../database/connection');
+const { verifyToken, isPlumber } = require('../middleware/auth');
 const { createNotification } = require('../utils/notifications');
 const { getBookingLifecycle } = require('../utils/bookingLifecycle');
+const { normalizeSchedule, canTransition } = require('../utils/validation');
+const { recordAuditEvent } = require('../utils/audit');
 
-// configure multer storage for booking photos
+const router = express.Router();
+const uploadDirectory = path.join(__dirname, '..', 'uploads', 'booking_photos');
+
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '..', 'uploads', 'booking_photos'));
+  destination(_req, _file, callback) {
+    fs.mkdirSync(uploadDirectory, { recursive: true });
+    callback(null, uploadDirectory);
   },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    const filename = `${Date.now()}-${Math.round(Math.random()*1e9)}${ext}`;
-    cb(null, filename);
+  filename(_req, file, callback) {
+    const extension = path.extname(file.originalname).toLowerCase();
+    callback(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: Number(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024 },
+  fileFilter(_req, file, callback) {
+    const extension = path.extname(file.originalname).toLowerCase();
+    const accepted =
+      ['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype) &&
+      ['.jpg', '.jpeg', '.png', '.webp'].includes(extension);
+    callback(accepted ? null : new Error('Only JPEG, PNG, and WebP images are allowed'), accepted);
+  },
+});
+
+async function hasSupportedImageSignature(filePath) {
+  const handle = await fs.promises.open(filePath, 'r');
+  try {
+    const buffer = Buffer.alloc(12);
+    const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
+    if (bytesRead < 4) return false;
+    const jpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+    const png = buffer
+      .subarray(0, 8)
+      .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const webp =
+      buffer.subarray(0, 4).toString() === 'RIFF' && buffer.subarray(8, 12).toString() === 'WEBP';
+    return jpeg || png || webp;
+  } finally {
+    await handle.close();
+  }
+}
+
+router.use(verifyToken, isPlumber);
+
+router.get('/', (_req, res) => res.redirect('/plumber/my-bookings'));
+
+router.get('/availability', async (req, res, next) => {
+  try {
+    const [availability] = await database.promise().query(
+      `SELECT id, starts_at, ends_at, availability_type
+       FROM plumber_availability WHERE plumber_id = ? AND ends_at >= NOW()
+       ORDER BY starts_at`,
+      [req.user.idusers],
+    );
+    res.render('plumber-availability', { title: 'My availability', availability });
+  } catch (error) {
+    next(error);
   }
 });
-const upload = multer({ storage });
 
-
-// Apply JWT verification and plumber check to all plumber routes
-router.use(verifyToken);
-router.use(isPlumber);
-
-router.get('/', function(req,res,next){
-    res.render('plumber', {title:'Plumber Dashboard'});
+router.post('/availability', async (req, res, next) => {
+  const schedule = normalizeSchedule(req.body.starts_at, req.body.ends_at);
+  const type = String(req.body.availability_type || 'AVAILABLE').toUpperCase();
+  if (!schedule || !['AVAILABLE', 'UNAVAILABLE'].includes(type)) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Provide a valid future availability window.' });
+  }
+  try {
+    const [result] = await database
+      .promise()
+      .query(
+        'INSERT INTO plumber_availability (plumber_id, starts_at, ends_at, availability_type) VALUES (?, ?, ?, ?)',
+        [req.user.idusers, schedule.start, schedule.end, type],
+      );
+    recordAuditEvent({
+      actorId: req.user.idusers,
+      action: 'AVAILABILITY_CREATED',
+      entityType: 'plumber_availability',
+      entityId: result.insertId,
+      metadata: { type },
+      ipAddress: req.ip,
+    });
+    return res.status(201).json({ success: true, id: result.insertId });
+  } catch (error) {
+    next(error);
+  }
 });
 
-/* GET assigned bookings for the logged-in plumber */
-router.get('/my-bookings', function(req, res, next){
-    const plumberId = req.user.idusers;
-    
-    if (!plumberId) {
-        return res.status(401).send('Plumber not authenticated.');
-    }
+router.delete('/availability/:id', async (req, res, next) => {
+  try {
+    const [result] = await database
+      .promise()
+      .query('DELETE FROM plumber_availability WHERE id = ? AND plumber_id = ?', [
+        Number(req.params.id),
+        req.user.idusers,
+      ]);
+    if (!result.affectedRows)
+      return res.status(404).json({ success: false, message: 'Availability entry not found.' });
+    recordAuditEvent({
+      actorId: req.user.idusers,
+      action: 'AVAILABILITY_REMOVED',
+      entityType: 'plumber_availability',
+      entityId: req.params.id,
+      ipAddress: req.ip,
+    });
+    return res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
 
-    const getMyBookings = (plumberColumn, descriptionColumn) => {
-        const query = `
-            SELECT
-                b.idbookings,
-                b.type AS service_type,
-                b.date_start,
-                b.${descriptionColumn} AS description,
-                b.status,
-                b.amount,
-                b.before_photo,
-                b.after_photo,
-                c.name AS customer_name,
-                c.surname AS customer_surname,
+router.get('/my-bookings', async (req, res, next) => {
+  const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+  const pageSize = 20;
+  try {
+    const [[countRow], [bookings]] = await Promise.all([
+      database
+        .promise()
+        .query('SELECT COUNT(*) AS total FROM bookings WHERE idPlumber = ?', [req.user.idusers]),
+      database.promise().query(
+        `SELECT b.idbookings, b.type AS service_type, b.date_start,
+                b.scheduled_start, b.scheduled_end, b.location, b.description,
+                b.status, b.amount, b.before_photo, b.after_photo,
+                c.name AS customer_name, c.surname AS customer_surname,
                 c.email AS customer_email
-            FROM
-                bookings AS b
-            JOIN
-                users AS c ON b.idUser = c.idusers
-            WHERE
-                b.${plumberColumn} = ?
-            ORDER BY b.date_start DESC;
-        `;
-
-        connection.query(query, [plumberId], (err, results) => {
-            if (err && err.code === 'ER_BAD_FIELD_ERROR' && plumberColumn === 'plumberid') {
-                return getMyBookings('idPlumber', descriptionColumn);
-            }
-            if (err && err.code === 'ER_BAD_FIELD_ERROR' && descriptionColumn === 'des') {
-                return getMyBookings(plumberColumn, 'description');
-            }
-            if (err) {
-                console.error('Error fetching assigned bookings for plumber:', err.stack);
-                return res.status(500).send('Error fetching assigned bookings');
-            }
-            res.render('plumber_bookings', {
-                title: 'My Assigned Bookings',
-                bookings: results.map(booking => ({
-                    ...booking,
-                    lifecycle: getBookingLifecycle('plumber', booking.status)
-                }))
-            });
-        });
-    };
-
-    getMyBookings('plumberid', 'des');
+         FROM bookings b JOIN users c ON c.idusers = b.idUser
+         WHERE b.idPlumber = ? ORDER BY b.created_at DESC LIMIT ? OFFSET ?`,
+        [req.user.idusers, pageSize, (page - 1) * pageSize],
+      ),
+    ]);
+    res.render('plumber_bookings', {
+      title: 'My Assigned Bookings',
+      bookings: bookings.map((booking) => ({
+        ...booking,
+        lifecycle: getBookingLifecycle('plumber', booking.status),
+      })),
+      pagination: {
+        page,
+        pageSize,
+        total: countRow[0].total,
+        pages: Math.ceil(countRow[0].total / pageSize),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-/* POST to update the status of an assigned booking by the plumber */
-router.post('/update-booking-status', function(req, res, next){
-    const { booking_id, status } = req.body;
-    const plumberId = req.user.idusers;
+router.post('/update-booking-status', async (req, res, next) => {
+  const bookingId = Number(req.body.booking_id);
+  const nextStatus = String(req.body.status || '').toUpperCase();
+  if (!Number.isInteger(bookingId) || !['IN_PROGRESS', 'COMPLETED'].includes(nextStatus)) {
+    return res.status(400).json({ success: false, message: 'Provide a valid booking and status.' });
+  }
 
-    if (!booking_id || !status) {
-        return res.status(400).json({ message: 'Booking ID and Status are required.' });
+  let connection;
+  try {
+    connection = await database.promise().getConnection();
+    await connection.beginTransaction();
+    const [rows] = await connection.query(
+      'SELECT idUser, status FROM bookings WHERE idbookings = ? AND idPlumber = ? FOR UPDATE',
+      [bookingId, req.user.idusers],
+    );
+    if (!rows.length) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'Assigned booking not found.' });
     }
-    if (!plumberId) {
-        return res.status(401).send('Plumber not authenticated.');
+    const booking = rows[0];
+    if (!canTransition('plumber', booking.status, nextStatus)) {
+      await connection.rollback();
+      return res.status(409).json({
+        success: false,
+        message: `Cannot move a booking from ${booking.status} to ${nextStatus}.`,
+      });
     }
-
-    // Define allowed status transitions for plumbers
-    const allowedStatuses = ['IN_PROGRESS', 'COMPLETED', 'CANCELLED']; // Example statuses
-    if (!allowedStatuses.includes(status)) {
-        return res.status(400).json({ message: 'Invalid status provided.' });
-    }
-
-    // Ensure the booking is assigned to this plumber before updating
-    const checkAndUpdate = (plumberColumn) => {
-        const checkAssignmentQuery = `SELECT ${plumberColumn} AS assignedPlumber FROM bookings WHERE idbookings = ?`;
-        connection.query(checkAssignmentQuery, [booking_id], (err, bookingResults) => {
-            if (err && err.code === 'ER_BAD_FIELD_ERROR' && plumberColumn === 'plumberid') {
-                return checkAndUpdate('idPlumber');
-            }
-            if (err) {
-                console.error('Error checking booking assignment:', err);
-                return res.status(500).json({ message: 'Internal server error.' });
-            }
-            if (bookingResults.length === 0) {
-                return res.status(404).json({ message: 'Booking not found.' });
-            }
-            if (bookingResults[0].assignedPlumber !== plumberId) {
-                return res.status(403).json({ message: 'You are not authorized to update this booking.' });
-            }
-
-            const updateQuery = `UPDATE bookings SET status = ? WHERE idbookings = ? AND ${plumberColumn} = ?`;
-            connection.query(updateQuery, [status, booking_id, plumberId], function(err, result){
-                if(err){
-                    console.error('Error while updating booking status:', err);
-                    return res.status(500).json({ message:'Internal server error' });
-                }
-                if (result.affectedRows === 0) {
-                    return res.status(404).json({ message: 'Booking not found or not updated.' });
-                }
-                connection.query('SELECT idUser FROM bookings WHERE idbookings = ?', [booking_id], (customerErr, rows) => {
-                    if (!customerErr && rows.length > 0) {
-                        createNotification({
-                            userId: rows[0].idUser,
-                            role: 'customer',
-                            bookingId: booking_id,
-                            type: `booking_${status.toLowerCase()}`,
-                            title: 'Booking progress updated',
-                            message: `Your booking is now marked as ${status.replace('_', ' ').toLowerCase()}.`
-                        });
-                    }
-                });
-                res.json({ message: `Booking status updated to ${status}!` });
-            });
-        });
-    };
-
-    checkAndUpdate('plumberid');
+    await connection.query(
+      'UPDATE bookings SET status = ? WHERE idbookings = ? AND idPlumber = ? AND status = ?',
+      [nextStatus, bookingId, req.user.idusers, booking.status],
+    );
+    await connection.query(
+      'INSERT INTO booking_status_history (booking_id, from_status, to_status, changed_by, note) VALUES (?, ?, ?, ?, ?)',
+      [bookingId, booking.status, nextStatus, req.user.idusers, 'Updated by assigned plumber'],
+    );
+    await connection.commit();
+    createNotification({
+      userId: booking.idUser,
+      bookingId,
+      type: `booking_${nextStatus.toLowerCase()}`,
+      title: 'Booking progress updated',
+      message: `Your booking is now ${nextStatus.replace('_', ' ').toLowerCase()}.`,
+    });
+    recordAuditEvent({
+      actorId: req.user.idusers,
+      action: 'BOOKING_STATUS_CHANGED',
+      entityType: 'booking',
+      entityId: bookingId,
+      metadata: { from: booking.status, to: nextStatus },
+      ipAddress: req.ip,
+    });
+    return res.json({ success: true, message: `Booking status updated to ${nextStatus}.` });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    next(error);
+  } finally {
+    if (connection) connection.release();
+  }
 });
 
-/* POST update booking amount by plumber */
-router.post('/update-amount', function(req, res, next){
-    const { booking_id, amount } = req.body;
-    const plumberId = req.user.idusers;
-
-    if (!booking_id || amount === undefined) {
-        return res.status(400).json({ message: 'Booking ID and amount are required.' });
+router.post('/upload-photo', upload.single('photo'), async (req, res, next) => {
+  const bookingId = Number(req.body.booking_id);
+  const photoType = String(req.body.type || '').toUpperCase();
+  if (!Number.isInteger(bookingId) || !['BEFORE', 'AFTER'].includes(photoType) || !req.file) {
+    if (req.file) fs.rm(req.file.path, { force: true }, () => {});
+    return res
+      .status(400)
+      .json({ success: false, message: 'Provide a booking, photo type, and valid image.' });
+  }
+  try {
+    if (!(await hasSupportedImageSignature(req.file.path))) {
+      fs.rm(req.file.path, { force: true }, () => {});
+      return res.status(400).json({
+        success: false,
+        message: 'The uploaded file is not a valid JPEG, PNG, or WebP image.',
+      });
     }
-    if (!plumberId) {
-        return res.status(401).json({ message: 'Plumber not authenticated.' });
+    const [bookings] = await database
+      .promise()
+      .query('SELECT idUser FROM bookings WHERE idbookings = ? AND idPlumber = ?', [
+        bookingId,
+        req.user.idusers,
+      ]);
+    if (!bookings.length) {
+      fs.rm(req.file.path, { force: true }, () => {});
+      return res
+        .status(403)
+        .json({ success: false, message: 'You are not assigned to this booking.' });
     }
-
-    // Ensure the booking is assigned to this plumber
-    const checkAndUpdateAmount = (plumberColumn) => {
-        const checkQuery = `SELECT ${plumberColumn} AS assignedPlumber FROM bookings WHERE idbookings = ?`;
-        connection.query(checkQuery, [booking_id], (err, results) => {
-            if (err && err.code === 'ER_BAD_FIELD_ERROR' && plumberColumn === 'plumberid') {
-                return checkAndUpdateAmount('idPlumber');
-            }
-            if (err) {
-                console.error('Error checking booking:', err);
-                return res.status(500).json({ message: 'Internal server error.' });
-            }
-            if (results.length === 0 || results[0].assignedPlumber !== plumberId) {
-                return res.status(403).json({ message: 'You are not authorized to update this booking.' });
-            }
-
-            const updateQuery = `UPDATE bookings SET amount = ? WHERE idbookings = ? AND ${plumberColumn} = ?`;
-            connection.query(updateQuery, [amount, booking_id, plumberId], function(err, result){
-                if(err){
-                    console.error('Error updating amount:', err);
-                    return res.status(500).json({ message:'Internal server error' });
-                }
-                if (result.affectedRows === 0) {
-                    return res.status(404).json({ message: 'Booking not found.' });
-                }
-                connection.query('SELECT idUser FROM bookings WHERE idbookings = ?', [booking_id], (customerErr, rows) => {
-                    if (!customerErr && rows.length > 0) {
-                        createNotification({
-                            userId: rows[0].idUser,
-                            role: 'customer',
-                            bookingId: booking_id,
-                            type: 'booking_amount_updated',
-                            title: 'Booking amount updated',
-                            message: `The assigned plumber updated the amount to $${amount}.`
-                        });
-                    }
-                });
-                res.json({ message: 'Amount updated successfully!' });
-            });
-        });
-    };
-
-    checkAndUpdateAmount('plumberid');
-});
-
-
-// Endpoint for uploading before/after photos
-router.post('/upload-photo', upload.single('photo'), (req, res, next) => {
-    const plumberId = req.user.idusers;
-    const { booking_id, type } = req.body; // type should be 'before' or 'after'
-
-    if (!booking_id || !type || !req.file) {
-        return res.status(400).json({ success: false, message: 'Booking ID, type and photo file are required.' });
-    }
-    if (!['before','after'].includes(type)) {
-        return res.status(400).json({ success: false, message: 'Type must be before or after.' });
-    }
-    // check plumber assignment
-    const checkAndUpload = (plumberColumn) => {
-        const checkQuery = `SELECT ${plumberColumn} AS assignedPlumber FROM bookings WHERE idbookings = ?`;
-        connection.query(checkQuery, [booking_id], (err, results) => {
-            if (err && err.code === 'ER_BAD_FIELD_ERROR' && plumberColumn === 'plumberid') {
-                return checkAndUpload('idPlumber');
-            }
-            if (err) {
-                console.error('Error checking booking for photo upload', err);
-                return res.status(500).json({ success: false, message: 'Internal server error' });
-            }
-            if (results.length === 0 || results[0].assignedPlumber !== plumberId) {
-                return res.status(403).json({ success: false, message: 'Not authorized to upload photos for this booking.' });
-            }
-            const column = type === 'before' ? 'before_photo' : 'after_photo';
-            const filePath = `/uploads/booking_photos/${req.file.filename}`;
-            const updateQuery = `UPDATE bookings SET ${column} = ? WHERE idbookings = ?`;
-            connection.query(updateQuery, [filePath, booking_id], (updErr) => {
-                if (updErr) {
-                    console.error('Error saving photo path in database', updErr);
-                    return res.status(500).json({ success: false, message: 'Internal server error' });
-                }
-                connection.query('SELECT idUser FROM bookings WHERE idbookings = ?', [booking_id], (customerErr, rows) => {
-                    if (!customerErr && rows.length > 0) {
-                        createNotification({
-                            userId: rows[0].idUser,
-                            role: 'customer',
-                            bookingId: booking_id,
-                            type: `booking_${type}_photo_uploaded`,
-                            title: `${type === 'before' ? 'Before' : 'After'} photo uploaded`,
-                            message: `The plumber uploaded a ${type} photo for your booking.`
-                        });
-                    }
-                });
-                res.json({ success: true, message: 'Photo uploaded successfully!', path: filePath });
-            });
-        });
-    };
-
-    checkAndUpload('plumberid');
+    const filePath = `/uploads/booking_photos/${req.file.filename}`;
+    const column = photoType === 'BEFORE' ? 'before_photo' : 'after_photo';
+    await database
+      .promise()
+      .query(`UPDATE bookings SET ${column} = ? WHERE idbookings = ?`, [filePath, bookingId]);
+    await database
+      .promise()
+      .query(
+        'INSERT INTO booking_photos (booking_id, uploaded_by, photo_type, file_path) VALUES (?, ?, ?, ?)',
+        [bookingId, req.user.idusers, photoType, filePath],
+      );
+    createNotification({
+      userId: bookings[0].idUser,
+      bookingId,
+      type: 'booking_photo_uploaded',
+      title: `${photoType.toLowerCase()} photo uploaded`,
+      message: `The plumber added a ${photoType.toLowerCase()} photo to your job record.`,
+    });
+    recordAuditEvent({
+      actorId: req.user.idusers,
+      action: 'BOOKING_PHOTO_UPLOADED',
+      entityType: 'booking',
+      entityId: bookingId,
+      metadata: { photoType },
+      ipAddress: req.ip,
+    });
+    return res.json({ success: true, message: 'Photo uploaded successfully.', path: filePath });
+  } catch (error) {
+    fs.rm(req.file.path, { force: true }, () => {});
+    next(error);
+  }
 });
 
 module.exports = router;

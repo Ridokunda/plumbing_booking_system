@@ -28,13 +28,14 @@
       <div class="line"><span>Service</span><strong><%= receipt.serviceType || booking.type || 'General plumbing' %></strong></div>
       <div class="line"><span>Payment Method</span><strong><%= receipt.paymentMethod %></strong></div>
       <div class="line"><span>Paid On</span><strong><%= new Date(receipt.paidAt).toLocaleString() %></strong></div>
-      <div class="line"><span>Total Paid</span><strong>$<%= Number(receipt.amount || booking.amount || 0).toFixed(2) %></strong></div>
+      <div class="line"><span>Total Paid</span><strong>R<%= Number(receipt.amount || booking.amount || 0).toFixed(2) %></strong></div>
     </div>
   </div>
 
   <div class="actions">
     <a href="/payment/history" class="btn btn-secondary">Invoice & Receipt History</a>
     <a href="/booking/mybookings" class="btn btn-secondary">Back to My Bookings</a>
+    <a href="/payment/receipt/<%= booking.idbookings %>/pdf" class="btn btn-primary">Download PDF</a>
     <a href="#" class="btn btn-primary" onclick="window.print(); return false;">Print</a>
   </div>
 </body>

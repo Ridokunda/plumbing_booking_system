@@ -17,6 +17,7 @@
     <link href="/stylesheets/responsive.css" rel="stylesheet" />
 </head>
 <body>
+    <%- include('./partials/head') %>
     <div class="mybookings-container">
         <div style="width:100%; display:flex; align-items:center; justify-content:space-between;">
           <div class="mybookings-header">My Assigned Bookings</div>
@@ -53,23 +54,23 @@
                         </div>
                         <div class="status-note"><strong>Next:</strong> <%= booking.lifecycle.nextAction %></div>
                         <div style="margin-top:8px; color:#666; font-size:0.9em;">
-                            <strong>Description:</strong> <%= booking.des || booking.description || '' %>
+                            <strong>Description:</strong> <%= booking.description || '' %>
                         </div>
                         <!-- photo section -->
                         <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
                             <% if (booking.before_photo) { %>
-                                <div>Before:<br><img src="<%= booking.before_photo %>" class="booking-photo" style="max-width:150px; max-height:150px; display:block;"/></div>
+                                <div>Before:<br><img src="<%= booking.before_photo %>" alt="Before-work evidence" class="booking-photo" style="max-width:150px; max-height:150px; display:block;"/></div>
                             <% } else if (booking.status !== 'NEW' && booking.status !== 'CANCELLED') { %>
                                 <form class="photo-form" data-booking-id="<%= booking.idbookings %>" data-type="before" enctype="multipart/form-data" style="display:flex; gap:4px; align-items:center;">
-                                    <input type="file" name="photo" accept="image/*" required />
+                                    <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" aria-label="Upload before-work photo" required />
                                   <button type="submit" class="photo-upload-btn">Upload Before</button>
                                 </form>
                             <% } %>
                             <% if (booking.after_photo) { %>
-                                <div>After:<br><img src="<%= booking.after_photo %>" class="booking-photo" style="max-width:150px; max-height:150px; display:block;"/></div>
+                                <div>After:<br><img src="<%= booking.after_photo %>" alt="After-work evidence" class="booking-photo" style="max-width:150px; max-height:150px; display:block;"/></div>
                             <% } else if (booking.status === 'COMPLETED') { %>
                                 <form class="photo-form" data-booking-id="<%= booking.idbookings %>" data-type="after" enctype="multipart/form-data" style="display:flex; gap:4px; align-items:center;">
-                                    <input type="file" name="photo" accept="image/*" required />
+                                    <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" aria-label="Upload after-work photo" required />
                                   <button type="submit" class="photo-upload-btn">Upload After</button>
                                 </form>
                             <% } %>
@@ -82,11 +83,8 @@
                             <% } %>
                           <% }); %>
                         </div>
-                        <div class="booking-amount-row">
-                          <label class="booking-amount-label">Amount: $</label>
-                          <input type="number" class="amount-input booking-amount-input" data-booking-id="<%= booking.idbookings %>" value="<%= booking.amount || 50 %>" step="0.01" min="0">
-                          <button class="update-amount-btn booking-mini-btn success" data-booking-id="<%= booking.idbookings %>">Update Amount</button>
-                        </div>
+                        <a href="/quotes/booking/<%= booking.idbookings %>" class="booking-mini-btn">Prepare / view quote</a>
+                        <a href="/jobs/<%= booking.idbookings %>" class="booking-mini-btn">Open job record</a>
                     </div>
                 <% }); %>
             <% } else { %>
@@ -95,6 +93,13 @@
         </div>
 
         <div id="complete-message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
+        <% if (pagination && pagination.pages > 1) { %>
+          <nav aria-label="Booking pages" class="p-3 d-flex justify-content-between">
+            <% if (pagination.page > 1) { %><a class="btn btn-outline-primary" href="?page=<%= pagination.page - 1 %>">Previous</a><% } else { %><span></span><% } %>
+            <span>Page <%= pagination.page %> of <%= pagination.pages %></span>
+            <% if (pagination.page < pagination.pages) { %><a class="btn btn-outline-primary" href="?page=<%= pagination.page + 1 %>">Next</a><% } %>
+          </nav>
+        <% } %>
     </div>
 
     <script>
@@ -149,17 +154,7 @@
             msg.textContent = res.message;
             if (res.message && res.message.toLowerCase().includes('updated')) {
               msg.style.backgroundColor = '#d4edda'; msg.style.color = '#155724'; msg.style.border = '1px solid #c3e6cb';
-              const btn = document.querySelector(`button.status-action-btn[data-booking-id="${bookingId}"][data-status="${nextStatus}"]`);
-              if (btn) {
-                const card = btn.closest('.booking-card');
-                card.querySelector('.status-label').textContent = nextStatus;
-                card.querySelector('.status-label').className = 'status-label status_' + nextStatus;
-                if (nextStatus === 'IN_PROGRESS') {
-                  btn.remove();
-                } else if (nextStatus === 'COMPLETED' || nextStatus === 'CANCELLED') {
-                  card.querySelectorAll('.status-action-btn').forEach(button => button.remove());
-                }
-              }
+              window.setTimeout(() => window.location.reload(), 500);
             } else {
               msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; msg.style.border = '1px solid #f5c6cb';
             }
@@ -169,57 +164,9 @@
             msg.textContent = 'An error occurred';
           });
         }
-        if (e.target && e.target.classList.contains('complete-booking-btn')) {
-          const bookingId = e.target.getAttribute('data-booking-id');
-          if (!confirm('Mark this booking as completed?')) return;
-          fetch('/plumber/update-booking-status', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ booking_id: bookingId, status: 'COMPLETED' })
-          }).then(r => r.json()).then(res => {
-            const msg = document.getElementById('complete-message');
-            msg.style.display = 'block';
-            msg.textContent = res.message;
-            if (res.success) {
-              msg.style.backgroundColor = '#d4edda'; msg.style.color = '#155724'; msg.style.border = '1px solid #c3e6cb';
-              // update UI
-              const btn = document.querySelector(`button.complete-booking-btn[data-booking-id="${bookingId}"]`);
-              if (btn) {
-                const card = btn.closest('.booking-card');
-                card.querySelector('.status-label').textContent = 'COMPLETED';
-                card.querySelector('.status-label').className = 'status-label status_COMPLETED';
-                btn.remove();
-              }
-            } else {
-              msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; msg.style.border = '1px solid #f5c6cb';
-            }
-          }).catch(() => {
-            const msg = document.getElementById('complete-message');
-            msg.style.display = 'block'; msg.style.backgroundColor = '#f8d7da'; msg.style.color = '#721c24'; msg.style.border = '1px solid #f5c6cb';
-            msg.textContent = 'An error occurred';
-          });
-        }
-        if (e.target && e.target.classList.contains('update-amount-btn')) {
-          console.log('Update amount button clicked');
-          const bookingId = e.target.getAttribute('data-booking-id');
-          const amount = document.querySelector(`.amount-input[data-booking-id="${bookingId}"]`).value;
-          console.log('Booking ID:', bookingId, 'Amount:', amount);
-          fetch('/plumber/update-amount', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ booking_id: bookingId, amount: parseFloat(amount) })
-          }).then(r => r.json()).then(res => {
-            console.log('Response:', res);
-            alert(res.message);
-          }).catch(err => {
-            console.error('Error:', err);
-            alert('An error occurred');
-          });
-        }
-        // handle photo uploads
-        if (e.target && e.target.closest('.photo-form')) {
-          e.preventDefault();
-          const form = e.target.closest('.photo-form');
+      });
+      document.querySelectorAll('.photo-form').forEach(form => form.addEventListener('submit', event => {
+          event.preventDefault();
           const bookingId = form.getAttribute('data-booking-id');
           const type = form.getAttribute('data-type');
           const fileInput = form.querySelector('input[type=file]');
@@ -243,8 +190,8 @@
             console.error('Photo upload error', err);
             alert('An error occurred while uploading the photo');
           });
-        }
-      });
+      }));
     </script>
+    <%- include('./partials/footer') %>
 </body>
 </html>

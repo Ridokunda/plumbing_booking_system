@@ -22,13 +22,15 @@
                             <% } %>
                         </a>
                     </li>
-                    <li><a class="link" href="#" id="stats-link">Dashboard Analytics</a></li>
-                    <li><a class="link" href="#" id="user-management-link">User management</a></li>
-                    <li><a class="link" href="#" id="bookings-link">Bookings</a></li>
+                    <li><a class="link" href="/admin/stats" id="stats-link">Dashboard Analytics</a></li>
+                    <li><a class="link" href="/admin/manageusers" id="user-management-link">User management</a></li>
+                    <li><a class="link" href="/admin/bookings" id="bookings-link">Bookings</a></li>
+                    <li><a href="/admin/contacts">Contact messages</a></li>
+                    <li><a href="/support">Operations cases</a></li>
                 </ul>
             </div>
             <div class="logout-section">
-                <a href="/login/logout">Logout</a>
+                <form action="/login/logout" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button type="submit">Logout</button></form>
             </div>
         </div>
         <div class="content"></div>
@@ -36,4 +38,4 @@
     <script src="/javascripts/admin-dashboard.js"></script>
     <script src="/javascripts/jwt-handler.js"></script>
 </body>
-</html> 
+</html>

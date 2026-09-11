@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>WeFixIt | <%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/bootstrap.css">
+  <link rel="stylesheet" href="/stylesheets/custom.css">
+</head>
+<body>
+<%- include('./partials/head') %>
+<main class="container py-5">
+  <p class="booking-stepper-eyebrow">Job record</p>
+  <h1><%= title %></h1>
+  <p><a class="btn btn-outline-primary" href="/jobs/<%= booking.idbookings %>/pdf">Download job card (PDF)</a></p>
+  <div class="card mb-4"><div class="card-body"><dl class="row">
+    <dt class="col-sm-3">Service</dt><dd class="col-sm-9"><%= booking.type.replace(/_/g,' ') %></dd>
+    <dt class="col-sm-3">Location</dt><dd class="col-sm-9"><%= booking.location %></dd>
+    <dt class="col-sm-3">Status</dt><dd class="col-sm-9"><%= booking.status %></dd>
+    <dt class="col-sm-3">Customer</dt><dd class="col-sm-9"><%= booking.customer_name %> <%= booking.customer_surname %></dd>
+    <dt class="col-sm-3">Plumber</dt><dd class="col-sm-9"><%= booking.plumber_name ? booking.plumber_name + ' ' + booking.plumber_surname : 'Not assigned' %></dd>
+  </dl></div></div>
+
+  <section><h2>Photo evidence</h2><div class="row">
+    <% photos.forEach(photo => { %><figure class="col-md-4"><img class="img-fluid booking-photo" src="<%= photo.file_path %>" alt="<%= photo.photo_type.toLowerCase() %> job photo"><figcaption><%= photo.photo_type %><% if (photo.caption) { %> - <%= photo.caption %><% } %></figcaption></figure><% }) %>
+    <% if (!photos.length) { %><p class="col-12 alert alert-info">No photos yet.</p><% } %>
+  </div></section>
+
+  <section class="mt-4"><h2>Job notes</h2><div class="list-group mb-3">
+    <% notes.forEach(note => { %><article class="list-group-item"><strong><%= note.author_name %></strong> <small>- <%= note.visibility %> - <%= new Date(note.created_at).toLocaleString() %></small><p><%= note.note %></p></article><% }) %>
+  </div><form id="noteForm"><textarea class="form-control" name="note" minlength="2" maxlength="5000" required placeholder="Add a job note"></textarea>
+    <% if (session.user.usertype !== 1) { %><label><input type="checkbox" name="visibility" value="INTERNAL"> Internal note</label><% } %>
+    <button class="btn btn-primary mt-3" type="submit">Add note</button>
+  </form></section>
+
+  <% if (session.user.usertype === 1 && booking.status === 'COMPLETED' && !confirmation) { %>
+    <section class="card mt-4"><div class="card-body"><h2 class="h4">Confirm completion</h2><form id="confirmForm"><label for="signatureName">Type your name to confirm the work</label><input id="signatureName" name="signature_name" class="form-control" required><button class="btn btn-success mt-3" type="submit">Confirm completion</button></form></div></section>
+  <% } %>
+  <% if (confirmation) { %><p class="alert alert-success mt-4">Confirmed by <%= confirmation.signature_name %> on <%= new Date(confirmation.confirmed_at).toLocaleString() %>.</p><% } %>
+</main>
+<%- include('./partials/footer') %>
+<script>
+document.getElementById('noteForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = new FormData(event.target);
+  const response = await fetch('/jobs/<%= booking.idbookings %>/notes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ note: form.get('note'), visibility: form.get('visibility') || 'CUSTOMER' }) });
+  const data = await response.json();
+  if (!response.ok) return alert(data.message);
+  location.reload();
+});
+document.getElementById('confirmForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = new FormData(event.target);
+  const response = await fetch('/jobs/<%= booking.idbookings %>/confirm', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(Object.fromEntries(form)) });
+  const data = await response.json();
+  if (!response.ok) return alert(data.message);
+  location.reload();
+});
+</script>
+</body>
+</html>

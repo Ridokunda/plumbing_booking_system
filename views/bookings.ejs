@@ -53,7 +53,7 @@
                     </div>
                     <div class="status-note"><strong>Next:</strong> <%= booking.lifecycle.nextAction %></div>
                     <div style="margin-top:8px; color:#666; font-size:0.9em;">
-                        <strong>Description:</strong> <%= booking.des || booking.description || '' %>
+                        <strong>Description:</strong> <%= booking.description || '' %>
                     </div>
                     <div class="role-action-bar">
                         <div class="role-action-label">Recommended actions</div>
@@ -64,14 +64,16 @@
                             <span style="color:#666; font-style:italic;">No actions available</span>
                         <% } %>
                     </div>
-                    <div class="booking-amount-row">
-                        <label class="booking-amount-label">Amount: $</label>
-                        <input type="number" class="amount-input booking-amount-input" data-booking-id="<%= booking.idbookings %>" value="<%= booking.amount || 50 %>" step="0.01" min="0">
-                        <button class="update-amount-btn booking-mini-btn success" data-booking-id="<%= booking.idbookings %>">Update Amount</button>
-                    </div>
+                    <% if (booking.amount) { %><p class="booking-amount-row"><strong>Approved amount:</strong> R<%= Number(booking.amount).toFixed(2) %></p><% } %>
+                    <a href="/jobs/<%= booking.idbookings %>" class="booking-mini-btn">Open job record</a>
                 </div>
             <% }); %>
         </div>
+        <% if (pagination.pages > 1) { %><nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Booking pages">
+          <% if (pagination.page > 1) { %><a class="admin-page-link" href="/admin/bookings?page=<%= pagination.page - 1 %>">Previous</a><% } else { %><span></span><% } %>
+          <span>Page <%= pagination.page %> of <%= pagination.pages %></span>
+          <% if (pagination.page < pagination.pages) { %><a class="admin-page-link" href="/admin/bookings?page=<%= pagination.page + 1 %>">Next</a><% } %>
+        </nav><% } %>
         <div id="message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
     </div>
 
@@ -79,12 +81,14 @@
     <div id="assignModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
         <div class="modal-content" style="background:#fff; border-radius:12px; max-width:500px; width:90%; margin:auto; padding:32px 24px; position:relative; box-shadow:0 4px 24px rgba(0,0,0,0.15);">
             <span id="closeAssignModal" style="position:absolute; top:16px; right:20px; font-size:1.8em; color:#888; cursor:pointer;">&times;</span>
-            <h3 style="margin-top:0; color:#0f7e94;">Assign Plumber</h3>
+            <h3 style="margin-top:0; color:#0f7e94;">Schedule a plumber</h3>
+            <div class="form-group"><label for="scheduleStart">Starts</label><input class="form-control" type="datetime-local" id="scheduleStart" required></div>
+            <div class="form-group"><label for="scheduleEnd">Ends</label><input class="form-control" type="datetime-local" id="scheduleEnd" required></div>
             <div id="plumbersList">
                 <% plumbers.forEach(plumber => { %>
                     <div class="assign-modal-row">
                         <span><%= plumber.name %> <%= plumber.surname %></span>
-                        <button class="assign-plumber-btn modal-assign-btn" data-plumber-id="<%= plumber.idusers %>" data-booking-id="">Assign</button>
+                        <button class="assign-plumber-btn modal-assign-btn" data-plumber-id="<%= plumber.idusers %>" data-booking-id="">Schedule</button>
                     </div>
                 <% }); %>
             </div>
@@ -114,10 +118,13 @@
             if (e.target.classList.contains('assign-plumber-btn')) {
                 const bookingId = e.target.getAttribute('data-booking-id');
                 const plumberId = e.target.getAttribute('data-plumber-id');
-                fetch('/admin/assign-booking', {
+                const startsAt = document.getElementById('scheduleStart').value;
+                const endsAt = document.getElementById('scheduleEnd').value;
+                if (!startsAt || !endsAt) return alert('Choose a start and end time.');
+                fetch('/admin/schedule', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ booking_id: bookingId, plumber_id: plumberId })
+                    body: JSON.stringify({ booking_id: bookingId, plumber_id: plumberId, starts_at: startsAt, ends_at: endsAt })
                 }).then(r => r.json()).then(res => {
                     alert(res.message);
                     if (res.message.includes('successfully')) {
@@ -128,27 +135,17 @@
             }
             if (e.target.classList.contains('decline-btn')) {
                 const bookingId = e.target.getAttribute('data-booking-id');
-                if (confirm('Decline this booking?')) {
+                const reason = prompt('Why is this booking being declined?');
+                if (reason && reason.trim().length >= 5) {
                     fetch('/admin/declinebooking', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ booking_id: bookingId })
+                        body: JSON.stringify({ booking_id: bookingId, reason: reason.trim() })
                     }).then(r => r.json()).then(res => {
                         alert(res.message);
                         if (res.message.includes('declined')) location.reload();
                     });
                 }
-            }
-            if (e.target.classList.contains('update-amount-btn')) {
-                const bookingId = e.target.getAttribute('data-booking-id');
-                const amount = document.querySelector(`.amount-input[data-booking-id="${bookingId}"]`).value;
-                fetch('/admin/update-amount', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ booking_id: bookingId, amount: parseFloat(amount) })
-                }).then(r => r.json()).then(res => {
-                    alert(res.message);
-                });
             }
         });
 
@@ -157,5 +154,6 @@
             document.getElementById('assignModal').style.display = 'none';
         });
     </script>
+    <script src="/javascripts/jwt-handler.js"></script>
 </body>
 </html>

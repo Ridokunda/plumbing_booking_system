@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> | WeFixIt</title>
+  <link rel="stylesheet" href="/stylesheets/bootstrap.css">
+  <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+<body>
+  <%- include('partials/head') %>
+  <main class="container py-5">
+    <h1><%= title %></h1>
+    <p id="case-message" role="status" aria-live="polite"></p>
+
+    <% if (!isAdmin) { %>
+      <section class="card p-4 mb-4">
+        <h2 class="h4">Open a dispute</h2>
+        <form class="case-form" action="/support/disputes" method="post">
+          <label for="dispute-booking">Booking</label>
+          <select id="dispute-booking" name="booking_id" class="form-control mb-2" required>
+            <% bookings.forEach((booking) => { %><option value="<%= booking.idbookings %>">#<%= booking.idbookings %> — <%= booking.type %></option><% }) %>
+          </select>
+          <label for="category">Category</label>
+          <select id="category" name="category" class="form-control mb-2" required>
+            <option>QUALITY</option><option>DAMAGE</option><option>BILLING</option><option>CONDUCT</option><option>OTHER</option>
+          </select>
+          <label for="description">What happened?</label>
+          <textarea id="description" name="description" class="form-control mb-3" minlength="20" maxlength="2000" required></textarea>
+          <button class="btn btn-primary">Submit dispute</button>
+        </form>
+      </section>
+
+      <section class="card p-4 mb-4">
+        <h2 class="h4">Request a refund</h2>
+        <form class="case-form" action="/support/refunds" method="post">
+          <select name="booking_id" class="form-control mb-2" required><% bookings.filter((b) => b.status === 'PAID').forEach((b) => { %><option value="<%= b.idbookings %>">#<%= b.idbookings %> — <%= b.type %></option><% }) %></select>
+          <input name="amount" type="number" min="0.01" step="0.01" class="form-control mb-2" placeholder="Amount in ZAR" required>
+          <textarea name="reason" class="form-control mb-3" minlength="10" maxlength="1000" placeholder="Reason" required></textarea>
+          <button class="btn btn-primary">Request refund</button>
+        </form>
+      </section>
+
+      <section class="card p-4 mb-4">
+        <h2 class="h4">Request a new appointment time</h2>
+        <form class="case-form" action="/support/reschedules" method="post">
+          <select name="booking_id" class="form-control mb-2" required><% bookings.filter((b) => b.status === 'ASSIGNED').forEach((b) => { %><option value="<%= b.idbookings %>">#<%= b.idbookings %> — <%= b.type %></option><% }) %></select>
+          <label>Proposed start <input name="starts_at" type="datetime-local" class="form-control mb-2" required></label>
+          <label>Proposed end <input name="ends_at" type="datetime-local" class="form-control mb-2" required></label>
+          <textarea name="reason" class="form-control mb-3" minlength="5" maxlength="500" placeholder="Reason" required></textarea>
+          <button class="btn btn-primary">Request reschedule</button>
+        </form>
+      </section>
+    <% } %>
+
+    <section class="mt-5">
+      <h2 class="h3">Disputes</h2>
+      <% if (!disputes.length) { %><p>No disputes.</p><% } %>
+      <% disputes.forEach((item) => { %>
+        <article class="card p-3 mb-2">
+          <strong>#<%= item.id %> · Booking #<%= item.booking_id %> · <%= item.status %></strong>
+          <p class="mb-1"><%= item.category %>: <%= item.description %></p>
+          <% if (item.resolution) { %><p>Resolution: <%= item.resolution %></p><% } %>
+          <% if (isAdmin && !['RESOLVED','CLOSED'].includes(item.status)) { %>
+            <form class="case-form" action="/support/disputes/<%= item.id %>/status" method="post">
+              <select name="status" class="form-control mb-2"><option>INVESTIGATING</option><option>RESOLVED</option><option>CLOSED</option></select>
+              <textarea name="resolution" class="form-control mb-2" maxlength="2000" placeholder="Resolution or investigation note"></textarea>
+              <button class="btn btn-sm btn-primary">Update dispute</button>
+            </form>
+          <% } %>
+        </article>
+      <% }) %>
+    </section>
+
+    <section class="mt-4 mb-5">
+      <h2 class="h3">Reschedule requests</h2>
+      <% if (!reschedules.length) { %><p>No reschedule requests.</p><% } %>
+      <% reschedules.forEach((item) => { %>
+        <article class="card p-3 mb-2">
+          <strong>#<%= item.id %> · Booking #<%= item.booking_id %> · <%= item.status %></strong>
+          <p><%= new Date(item.proposed_start).toLocaleString('en-ZA') %> to <%= new Date(item.proposed_end).toLocaleString('en-ZA') %></p>
+          <p><%= item.reason %></p>
+          <% if (isAdmin && item.status === 'PENDING') { %>
+            <form class="case-form" action="/support/reschedules/<%= item.id %>/respond" method="post">
+              <select name="decision" class="form-control mb-2"><option>APPROVED</option><option>REJECTED</option></select>
+              <textarea name="note" class="form-control mb-2" maxlength="500" placeholder="Response note"></textarea>
+              <button class="btn btn-sm btn-primary">Respond</button>
+            </form>
+          <% } %>
+        </article>
+      <% }) %>
+    </section>
+
+    <section class="mt-4">
+      <h2 class="h3">Refund requests</h2>
+      <% if (!refunds.length) { %><p>No refund requests.</p><% } %>
+      <% refunds.forEach((item) => { %>
+        <article class="card p-3 mb-2">
+          <strong>#<%= item.id %> · Booking #<%= item.booking_id %> · R<%= Number(item.amount).toFixed(2) %> · <%= item.status %></strong>
+          <p><%= item.reason %></p>
+          <% if (isAdmin && item.status === 'REQUESTED') { %>
+            <form class="case-form" action="/support/refunds/<%= item.id %>/status" method="post">
+              <select name="status" class="form-control mb-2"><option>APPROVED</option><option>REJECTED</option></select>
+              <textarea name="note" class="form-control mb-2" maxlength="1000" placeholder="Decision note"></textarea>
+              <button class="btn btn-sm btn-primary">Record decision</button>
+            </form>
+          <% } %>
+          <% if (isAdmin && item.status === 'APPROVED') { %>
+            <form class="case-form" action="/support/refunds/<%= item.id %>/process" method="post">
+              <button class="btn btn-sm btn-success">Process refund</button>
+            </form>
+          <% } %>
+        </article>
+      <% }) %>
+    </section>
+  </main>
+  <%- include('partials/footer') %>
+  <script>
+    document.querySelectorAll('.case-form').forEach((form) => form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+      const result = await response.json();
+      document.getElementById('case-message').textContent = result.message;
+      if (response.ok) window.setTimeout(() => window.location.reload(), 800);
+    }));
+  </script>
+</body>
+</html>

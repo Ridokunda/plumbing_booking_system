@@ -57,7 +57,7 @@
                             type="text" 
                             name="name" 
                             id="cus_name"
-                            value="John"
+                            placeholder="First name"
                             style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
                             required
                         >
@@ -69,7 +69,7 @@
                             type="text" 
                             name="surname" 
                             id="cus_lastname"
-                            value="Doe"
+                            placeholder="Last name"
                             style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
                             required
                         >
@@ -80,25 +80,10 @@
                     <label style="font-weight: 600; color: #333; font-size: 0.9rem;">User Type</label>
                     <select name="usertype" id="usertype" onchange="toggleAdditionalFields()">
                         <option value="1">Customer</option>
-                        <option value="2">Admin</option>
                         <option value="3">Plumber</option>
-                        <option value="4">Electrician</option>
                     </select>
                 </div>
                 
-                <!-- Additional fields for Admin -->
-                <div id="adminFields" class="additional-fields">
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Admin Code</label>
-                        <input 
-                            type="text" 
-                            id="admin_code" 
-                            name="admin_code"
-                            style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
-                        >
-                    </div>
-                </div>
-
                 <!-- Additional fields for Plumber -->
                 <div id="plumberFields" class="additional-fields">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -173,15 +158,11 @@
     <script>
         function toggleAdditionalFields() {
             const userType = document.getElementById('usertype').value;
-            const adminFields = document.getElementById('adminFields');
             const plumberFields = document.getElementById('plumberFields');
             
-            adminFields.style.display = 'none';
             plumberFields.style.display = 'none';
             
-            if (userType === '2') {
-                adminFields.style.display = 'block';
-            } else if (userType === '3' || userType === '4') {
+            if (userType === '3') {
                 plumberFields.style.display = 'block';
             }
         }

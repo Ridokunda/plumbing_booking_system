@@ -24,27 +24,40 @@
         <thead>
           <tr>
             <th>Name</th>
-            <th>Status</th>
+            <th>Verification</th>
+            <th>Service area</th>
             <th>Active Jobs</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <% if(plumbers.length === 0){ %>
             <tr>
-              <td colspan="3">No plumbers found.</td>
+              <td colspan="5">No plumbers found.</td>
             </tr>
           <% }else{ %>
             <% plumbers.forEach(plumber=>{ %>
               <tr>
                 <td><%= plumber.name %> <%= plumber.surname %></td>
-                <td><%= plumber.status %></td>
-                <td>2</td>
+                <td><%= plumber.verification_status || 'PENDING' %> / <%= plumber.account_status %></td>
+                <td><%= plumber.service_area || 'Not provided' %></td>
+                <td><%= plumber.active_jobs %></td>
+                <td>
+                  <% if (plumber.verification_status !== 'APPROVED') { %><button class="admin-btn approve-plumber" data-id="<%= plumber.idusers %>">Approve</button><% } %>
+                  <% if (plumber.verification_status !== 'REJECTED') { %><button class="admin-btn danger reject-plumber" data-id="<%= plumber.idusers %>">Reject</button><% } %>
+                  <button class="admin-btn secondary user-status" data-role="plumber" data-id="<%= plumber.idusers %>" data-status="<%= plumber.account_status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED' %>"><%= plumber.account_status === 'SUSPENDED' ? 'Reactivate' : 'Suspend' %></button>
+                </td>
               </tr>
             <% }) %>
           <% } %>
         </tbody>
       </table>
     </div>
+    <% if (pagination.pages > 1) { %><nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Plumber pages">
+      <% if (pagination.page > 1) { %><a class="admin-page-link" href="/admin/manageplumbers?page=<%= pagination.page - 1 %>">Previous</a><% } else { %><span></span><% } %>
+      <span>Page <%= pagination.page %> of <%= pagination.pages %></span>
+      <% if (pagination.page < pagination.pages) { %><a class="admin-page-link" href="/admin/manageplumbers?page=<%= pagination.page + 1 %>">Next</a><% } %>
+    </nav><% } %>
 </div>
     <script>
       // Client-side search and filter for plumbers

@@ -1,38 +1,16 @@
-const jwt = require('jsonwebtoken');
-const jwtSecret = process.env.JWT_SECRET;
+// Session-only browser authentication avoids exposing credentials in localStorage.
 
-if (!jwtSecret) {
-  throw new Error('Missing required JWT_SECRET environment variable');
-}
-
-// Middleware to verify JWT token from Authorization header or cookies
+// Browser authentication is intentionally session-only. Keeping one source of
+// truth makes logout and server-side revocation reliable.
 const verifyToken = (req, res, next) => {
-  // Get token from Authorization header or cookies
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1] || req.cookies.token;
-
-  if (!token) {
-    // For browser navigation (HTML), redirect to login
-    if (req.accepts('html')) {
-      return res.redirect('/login');
-    }
-    return res.status(401).json({ success: false, message: 'No token provided' });
+  if (req.session && req.session.user) {
+    req.user = req.session.user;
+    return next();
   }
-
-  jwt.verify(token, jwtSecret, (err, decoded) => {
-    if (err) {
-      console.error('Token verification failed:', err);
-      // invalid/expired token
-      if (req.accepts('html')) {
-        return res.redirect('/login');
-      }
-      return res.status(403).json({ success: false, message: 'Invalid or expired token' });
-    }
-    
-    // Attach user info from token to request
-    req.user = decoded;
-    next();
-  });
+  if (req.accepts('html')) {
+    return res.redirect('/login');
+  }
+  return res.status(401).json({ success: false, message: 'Authentication required' });
 };
 
 // Middleware to check if user is admin
@@ -40,7 +18,7 @@ const isAdmin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ success: false, message: 'Not authenticated' });
   }
-  
+
   if (req.user.usertype === 2) {
     next();
   } else {
@@ -53,7 +31,7 @@ const isPlumber = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ success: false, message: 'Not authenticated' });
   }
-  
+
   if (req.user.usertype === 3) {
     next();
   } else {
@@ -66,7 +44,7 @@ const isCustomer = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ success: false, message: 'Not authenticated' });
   }
-  
+
   if (req.user.usertype === 1) {
     next();
   } else {

@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: wefixit_test
+          MYSQL_ROOT_PASSWORD: test-root-password
+          MYSQL_USER: wefixit
+          MYSQL_PASSWORD: test-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -ptest-root-password"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: wefixit_test
+      DB_USER: wefixit
+      DB_PASSWORD: test-password
+      SESSION_SECRET: ci-session-secret-that-is-at-least-32-characters
+      COOKIE_SECURE: 'false'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run db:verify
+      - run: npm run db:seed
+      - run: npm run check
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run smoke:auth
+      - run: npm run smoke:workflow
+      - run: npm audit --audit-level=high

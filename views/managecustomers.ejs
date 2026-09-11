@@ -12,8 +12,9 @@
         <input type="search" name="search" id="search-customer" placeholder="Search for customer">
         <select name="filter" id="filter-customer">
           <option value="ALL">All</option>
-          <option value="AVAILABLE">AVAILABLE</option>
-          <option value="OFFLINE">NOT AVAILABLE</option>
+          <option value="ACTIVE">Active</option>
+          <option value="SUSPENDED">Suspended</option>
+          <option value="DEACTIVATED">Deactivated</option>
         </select>
         <button type="button" id="filter-btn-customer" class="admin-btn secondary">Filter</button>
       </div>
@@ -25,26 +26,35 @@
           <tr>
             <th>Name</th>
             <th>Address</th>
+            <th>Status</th>
             <th>Active Jobs</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <% if(customers.length === 0){ %>
             <tr>
-              <td colspan="3">No customers found.</td>
+              <td colspan="5">No customers found.</td>
             </tr>
           <% }else{ %>
             <% customers.forEach(customer=>{ %>
               <tr>
                 <td><%= customer.name %> <%= customer.surname %></td>
-                <td><%= customer.address %></td>
-                <td>2</td>
+                <td><%= customer.address || 'Not provided' %></td>
+                <td><%= customer.account_status %></td>
+                <td><%= customer.active_jobs %></td>
+                <td><button class="admin-btn secondary user-status" data-role="customer" data-id="<%= customer.idusers %>" data-status="<%= customer.account_status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED' %>"><%= customer.account_status === 'SUSPENDED' ? 'Reactivate' : 'Suspend' %></button></td>
               </tr>
             <% }) %>
           <% } %>
         </tbody>
       </table>
     </div>
+    <% if (pagination.pages > 1) { %><nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Customer pages">
+      <% if (pagination.page > 1) { %><a class="admin-page-link" href="/admin/managecustomers?page=<%= pagination.page - 1 %>">Previous</a><% } else { %><span></span><% } %>
+      <span>Page <%= pagination.page %> of <%= pagination.pages %></span>
+      <% if (pagination.page < pagination.pages) { %><a class="admin-page-link" href="/admin/managecustomers?page=<%= pagination.page + 1 %>">Next</a><% } %>
+    </nav><% } %>
 </div>
     <script>
       // Client-side search and filter for customers
@@ -60,12 +70,12 @@
           tableRows.forEach(row => {
             const name = row.children[0]?.textContent.toLowerCase() || '';
             
-            // const status = row.children[2]?.textContent.toUpperCase() || '';
+            const status = row.children[2]?.textContent.trim().toUpperCase() || '';
             let show = name.includes(searchValue);
             // If filtering by status, add logic here (currently not in table)
             if (filterValue !== 'ALL') {
               
-              // show = show && status === filterValue;
+              show = show && status === filterValue;
             }
             row.style.display = show ? '' : 'none';
           });

@@ -1,95 +1,86 @@
 var express = require('express');
 var router = express.Router();
 var bcrypt = require('bcrypt');
-var jwt = require('jsonwebtoken');
 const connection = require('../database/connection');
-const jwtSecret = process.env.JWT_SECRET;
-
-if (!jwtSecret) {
-  throw new Error('Missing required JWT_SECRET environment variable');
-}
-
+const { createRateLimiter } = require('../middleware/security');
+const { normalizeEmail } = require('../utils/validation');
 
 /* GET Login page. */
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res) {
   const error = req.query.error;
-  res.render('login',{ title: 'Log in', error});
+  res.render('login', { title: 'Log in', error });
 });
 
 /* POST login*/
-router.post('/log', (req, res) =>{
-  const {email, password} = req.body;
-  if(!email || !password){
+router.post('/log', createRateLimiter({ max: 10 }), (req, res) => {
+  const email = normalizeEmail(req.body.email);
+  const password = req.body.password;
+  if (!email || typeof password !== 'string') {
     return res.status(400).json({ success: false, message: 'Provide email and password' });
   }
 
-  const query = "SELECT * FROM users WHERE email = ?";
+  const query = 'SELECT * FROM users WHERE email = ?';
 
-  connection.query(query, [email], async (err,result) =>{
-    if(err){
-      console.error('error querying the database',err);
+  connection.query(query, [email], async (err, result) => {
+    if (err) {
+      console.error('error querying the database', err);
       return res.status(500).json({ success: false, message: 'Internal server error' });
-    };
+    }
 
-    if(result.length === 0){
+    if (result.length === 0) {
       return res.status(401).json({ success: false, message: 'Invalid password or email' });
     }
     const user = result[0];
 
-    const match = await bcrypt.compare(password, user.password)
-    if(!match){
+    if (user.account_status !== 'ACTIVE') {
+      return res.status(403).json({
+        success: false,
+        message: 'This account is pending approval or has been suspended.',
+      });
+    }
+    if (process.env.REQUIRE_EMAIL_VERIFICATION === 'true' && !user.email_verified_at) {
+      return res
+        .status(403)
+        .json({ success: false, message: 'Verify your email before signing in.' });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
       return res.status(401).json({ success: false, message: 'Invalid password or email' });
     }
-    
-    // Generate JWT token
-    const token = jwt.sign(
-      { 
-        idusers: user.idusers, 
-        email: user.email, 
-        usertype: user.usertype,
-        name: user.name 
-      },
-      jwtSecret,
-      { expiresIn: '24h' }
-    );
 
-    // Set token in cookie (httpOnly for security)
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    });
-
-    // Save user into session for server-rendered views
-    if (req.session) {
+    req.session.regenerate((sessionError) => {
+      if (sessionError) {
+        console.error('Unable to create login session', sessionError);
+        return res.status(500).json({ success: false, message: 'Unable to sign in' });
+      }
       req.session.user = {
         idusers: user.idusers,
         email: user.email,
         usertype: user.usertype,
-        name: user.name
+        name: user.name,
       };
-    }
-
-    // Return token in response for client-side storage
-    let redirectUrl = '/'; // default
-    if(user.usertype === 2) redirectUrl = '/admin';
-    if(user.usertype === 3) redirectUrl = '/plumber';
-    if(user.usertype === 1) redirectUrl = '/';
-    
-    res.json({ 
-      success: true, 
-      token, 
-      redirectUrl, 
-      usertype: user.usertype,
-      message: 'Login successful'
+      let redirectUrl = '/';
+      if (user.usertype === 2) redirectUrl = '/admin';
+      if (user.usertype === 3) redirectUrl = '/plumber';
+      req.session.save((saveError) => {
+        if (saveError)
+          return res.status(500).json({ success: false, message: 'Unable to sign in' });
+        res.json({
+          success: true,
+          redirectUrl,
+          usertype: user.usertype,
+          message: 'Login successful',
+        });
+      });
     });
   });
 });
 
 function logoutHandler(req, res) {
   const finishLogout = () => {
-    res.clearCookie('token');
-
+    res.clearCookie(process.env.SESSION_NAME || 'connect.sid');
+    res.clearCookie('csrfToken');
     if (req.method === 'POST') {
       return res.json({ success: true, message: 'Logged out successfully' });
     }
@@ -110,7 +101,6 @@ function logoutHandler(req, res) {
   });
 }
 
-router.get('/logout', logoutHandler);
 router.post('/logout', logoutHandler);
 
 module.exports = router;

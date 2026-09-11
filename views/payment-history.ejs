@@ -17,6 +17,8 @@
     .status-paid { color: #157347; }
     .status-pending { color: #b45309; }
     .empty { border: 1px dashed #d1d5db; border-radius: 10px; padding: 24px; color: #6b7280; }
+    .table-wrap { overflow-x: auto; }
+    .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
   </style>
 </head>
 <body>
@@ -28,7 +30,7 @@
   <% if (!history || history.length === 0) { %>
     <div class="empty">No completed jobs or payments yet.</div>
   <% } else { %>
-    <table class="history-table">
+    <div class="table-wrap"><table class="history-table">
       <thead>
         <tr>
           <th>Booking</th>
@@ -45,7 +47,7 @@
           <tr>
             <td>#<%= item.idbookings %></td>
             <td><%= item.type || '-' %></td>
-            <td>$<%= Number(item.amount || 0).toFixed(2) %></td>
+            <td>R<%= Number(item.amount || 0).toFixed(2) %></td>
             <td>
               <div><strong><%= item.isPaid ? 'Receipt' : 'Invoice' %>:</strong> <%= item.invoiceNumber %></div>
               <% if (item.description) { %>
@@ -78,7 +80,12 @@
           </tr>
         <% }); %>
       </tbody>
-    </table>
+    </table></div>
+    <% if (pagination.pages > 1) { %><nav class="pagination" aria-label="Payment history pages">
+      <% if (pagination.page > 1) { %><a href="?page=<%= pagination.page - 1 %>">Previous</a><% } else { %><span></span><% } %>
+      <span>Page <%= pagination.page %> of <%= pagination.pages %></span>
+      <% if (pagination.page < pagination.pages) { %><a href="?page=<%= pagination.page + 1 %>">Next</a><% } %>
+    </nav><% } %>
   <% } %>
 </body>
 </html>

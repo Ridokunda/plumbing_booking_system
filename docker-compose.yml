@@ -1,0 +1,52 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: wefixit_db
+      MYSQL_ROOT_PASSWORD: local-root-password
+      MYSQL_USER: wefixit
+      MYSQL_PASSWORD: local-wefixit-password
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-plocal-root-password']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    build: .
+    command: npm run db:migrate
+    environment: &app_environment
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: wefixit_db
+      DB_USER: wefixit
+      DB_PASSWORD: local-wefixit-password
+      SESSION_SECRET: local-development-secret-change-before-deploying
+      COOKIE_SECURE: 'false'
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      <<: *app_environment
+      APP_URL: http://localhost:3000
+    volumes:
+      - app_uploads:/app/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  app_uploads:

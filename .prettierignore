@@ -1,0 +1,16 @@
+node_modules
+package-lock.json
+public/stylesheets/bootstrap*.css
+public/stylesheets/font-awesome.min.css
+public/stylesheets/responsive.css
+public/stylesheets/style.css
+public/stylesheets/style.scss
+public/javascripts/bootstrap*.js
+public/javascripts/jquery-*.js
+public/javascripts/popper*.js
+public/images
+public/uploads
+uploads
+data
+coverage
+views

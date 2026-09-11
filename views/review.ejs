@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>WeFixIt | <%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/bootstrap.css">
+  <link rel="stylesheet" href="/stylesheets/custom.css">
+</head>
+<body>
+<%- include('./partials/head') %>
+<main class="container py-5"><div class="row justify-content-center"><div class="col-lg-7">
+  <p class="booking-stepper-eyebrow">Paid booking #<%= booking.idbookings %></p>
+  <h1>Review <%= booking.plumber_name %> <%= booking.plumber_surname %></h1>
+  <% if (booking.rating) { %>
+    <div class="alert alert-info">You rated this service <%= booking.rating %>/5.</div>
+  <% } else { %>
+    <form id="reviewForm" class="card card-body">
+      <div class="form-group"><label for="rating">Rating</label><select id="rating" name="rating" class="form-control" required><option value="">Choose</option><% [5,4,3,2,1].forEach(value => { %><option value="<%= value %>"><%= value %>/5</option><% }) %></select></div>
+      <div class="form-group"><label for="comment">Comments</label><textarea id="comment" name="comment" maxlength="1500" class="form-control"></textarea></div>
+      <button class="btn btn-primary" type="submit">Submit review</button>
+    </form>
+  <% } %>
+</div></div></main>
+<%- include('./partials/footer') %>
+<script>
+document.getElementById('reviewForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const response = await fetch('/reviews/booking/<%= booking.idbookings %>', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(Object.fromEntries(new FormData(event.target)))
+  });
+  const data = await response.json();
+  if (!response.ok) return alert(data.message);
+  location.reload();
+});
+</script>
+</body>
+</html>

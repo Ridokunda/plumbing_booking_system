@@ -24,5 +24,30 @@
             <p class="admin-metric-label">Completed Bookings</p>
             <p class="admin-metric-value"><%= stats.completedBookings %></p>
         </div>
+        <div class="admin-metric-card">
+            <p class="admin-metric-label">Paid Revenue</p>
+            <p class="admin-metric-value">R<%= Number(stats.revenue || 0).toFixed(2) %></p>
+        </div>
+        <div class="admin-metric-card">
+            <p class="admin-metric-label">Average Turnaround</p>
+            <p class="admin-metric-value"><%= stats.averageTurnaroundHours || '—' %> hours</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <section class="col-lg-6 mb-4">
+            <h3 class="h5">Booking status mix</h3>
+            <div class="table-responsive"><table class="table table-striped">
+                <thead><tr><th>Status</th><th class="text-right">Bookings</th></tr></thead>
+                <tbody><% statusBreakdown.forEach((row) => { %><tr><td><%= row.status %></td><td class="text-right"><%= row.total %></td></tr><% }) %></tbody>
+            </table></div>
+        </section>
+        <section class="col-lg-6 mb-4">
+            <h3 class="h5">Six-month trend</h3>
+            <div class="table-responsive"><table class="table table-striped">
+                <thead><tr><th>Month</th><th>Bookings</th><th class="text-right">Revenue</th></tr></thead>
+                <tbody><% monthlyTrend.forEach((row) => { %><tr><td><%= row.month %></td><td><%= row.bookings %></td><td class="text-right">R<%= Number(row.revenue || 0).toFixed(2) %></td></tr><% }) %></tbody>
+            </table></div>
+        </section>
     </div>
 </div>

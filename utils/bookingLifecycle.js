@@ -31,7 +31,7 @@ function getBookingLifecycle(role, status) {
   };
 
   const flow = flowByRole[normalizedRole] || customerFlow;
-  const statusIndex = flow.findIndex(step => step.key === normalizedStatus);
+  const statusIndex = flow.findIndex((step) => step.key === normalizedStatus);
 
   const steps = flow.map((step, index) => ({
     key: step.key,
@@ -56,36 +56,27 @@ function getBookingLifecycle(role, status) {
     } else if (normalizedStatus === 'ASSIGNED') {
       headline = 'A plumber is assigned';
       nextAction = 'Wait for the plumber to start work. You will be notified of progress.';
-      actions = [
-        { key: 'view', label: 'View details', variant: 'secondary' },
-      ];
+      actions = [{ key: 'view', label: 'View details', variant: 'secondary' }];
     } else if (normalizedStatus === 'IN_PROGRESS') {
       headline = 'Work is in progress';
       nextAction = 'The assigned plumber is currently working on your request.';
-      actions = [
-        { key: 'view', label: 'View details', variant: 'secondary' },
-      ];
+      actions = [{ key: 'view', label: 'View details', variant: 'secondary' }];
     } else if (normalizedStatus === 'COMPLETED') {
       headline = 'Job completed';
-      nextAction = 'Review the result and proceed to payment.';
-      actions = [
-        { key: 'pay', label: 'Pay now', variant: 'success' },
-      ];
+      nextAction = 'Review the result, confirm completion, and proceed to payment.';
+      actions = [{ key: 'pay', label: 'Pay now', variant: 'success' }];
     } else if (normalizedStatus === 'PAID') {
       headline = 'Closed and paid';
-      nextAction = 'This booking is complete. You can keep it for reference.';
+      nextAction = 'This booking is complete. Share feedback about your service.';
+      actions = [{ key: 'review', label: 'Leave a review', variant: 'primary' }];
     } else if (normalizedStatus === 'DECLINED') {
       headline = 'Request declined';
       nextAction = 'You can create a new request if you still need service.';
-      actions = [
-        { key: 'new', label: 'Create new request', variant: 'primary' },
-      ];
+      actions = [{ key: 'new', label: 'Create new request', variant: 'primary' }];
     } else if (normalizedStatus === 'CANCELLED') {
       headline = 'Request cancelled';
       nextAction = 'This request is closed. You can create another booking anytime.';
-      actions = [
-        { key: 'new', label: 'Create new request', variant: 'primary' },
-      ];
+      actions = [{ key: 'new', label: 'Create new request', variant: 'primary' }];
     }
   }
 
@@ -99,10 +90,8 @@ function getBookingLifecycle(role, status) {
       ];
     } else if (normalizedStatus === 'ASSIGNED') {
       headline = 'Assigned to a plumber';
-      nextAction = 'Monitor progress and update pricing if needed.';
-      actions = [
-        { key: 'view', label: 'Review booking', variant: 'secondary' },
-      ];
+      nextAction = 'Monitor the approved quote, schedule, evidence, and job progress.';
+      actions = [{ key: 'view', label: 'Review booking', variant: 'secondary' }];
     } else if (normalizedStatus === 'COMPLETED') {
       headline = 'Completed and ready for payment';
       nextAction = 'Customer payment should be processed next.';
@@ -113,16 +102,11 @@ function getBookingLifecycle(role, status) {
     if (normalizedStatus === 'ASSIGNED') {
       headline = 'New assigned job';
       nextAction = 'Start the work once you are on-site.';
-      actions = [
-        { key: 'start', label: 'Start work', variant: 'primary' },
-        { key: 'complete', label: 'Mark complete', variant: 'success' },
-      ];
+      actions = [{ key: 'start', label: 'Start work', variant: 'primary' }];
     } else if (normalizedStatus === 'IN_PROGRESS') {
       headline = 'Working on job';
       nextAction = 'Upload progress photos and complete the job when finished.';
-      actions = [
-        { key: 'complete', label: 'Mark complete', variant: 'success' },
-      ];
+      actions = [{ key: 'complete', label: 'Mark complete', variant: 'success' }];
     } else if (normalizedStatus === 'COMPLETED') {
       headline = 'Job completed';
       nextAction = 'Await payment confirmation and keep records up to date.';
