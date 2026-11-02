@@ -13,6 +13,7 @@
     "test": "node --test",
     "smoke:auth": "node ./scripts/smoke-auth.js",
     "smoke:workflow": "node ./scripts/smoke-workflow.js",
+    "smoke:dispatch": "node ./scripts/smoke-dispatch.js",
     "verify": "npm run check && npm run lint && npm test && npm run format:check",
     "db:migrate": "node ./scripts/migrate.js",
     "db:verify": "node ./scripts/verify-schema.js",

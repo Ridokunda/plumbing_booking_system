@@ -28,6 +28,7 @@ services:
       DB_PASSWORD: local-wefixit-password
       SESSION_SECRET: local-development-secret-change-before-deploying
       COOKIE_SECURE: 'false'
+      DISPATCH_TRAVEL_GAP_MINUTES: ${DISPATCH_TRAVEL_GAP_MINUTES:-30}
     depends_on:
       db:
         condition: service_healthy

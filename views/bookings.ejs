@@ -58,7 +58,7 @@
                     <div class="role-action-bar">
                         <div class="role-action-label">Recommended actions</div>
                         <% if (booking.status === 'NEW' || booking.status === 'PENDING') { %>
-                            <button class="assign-btn role-action-btn assign" data-booking-id="<%= booking.idbookings %>">Assign Plumber</button>
+                            <a class="role-action-btn assign" href="/admin/dispatch?booking_id=<%= booking.idbookings %>">Plan visit</a>
                             <button class="decline-btn role-action-btn decline" data-booking-id="<%= booking.idbookings %>">Decline</button>
                         <% } else { %>
                             <span style="color:#666; font-style:italic;">No actions available</span>
@@ -77,24 +77,6 @@
         <div id="message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
     </div>
 
-    <!-- Assign Plumber Modal -->
-    <div id="assignModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
-        <div class="modal-content" style="background:#fff; border-radius:12px; max-width:500px; width:90%; margin:auto; padding:32px 24px; position:relative; box-shadow:0 4px 24px rgba(0,0,0,0.15);">
-            <span id="closeAssignModal" style="position:absolute; top:16px; right:20px; font-size:1.8em; color:#888; cursor:pointer;">&times;</span>
-            <h3 style="margin-top:0; color:#0f7e94;">Schedule a plumber</h3>
-            <div class="form-group"><label for="scheduleStart">Starts</label><input class="form-control" type="datetime-local" id="scheduleStart" required></div>
-            <div class="form-group"><label for="scheduleEnd">Ends</label><input class="form-control" type="datetime-local" id="scheduleEnd" required></div>
-            <div id="plumbersList">
-                <% plumbers.forEach(plumber => { %>
-                    <div class="assign-modal-row">
-                        <span><%= plumber.name %> <%= plumber.surname %></span>
-                        <button class="assign-plumber-btn modal-assign-btn" data-plumber-id="<%= plumber.idusers %>" data-booking-id="">Schedule</button>
-                    </div>
-                <% }); %>
-            </div>
-        </div>
-    </div>
-
     <script>
         // Format booking dates
         document.querySelectorAll('.booking-date').forEach(function(el) {
@@ -106,33 +88,7 @@
             }
         });
 
-        // Assign plumber
         document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('assign-btn')) {
-                const bookingId = e.target.getAttribute('data-booking-id');
-                document.getElementById('assignModal').style.display = 'flex';
-                document.querySelectorAll('.assign-plumber-btn').forEach(btn => {
-                    btn.setAttribute('data-booking-id', bookingId);
-                });
-            }
-            if (e.target.classList.contains('assign-plumber-btn')) {
-                const bookingId = e.target.getAttribute('data-booking-id');
-                const plumberId = e.target.getAttribute('data-plumber-id');
-                const startsAt = document.getElementById('scheduleStart').value;
-                const endsAt = document.getElementById('scheduleEnd').value;
-                if (!startsAt || !endsAt) return alert('Choose a start and end time.');
-                fetch('/admin/schedule', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ booking_id: bookingId, plumber_id: plumberId, starts_at: startsAt, ends_at: endsAt })
-                }).then(r => r.json()).then(res => {
-                    alert(res.message);
-                    if (res.message.includes('successfully')) {
-                        document.getElementById('assignModal').style.display = 'none';
-                        location.reload();
-                    }
-                });
-            }
             if (e.target.classList.contains('decline-btn')) {
                 const bookingId = e.target.getAttribute('data-booking-id');
                 const reason = prompt('Why is this booking being declined?');
@@ -149,10 +105,6 @@
             }
         });
 
-        // Close modal
-        document.getElementById('closeAssignModal').addEventListener('click', function() {
-            document.getElementById('assignModal').style.display = 'none';
-        });
     </script>
     <script src="/javascripts/jwt-handler.js"></script>
 </body>

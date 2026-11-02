@@ -45,6 +45,7 @@ operations staff collaborate through a controlled job lifecycle from request to 
 - Signed and idempotent Stripe payment/refund handling; email delivery through Resend when enabled.
 - Downloadable PDF job cards and receipts generated from access-controlled database records.
 - Health endpoints, Docker Compose, automated tests, linting, dependency auditing, and CI.
+- An administrator dispatch calendar with day/week schedules, work queues, and travel-gap checks.
 
 See [the architecture notes](docs/architecture.md) and [OpenAPI description](docs/api.yaml).
 
@@ -98,6 +99,7 @@ npm audit           # dependency vulnerability report
 npm run db:seed     # optional local demo data
 npm run smoke:auth  # role-based HTTP smoke test after seeding
 npm run smoke:workflow # full booking-to-payment lifecycle smoke test
+npm run smoke:dispatch # dispatch integration tests; disposable *_test database only
 npm run verify      # complete local static/unit quality gate
 ```
 
@@ -117,6 +119,34 @@ npm run verify      # complete local static/unit quality gate
 | `TAX_RATE`                                   | No                   | Decimal quote tax rate; defaults to `0.15`        |
 
 Refer to [`env.template`](env.template) for the complete example. Do not commit `.env`.
+
+## Dispatch calendar
+
+Sign in as an administrator and open **Dispatch** in the navigation or **Dispatch calendar**
+from the dashboard. Day view shows plumber timelines; week view groups visits by plumber
+and day. On small screens, the calendar becomes an agenda. Requests and overdue jobs have
+separate, 20-item pages and remain available when you browse other dates.
+
+Click a request, visit, or available time to open the visit planner. Approved, active plumbers
+need an availability window covering the entire visit. Visits that have started or finished
+are read-only. A pending customer reschedule request must be reviewed in **Operations cases**
+before direct calendar edits. Existing booking assignment links open this same planner.
+
+All calendar dates and times use **Africa/Johannesburg (SAST, UTC+02:00)**, regardless of
+the browser or server timezone. The server retains UTC timestamps. Overdue means an assigned
+or in-progress visit whose planned end has passed; this does not automatically change its status.
+
+`DISPATCH_TRAVEL_GAP_MINUTES` sets the minimum time between a plumber's visits and defaults
+to `30`. Set it in the environment (or `.env` with Docker Compose), then recreate/restart the
+app as appropriate. Exactly the configured gap is accepted. Travel checks also apply when
+approving customer reschedule requests. Completed/paid visits retain their planned slots;
+cancelled/declined work does not reserve time. Changing the setting does not move existing
+visits; insufficient gaps appear as warnings. Use **Refresh** to retrieve other staff's changes.
+
+`npm run smoke:dispatch` requires `NODE_ENV=test`, a database name ending in `_test`, existing
+migrations, and the default 30-minute gap. It creates and cleans up its own synthetic users
+and bookings. Run it against a disposable database, never a working database. CI includes it
+alongside the existing authentication and full-lifecycle smoke tests.
 
 ## Core lifecycle
 

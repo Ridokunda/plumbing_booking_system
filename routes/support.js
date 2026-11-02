@@ -4,6 +4,14 @@ const { verifyToken } = require('../middleware/auth');
 const { cleanText, normalizeMoney, normalizeSchedule } = require('../utils/validation');
 const { createNotification, createNotifications } = require('../utils/notifications');
 const { recordAuditEvent } = require('../utils/audit');
+const {
+  SchedulingError,
+  beginSchedulingTransaction,
+  lockBooking,
+  validateSlot,
+  saveSchedule,
+  notifySchedule,
+} = require('../utils/scheduling');
 const stripe = process.env.STRIPE_SECRET_KEY
   ? require('stripe')(process.env.STRIPE_SECRET_KEY)
   : null;
@@ -128,45 +136,50 @@ router.post('/reschedules', requireCustomer, async (req, res, next) => {
   const bookingId = Number(req.body.booking_id);
   const schedule = normalizeSchedule(req.body.starts_at, req.body.ends_at);
   const reason = cleanText(req.body.reason, { min: 5, max: 500 });
-  if (!Number.isInteger(bookingId) || !schedule || !reason) {
+  if (!Number.isInteger(bookingId) || bookingId <= 0 || !schedule || !reason) {
     return res
       .status(400)
       .json({ success: false, message: 'Provide a valid future schedule and reason.' });
   }
+  let db;
+  let requestId;
   try {
-    const [result] = await database.promise().query(
+    db = await database.promise().getConnection();
+    await beginSchedulingTransaction(db);
+    const { booking, requests } = await lockBooking(db, bookingId);
+    if (booking.idUser !== req.user.idusers || booking.status !== 'ASSIGNED' || requests.length) {
+      throw new SchedulingError(
+        'This booking cannot be rescheduled or already has a pending request.',
+      );
+    }
+    const [result] = await db.query(
       `INSERT INTO reschedule_requests
-        (booking_id, requested_by, proposed_start, proposed_end, reason)
-       SELECT idbookings, ?, ?, ?, ? FROM bookings
-       WHERE idbookings = ? AND idUser = ? AND status = 'ASSIGNED'
-       AND NOT EXISTS (SELECT 1 FROM reschedule_requests rr
-         WHERE rr.booking_id = bookings.idbookings AND rr.status = 'PENDING')`,
-      [req.user.idusers, schedule.start, schedule.end, reason, bookingId, req.user.idusers],
+      (booking_id, requested_by, proposed_start, proposed_end, reason) VALUES (?, ?, ?, ?, ?)`,
+      [bookingId, req.user.idusers, schedule.start, schedule.end, reason],
     );
-    if (!result.affectedRows)
-      return res.status(409).json({
-        success: false,
-        message: 'This booking cannot be rescheduled or already has a pending request.',
-      });
-    await notifyAdmins({
-      bookingId,
-      type: 'reschedule_requested',
-      title: 'Reschedule requested',
-      message: 'A customer proposed a new visit time.',
-    });
-    recordAuditEvent({
-      actorId: req.user.idusers,
-      action: 'RESCHEDULE_REQUESTED',
-      entityType: 'reschedule_request',
-      entityId: result.insertId,
-      ipAddress: req.ip,
-    });
-    return res.status(201).json({ success: true, message: 'Reschedule request submitted.' });
+    requestId = result.insertId;
+    await db.commit();
   } catch (error) {
-    next(error);
+    if (db) await db.rollback();
+    return next(error);
+  } finally {
+    if (db) db.release();
   }
+  await notifyAdmins({
+    bookingId,
+    type: 'reschedule_requested',
+    title: 'Reschedule requested',
+    message: 'A customer proposed a new visit time.',
+  });
+  await recordAuditEvent({
+    actorId: req.user.idusers,
+    action: 'RESCHEDULE_REQUESTED',
+    entityType: 'reschedule_request',
+    entityId: requestId,
+    ipAddress: req.ip,
+  });
+  return res.status(201).json({ success: true, message: 'Reschedule request submitted.' });
 });
-
 router.post('/disputes/:id/status', requireAdmin, async (req, res, next) => {
   const id = Number(req.params.id);
   const status = String(req.body.status || '').toUpperCase();
@@ -320,103 +333,66 @@ router.post('/reschedules/:id/respond', requireAdmin, async (req, res, next) => 
   const id = Number(req.params.id);
   const decision = String(req.body.decision || '').toUpperCase();
   const responseNote = cleanText(req.body.note, { min: 0, max: 500 });
-  if (!Number.isInteger(id) || !['APPROVED', 'REJECTED'].includes(decision)) {
+  if (!Number.isInteger(id) || id <= 0 || !['APPROVED', 'REJECTED'].includes(decision)) {
     return res.status(400).json({ success: false, message: 'Invalid reschedule decision.' });
   }
-  let connection;
+  let db;
+  let request;
+  let change;
   try {
-    connection = await database.promise().getConnection();
-    await connection.beginTransaction();
-    const [rows] = await connection.query(
-      `SELECT rr.*, b.idUser, b.idPlumber, b.status AS booking_status
-       FROM reschedule_requests rr JOIN bookings b ON b.idbookings = rr.booking_id
-       WHERE rr.id = ? AND rr.status = 'PENDING' FOR UPDATE`,
-      [id],
-    );
-    if (!rows.length) {
-      await connection.rollback();
-      return res
-        .status(409)
-        .json({ success: false, message: 'Reschedule request is no longer pending.' });
-    }
-    const request = rows[0];
+    db = await database.promise().getConnection();
+    await beginSchedulingTransaction(db);
+    const [[lookup]] = await db.query('SELECT booking_id FROM reschedule_requests WHERE id = ?', [
+      id,
+    ]);
+    if (!lookup) throw new SchedulingError('Reschedule request not found.', 404);
+    const { booking, requests } = await lockBooking(db, lookup.booking_id);
+    request = requests.find((row) => row.id === id);
+    if (!request) throw new SchedulingError('Reschedule request is no longer pending.');
     if (decision === 'APPROVED') {
-      if (
-        !request.idPlumber ||
-        request.booking_status !== 'ASSIGNED' ||
-        new Date(request.proposed_start) <= new Date()
-      ) {
-        await connection.rollback();
-        return res.status(409).json({
-          success: false,
-          message: 'Only an assigned booking with a future proposal can be rescheduled.',
-        });
+      const schedule = normalizeSchedule(request.proposed_start, request.proposed_end);
+      if (booking.status !== 'ASSIGNED' || !booking.idPlumber || !schedule) {
+        throw new SchedulingError(
+          'Only an assigned booking with a future proposal can be rescheduled.',
+        );
       }
-      const [conflicts] = await connection.query(
-        `SELECT idbookings FROM bookings WHERE idPlumber = ? AND idbookings <> ?
-         AND status IN ('ASSIGNED','IN_PROGRESS') AND scheduled_start < ? AND scheduled_end > ? LIMIT 1`,
-        [request.idPlumber, request.booking_id, request.proposed_end, request.proposed_start],
-      );
-      if (conflicts.length) {
-        await connection.rollback();
-        return res
-          .status(409)
-          .json({ success: false, message: 'The proposed time conflicts with another job.' });
-      }
-      const [availability] = await connection.query(
-        `SELECT
-          EXISTS(SELECT 1 FROM plumber_availability WHERE plumber_id = ? AND availability_type = 'AVAILABLE' AND starts_at <= ? AND ends_at >= ?) AS is_available,
-          EXISTS(SELECT 1 FROM plumber_availability WHERE plumber_id = ? AND availability_type = 'UNAVAILABLE' AND starts_at < ? AND ends_at > ?) AS is_blocked`,
-        [
-          request.idPlumber,
-          request.proposed_start,
-          request.proposed_end,
-          request.idPlumber,
-          request.proposed_end,
-          request.proposed_start,
-        ],
-      );
-      if (!availability[0].is_available || availability[0].is_blocked) {
-        await connection.rollback();
-        return res.status(409).json({
-          success: false,
-          message: 'The assigned plumber is not available for the proposed time.',
-        });
-      }
-      await connection.query(
-        'UPDATE bookings SET scheduled_start = ?, scheduled_end = ? WHERE idbookings = ?',
-        [request.proposed_start, request.proposed_end, request.booking_id],
+      await validateSlot(db, booking.idbookings, booking.idPlumber, schedule.start, schedule.end);
+      change = await saveSchedule(
+        db,
+        booking,
+        booking.idPlumber,
+        schedule.start,
+        schedule.end,
+        req.user.idusers,
+        req.ip,
       );
     }
-    await connection.query(
+    await db.query(
       'UPDATE reschedule_requests SET status = ?, reviewed_by = ?, response_note = ?, responded_at = NOW() WHERE id = ?',
       [decision, req.user.idusers, responseNote, id],
     );
-    await connection.commit();
-    createNotification({
-      userId: request.idUser,
-      bookingId: request.booking_id,
-      type: 'reschedule_response',
-      title: `Reschedule ${decision.toLowerCase()}`,
-      message: responseNote || `Your reschedule request was ${decision.toLowerCase()}.`,
-    });
-    recordAuditEvent({
-      actorId: req.user.idusers,
-      action: 'RESCHEDULE_DECIDED',
-      entityType: 'reschedule_request',
-      entityId: id,
-      metadata: { decision },
-      ipAddress: req.ip,
-    });
-    return res.json({ success: true, message: `Reschedule request ${decision.toLowerCase()}.` });
+    await db.query(
+      `INSERT INTO audit_events (actor_id, action, entity_type, entity_id, metadata, ip_address)
+      VALUES (?, 'RESCHEDULE_DECIDED', 'reschedule_request', ?, ?, ?)`,
+      [req.user.idusers, String(id), JSON.stringify({ decision }), req.ip || null],
+    );
+    await db.commit();
   } catch (error) {
-    if (connection) await connection.rollback();
-    next(error);
+    if (db) await db.rollback();
+    return next(error);
   } finally {
-    if (connection) connection.release();
+    if (db) db.release();
   }
+  await notifySchedule(change);
+  await createNotification({
+    userId: request.requested_by,
+    bookingId: request.booking_id,
+    type: 'reschedule_response',
+    title: `Reschedule ${decision.toLowerCase()}`,
+    message: responseNote || `Your reschedule request was ${decision.toLowerCase()}.`,
+  });
+  return res.json({ success: true, message: `Reschedule request ${decision.toLowerCase()}.` });
 });
-
 router.get('/', async (req, res, next) => {
   try {
     if (![1, 2].includes(req.user.usertype))

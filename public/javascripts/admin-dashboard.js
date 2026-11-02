@@ -186,74 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Assign plumber functionality
-    document.querySelectorAll('.assign-btn').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        var bookingId = this.getAttribute('data-booking-id');
-        // Update all assign buttons with the current booking ID
-        document.querySelectorAll('.assign-plumber-btn').forEach(function (assignBtn) {
-          assignBtn.setAttribute('data-booking-id', bookingId);
-        });
-        document.getElementById('assignModal').style.display = 'flex';
-      });
-    });
-
-    // Handle assign plumber
-    document.addEventListener('click', function (e) {
-      if (e.target.classList.contains('assign-plumber-btn')) {
-        var plumberId = e.target.getAttribute('data-plumber-id');
-        var bookingId = e.target.getAttribute('data-booking-id');
-        const startsAt = document.getElementById('scheduleStart')?.value;
-        const endsAt = document.getElementById('scheduleEnd')?.value;
-        if (!startsAt || !endsAt) return alert('Choose a start and end time.');
-        fetch('/admin/schedule', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            booking_id: bookingId,
-            plumber_id: plumberId,
-            starts_at: startsAt,
-            ends_at: endsAt,
-          }),
-        })
-          .then((res) => res.json())
-          .then((result) => {
-            var msgDiv = document.getElementById('message');
-            msgDiv.style.display = 'block';
-            msgDiv.textContent = result.message;
-            if (result.success) {
-              msgDiv.style.backgroundColor = '#d4edda';
-              msgDiv.style.color = '#155724';
-              msgDiv.style.border = '1px solid #c3e6cb';
-              document.getElementById('assignModal').style.display = 'none';
-              // Update status in UI
-              var card = document
-                .querySelector(`[data-booking-id="${bookingId}"]`)
-                .closest('.booking-card');
-              card.querySelector('.status-label').textContent = 'ASSIGNED';
-              card.querySelector('.status-label').className = 'status-label status-ASSIGNED';
-              // Remove action buttons
-              var actionDiv = card.querySelector('div:last-child');
-              actionDiv.innerHTML =
-                '<span style="color:#666; font-style:italic;">No actions available</span>';
-            } else {
-              msgDiv.style.backgroundColor = '#f8d7da';
-              msgDiv.style.color = '#721c24';
-              msgDiv.style.border = '1px solid #f5c6cb';
-            }
-          })
-          .catch(() => {
-            var msgDiv = document.getElementById('message');
-            msgDiv.style.display = 'block';
-            msgDiv.textContent = 'An error occurred. Please try again.';
-            msgDiv.style.backgroundColor = '#f8d7da';
-            msgDiv.style.color = '#721c24';
-            msgDiv.style.border = '1px solid #f5c6cb';
-          });
-      }
-    });
-
     // Decline booking functionality
     document.querySelectorAll('.decline-btn').forEach(function (btn) {
       btn.addEventListener('click', function (e) {
@@ -299,18 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
           });
       });
     });
-
-    // Close assign modal
-    const closeAssignModal = document.getElementById('closeAssignModal');
-    if (closeAssignModal !== null) {
-      closeAssignModal.addEventListener('click', function () {
-        document.getElementById('assignModal').style.display = 'none';
-      });
-    }
-    window.onclick = function (event) {
-      var modal = document.getElementById('assignModal');
-      if (event.target === modal) modal.style.display = 'none';
-    };
 
     // Search and filter
     const searchInput = document.getElementById('searchInput');

@@ -2,15 +2,12 @@ var express = require('express');
 var router = express.Router();
 const connection = require('../database/connection');
 const { verifyToken, isAdmin } = require('../middleware/auth');
-const { createNotifications, createNotification } = require('../utils/notifications');
+const { createNotification } = require('../utils/notifications');
 const { getBookingLifecycle } = require('../utils/bookingLifecycle');
-const {
-  cleanText,
-  normalizeSchedule,
-  normalizePagination,
-  canTransition,
-} = require('../utils/validation');
+const { cleanText, normalizePagination, canTransition } = require('../utils/validation');
 const { recordAuditEvent } = require('../utils/audit');
+const { assignVisit } = require('../utils/scheduling');
+const { getDispatchData } = require('../utils/dispatchData');
 
 // Protect all administrator routes with the server-side session.
 router.use(verifyToken);
@@ -211,13 +208,9 @@ router.get('/bookings', async function (req, res, next) {
     JOIN users ON bookings.idUser = users.idusers 
     ORDER BY bookings.idbookings DESC LIMIT ? OFFSET ?
   `;
-  const plumbersQuery = `SELECT u.* FROM users u
-      JOIN plumber_profiles pp ON pp.user_id = u.idusers
-      WHERE u.usertype = 3 AND u.account_status = 'ACTIVE' AND pp.verification_status = 'APPROVED'`;
   try {
-    const [[results], [plumbers], [[count]]] = await Promise.all([
+    const [[results], [[count]]] = await Promise.all([
       connection.promise().query(bookingsQuery, [pageSize, offset]),
-      connection.promise().query(plumbersQuery),
       connection.promise().query('SELECT COUNT(*) AS total FROM bookings'),
     ]);
     res.render('bookings', {
@@ -225,7 +218,6 @@ router.get('/bookings', async function (req, res, next) {
         ...booking,
         lifecycle: getBookingLifecycle('admin', booking.status),
       })),
-      plumbers,
       title: 'Bookings',
       pagination: { page, pages: Math.max(1, Math.ceil(count.total / pageSize)) },
     });
@@ -282,106 +274,35 @@ router.get('/schedule', function (req, res, next) {
   });
 });
 
-router.post('/schedule', async function (req, res, next) {
-  const bookingId = Number(req.body.booking_id);
-  const plumberId = Number(req.body.plumber_id);
-  const schedule = normalizeSchedule(req.body.starts_at, req.body.ends_at);
-  if (!Number.isInteger(bookingId) || !Number.isInteger(plumberId) || !schedule) {
-    return res.status(400).json({
-      message: 'Provide a booking, plumber, and valid future time window of no more than 12 hours.',
-    });
-  }
+router.get('/dispatch', (_req, res) => {
+  res.render('dispatch', { title: 'Dispatch calendar' });
+});
 
-  let db;
+router.get('/dispatch/data', async (req, res, next) => {
   try {
-    db = await connection.promise().getConnection();
-    await db.beginTransaction();
-    const [plumbers] = await db.query(
-      `SELECT u.idusers FROM users u
-             JOIN plumber_profiles pp ON pp.user_id = u.idusers
-             WHERE u.idusers = ? AND u.usertype = 3 AND u.account_status = 'ACTIVE'
-             AND pp.verification_status = 'APPROVED' FOR UPDATE`,
-      [plumberId],
-    );
-    if (!plumbers.length) {
-      await db.rollback();
-      return res
-        .status(400)
-        .json({ message: 'Only an approved, active plumber can be scheduled.' });
-    }
-
-    const [bookings] = await db.query(
-      'SELECT idUser, status FROM bookings WHERE idbookings = ? FOR UPDATE',
-      [bookingId],
-    );
-    if (!bookings.length || !['NEW', 'PENDING', 'ASSIGNED'].includes(bookings[0].status)) {
-      await db.rollback();
-      return res.status(409).json({ message: 'This booking cannot be scheduled.' });
-    }
-
-    const [conflicts] = await db.query(
-      `SELECT idbookings FROM bookings
-             WHERE idPlumber = ? AND idbookings <> ? AND status IN ('ASSIGNED','IN_PROGRESS')
-             AND scheduled_start < ? AND scheduled_end > ? LIMIT 1`,
-      [plumberId, bookingId, schedule.end, schedule.start],
-    );
-    if (conflicts.length) {
-      await db.rollback();
-      return res.status(409).json({ message: 'That plumber already has a job during this time.' });
-    }
-
-    const [availability] = await db.query(
-      `SELECT
-               EXISTS(SELECT 1 FROM plumber_availability WHERE plumber_id = ? AND availability_type = 'AVAILABLE' AND starts_at <= ? AND ends_at >= ?) AS isAvailable,
-               EXISTS(SELECT 1 FROM plumber_availability WHERE plumber_id = ? AND availability_type = 'UNAVAILABLE' AND starts_at < ? AND ends_at > ?) AS isBlocked`,
-      [plumberId, schedule.start, schedule.end, plumberId, schedule.end, schedule.start],
-    );
-    if (!availability[0].isAvailable || availability[0].isBlocked) {
-      await db.rollback();
-      return res
-        .status(409)
-        .json({ message: 'That plumber is not available for the full selected time.' });
-    }
-
-    await db.query(
-      `UPDATE bookings SET idPlumber = ?, scheduled_start = ?, scheduled_end = ?, status = 'ASSIGNED'
-             WHERE idbookings = ?`,
-      [plumberId, schedule.start, schedule.end, bookingId],
-    );
-    await db.query(
-      'INSERT INTO booking_status_history (booking_id, from_status, to_status, changed_by, note) VALUES (?, ?, ?, ?, ?)',
-      [
-        bookingId,
-        bookings[0].status,
-        'ASSIGNED',
-        req.user.idusers,
-        'Visit scheduled by administrator',
-      ],
-    );
-    await db.commit();
-    recordAuditEvent({
-      actorId: req.user.idusers,
-      action: 'BOOKING_SCHEDULED',
-      entityType: 'booking',
-      entityId: bookingId,
-      metadata: { plumberId, startsAt: schedule.start, endsAt: schedule.end },
-      ipAddress: req.ip,
-    });
-    createNotifications([bookings[0].idUser, plumberId], {
-      bookingId,
-      type: 'booking_scheduled',
-      title: 'Visit scheduled',
-      message: `The visit is scheduled for ${schedule.start.toLocaleString('en-ZA')}.`,
-    });
-    res.json({ success: true, message: 'Booking scheduled successfully.' });
+    res.set('Cache-Control', 'no-store');
+    res.json(await getDispatchData(req.query));
   } catch (error) {
-    if (db) await db.rollback();
     next(error);
-  } finally {
-    if (db) db.release();
   }
 });
 
+router.post('/schedule', async (req, res, next) => {
+  try {
+    await assignVisit({
+      bookingId: Number(req.body.booking_id),
+      plumberId: Number(req.body.plumber_id),
+      startsAt: req.body.starts_at,
+      endsAt: req.body.ends_at,
+      expected: req.body.expected_schedule,
+      actorId: req.user.idusers,
+      ipAddress: req.ip,
+    });
+    res.json({ success: true, message: 'Booking scheduled successfully.' });
+  } catch (error) {
+    next(error);
+  }
+});
 /* POST decline booking*/
 router.post('/declinebooking', function (req, res) {
   const { booking_id } = req.body;

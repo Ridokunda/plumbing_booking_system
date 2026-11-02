@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeFixIt | <%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/bootstrap.css">
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <link rel="stylesheet" href="/stylesheets/dispatch.css">
+</head>
+<body>
+  <%- include('./partials/head') %>
+  <main class="dispatch-shell">
+    <header class="dispatch-heading">
+      <div><p class="dispatch-eyebrow">OPERATIONS / DISPATCH</p><h1>Every visit. In view.</h1><p class="dispatch-subtitle">Plan the team’s day, leave room for the journey, keep work moving.</p></div>
+      <a class="dispatch-button secondary" href="/admin">Back to dashboard</a>
+    </header>
+    <section class="dispatch-toolbar" aria-label="Calendar controls">
+      <div class="dispatch-controls"><button id="dispatch-prev" class="dispatch-button secondary" aria-label="Previous period">←</button><button id="dispatch-today" class="dispatch-button secondary">Today</button><button id="dispatch-next" class="dispatch-button secondary" aria-label="Next period">→</button><label class="sr-only" for="dispatch-date">Calendar date</label><input id="dispatch-date" type="date" required></div>
+      <div class="dispatch-controls"><label for="dispatch-view">View</label><select id="dispatch-view"><option value="day">Day</option><option value="week">Week</option></select><label for="dispatch-plumber">Team</label><select id="dispatch-plumber"><option value="">All plumbers</option></select><button id="dispatch-refresh" class="dispatch-button">Refresh</button></div>
+    </section>
+    <div id="dispatch-error" class="dispatch-alert" role="alert" hidden><span></span> <button id="dispatch-retry" class="dispatch-button secondary">Try again</button></div>
+    <p id="dispatch-status" class="dispatch-status" role="status" aria-live="polite">Loading dispatch…</p>
+    <div class="dispatch-layout">
+      <section class="dispatch-calendar-panel" aria-labelledby="dispatch-period">
+        <div class="dispatch-panel-heading"><div><h2 id="dispatch-period">Your team’s schedule</h2><p id="dispatch-settings">SAST · Africa/Johannesburg</p></div><span class="dispatch-live-dot">Manual refresh</span></div>
+        <div class="dispatch-legend" aria-label="Calendar legend"><span><i class="legend-available"></i> Available</span><span><i class="legend-assigned"></i> Assigned</span><span><i class="legend-progress"></i> In progress</span><span><i class="legend-history"></i> Finished</span><span><i class="legend-travel"></i> Travel buffer</span></div>
+        <div id="dispatch-calendar" aria-busy="true"></div>
+      </section>
+      <aside class="dispatch-queues" aria-label="Work queues">
+        <section class="dispatch-queue-panel"><div class="dispatch-panel-heading"><div><p class="dispatch-eyebrow">READY TO PLAN</p><h2>Unassigned requests <span id="unassigned-count" class="dispatch-count">0</span></h2></div></div><p class="queue-help">All dates · oldest requests first</p><div id="unassigned-items"></div><nav id="unassigned-pages" class="queue-pages" aria-label="Unassigned request pages"></nav></section>
+        <section class="dispatch-queue-panel overdue-panel"><div class="dispatch-panel-heading"><div><p class="dispatch-eyebrow">NEEDS ATTENTION</p><h2>Overdue jobs <span id="overdue-count" class="dispatch-count">0</span></h2></div></div><p class="queue-help">Unfinished visits past their planned end · all dates</p><div id="overdue-items"></div><nav id="overdue-pages" class="queue-pages" aria-label="Overdue job pages"></nav></section>
+      </aside>
+    </div>
+    <noscript><p class="dispatch-alert">Enable JavaScript to use the dispatch calendar. <a href="/admin">Return to the dashboard</a>.</p></noscript>
+  </main>
+  <dialog id="dispatch-dialog" aria-labelledby="dispatch-dialog-title">
+    <form id="dispatch-form">
+      <div class="dispatch-dialog-heading"><div><p class="dispatch-eyebrow">VISIT PLANNER</p><h2 id="dispatch-dialog-title">Schedule a visit</h2></div><button type="button" id="dispatch-close" class="dispatch-button secondary" aria-label="Close visit planner">✕</button></div>
+      <label for="visit-booking">Request</label><select id="visit-booking" required></select>
+      <div id="visit-details" class="visit-details"></div>
+      <label for="visit-plumber">Plumber</label><select id="visit-plumber" required></select>
+      <div class="dispatch-form-dates"><div><label for="visit-start">Starts · SAST</label><input id="visit-start" type="datetime-local" required></div><div><label for="visit-end">Ends · SAST</label><input id="visit-end" type="datetime-local" required></div></div>
+      <p id="visit-gap" class="queue-help"></p>
+      <p id="visit-error" class="dispatch-alert" role="alert" hidden></p>
+      <div class="dispatch-dialog-actions"><a id="visit-record" href="/admin">Open job record</a><a id="visit-case" href="/support" hidden>Review Operations case</a><button id="visit-save" class="dispatch-button" type="submit">Save visit</button></div>
+    </form>
+  </dialog>
+  <script src="/javascripts/dispatch-time.js"></script>
+  <script src="/javascripts/dispatch.js"></script>
+  <script src="/javascripts/jquery-3.4.1.min.js"></script>
+  <script src="/javascripts/bootstrap.js"></script>
+</body>
+</html>

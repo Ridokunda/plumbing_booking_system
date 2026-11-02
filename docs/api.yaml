@@ -67,12 +67,91 @@ paths:
         '200': { description: Booking cancelled }
         '409': { description: Invalid lifecycle transition }
   /admin/schedule:
+    get:
+      summary: Legacy administrator schedule listing (preserved)
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - { in: query, name: from, schema: { type: string, format: date } }
+      responses:
+        '200': { description: Scheduled bookings }
     post:
-      summary: Assign an available verified plumber and time window
+      summary: Assign or update a visit with availability and minimum travel-gap validation
       security: [{ sessionCookie: [], csrfHeader: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [booking_id, plumber_id, starts_at, ends_at]
+              properties:
+                booking_id: { type: integer, minimum: 1 }
+                plumber_id: { type: integer, minimum: 1 }
+                starts_at: { type: string, format: date-time }
+                ends_at: { type: string, format: date-time }
+                expected_schedule:
+                  description: Optional legacy-compatible optimistic check; calendar clients always send the snapshot from dispatch data.
+                  type: object
+                  required: [status, plumber_id, starts_at, ends_at]
+                  properties:
+                    status: { type: string }
+                    plumber_id: { type: [integer, 'null'] }
+                    starts_at: { type: [string, 'null'], format: date-time }
+                    ends_at: { type: [string, 'null'], format: date-time }
       responses:
         '200': { description: Job scheduled }
-        '409': { description: Availability or schedule conflict }
+        '400': { description: Invalid input or ineligible plumber }
+        '404': { description: Booking not found }
+        '409':
+          {
+            description: Stale snapshot,
+            pending reschedule case,
+            lifecycle,
+            availability,
+            or travel-gap conflict,
+          }
+  /admin/dispatch:
+    get:
+      summary: Administrator dispatch calendar HTML
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - {
+            in: query,
+            name: booking_id,
+            description: Open a specific booking in the planner,
+            schema: { type: integer, minimum: 1 },
+          }
+      responses:
+        '200': { description: Dispatch calendar }
+        '403': { description: Administrator access required }
+  /admin/dispatch/data:
+    get:
+      summary: Day/week calendar, availability, and independently paginated work queues
+      description: Dates use Africa/Johannesburg. Timestamps are UTC ISO values. The response contains range, timezone, travel_gap_minutes, server_now, plumbers, availability, bookings, unassigned, overdue, and optional selected_booking. Queues contain items, total, page, and pages; page size is 20. Calendar bookings include adjacent travel-buffer neighbours beyond the visible range. Consumers display only visits intersecting that range.
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - {
+            in: query,
+            name: date,
+            schema: { type: string, format: date },
+            description: Defaults to today in SAST,
+          }
+        - { in: query, name: view, schema: { type: string, enum: [day, week], default: day } }
+        - {
+            in: query,
+            name: plumber_id,
+            schema: { type: integer, minimum: 1 },
+            description: Filters calendar and overdue queue; unassigned requests remain global,
+          }
+        - { in: query, name: booking_id, schema: { type: integer, minimum: 1 } }
+        - { in: query, name: unassigned_page, schema: { type: integer, minimum: 1, default: 1 } }
+        - { in: query, name: overdue_page, schema: { type: integer, minimum: 1, default: 1 } }
+      responses:
+        '200': { description: Dispatch data; never cached }
+        '400': { description: Invalid date, view, identifier, or page }
+        '401': { description: Authentication required; request application/json }
+        '403': { description: Administrator access required }
+        '404': { description: Selected booking or plumber not found }
   /quotes/{quoteId}/respond:
     post:
       summary: Approve or reject the active quote
