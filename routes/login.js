@@ -87,11 +87,7 @@ function logoutHandler(req, res) {
   const finishLogout = () => {
     res.clearCookie(process.env.SESSION_NAME || 'connect.sid');
     res.clearCookie('csrfToken');
-    if (req.method === 'POST') {
-      return res.json({ success: true, message: 'Logged out successfully' });
-    }
-
-    return res.redirect('/');
+    return res.redirect(303, '/');
   };
 
   if (!req.session) {

@@ -69,6 +69,40 @@ test('form login redirects an admin after saving the authenticated session', asy
   await agent.get('/admin').expect(200);
 });
 
+test('logout form redirects home, clears cookies, and revokes the previous session', async (t) => {
+  const { agent, response: login } = await signIn(t, 2);
+  const sessionName = process.env.SESSION_NAME || 'connect.sid';
+  const previousSession = login.headers['set-cookie']
+    .find((cookie) => cookie.startsWith(`${sessionName}=`))
+    .split(';')[0];
+  const dashboard = await agent.get('/admin').expect(200);
+  const csrfCookie = dashboard.headers['set-cookie'].find((cookie) =>
+    cookie.startsWith('csrfToken='),
+  );
+  const token = decodeURIComponent(csrfCookie.split(';')[0].slice('csrfToken='.length));
+  const logout = await agent
+    .post('/login/logout')
+    .type('form')
+    .set('Accept', 'text/html')
+    .send({ _csrf: token })
+    .expect(303);
+  assert.equal(logout.headers.location, '/');
+  for (const cookieName of [sessionName, 'csrfToken']) {
+    assert.ok(
+      logout.headers['set-cookie'].some(
+        (cookie) => cookie.startsWith(`${cookieName}=;`) && cookie.includes('Expires='),
+      ),
+    );
+  }
+  const home = await agent.get(logout.headers.location).expect(200);
+  assert.match(home.text, /href="\/login"/);
+  assert.doesNotMatch(home.text, /action="\/login\/logout"/);
+  const protectedPage = await agent.get('/admin').expect(302);
+  assert.equal(protectedPage.headers.location, '/login');
+  const replay = await request(app).get('/admin').set('Cookie', previousSession).expect(302);
+  assert.equal(replay.headers.location, '/login');
+});
+
 test('dispatch renders within the admin sidebar and preserves section navigation', async (t) => {
   const { agent } = await signIn(t, 2);
   const dispatch = await agent

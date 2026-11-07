@@ -186,6 +186,11 @@ footer span {
   text-align: center;
 }
 
+.footer_section > .container {
+  display: block;
+  height: auto;
+}
+
 /*----------------------------Booking---------------------------------*/
 .container {
   width: 100%;
