@@ -630,7 +630,7 @@ footer span {
 .admin-container {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 270px 1fr;
+  grid-template-columns: 270px minmax(0, 1fr);
   background: linear-gradient(165deg, #f3f8ff 0%, #f8fbff 55%, #ffffff 100%);
 }
 
@@ -676,7 +676,8 @@ footer span {
 }
 
 .admin-pages a:hover,
-.admin-pages a:focus {
+.admin-pages a:focus,
+.admin-pages a[aria-current='page'] {
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
   transform: translateX(2px);

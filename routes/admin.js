@@ -14,7 +14,10 @@ router.use(verifyToken);
 router.use(isAdmin);
 
 router.get('/', function (req, res) {
-  res.render('admindashboard', { title: 'Admin Dashboard' });
+  const adminPage = ['stats', 'users', 'bookings'].includes(req.query.section)
+    ? req.query.section
+    : 'stats';
+  res.render('admindashboard', { title: 'Admin Dashboard', adminPage });
 });
 
 router.get('/manageusers', function (req, res) {
@@ -275,7 +278,7 @@ router.get('/schedule', function (req, res, next) {
 });
 
 router.get('/dispatch', (_req, res) => {
-  res.render('dispatch', { title: 'Dispatch calendar' });
+  res.render('admindashboard', { title: 'Dispatch calendar', adminPage: 'dispatch' });
 });
 
 router.get('/dispatch/data', async (req, res, next) => {

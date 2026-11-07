@@ -5,8 +5,15 @@ const connection = require('../database/connection');
 const { createRateLimiter } = require('../middleware/security');
 const { normalizeEmail } = require('../utils/validation');
 
+function loginDestination(user) {
+  if (Number(user.usertype) === 2) return '/admin';
+  if (Number(user.usertype) === 3) return '/plumber';
+  return '/';
+}
+
 /* GET Login page. */
 router.get('/', function (req, res) {
+  if (req.session.user) return res.redirect(loginDestination(req.session.user));
   const error = req.query.error;
   res.render('login', { title: 'Log in', error });
 });
@@ -57,19 +64,18 @@ router.post('/log', createRateLimiter({ max: 10 }), (req, res) => {
       req.session.user = {
         idusers: user.idusers,
         email: user.email,
-        usertype: user.usertype,
+        usertype: Number(user.usertype),
         name: user.name,
       };
-      let redirectUrl = '/';
-      if (user.usertype === 2) redirectUrl = '/admin';
-      if (user.usertype === 3) redirectUrl = '/plumber';
+      const redirectUrl = loginDestination(req.session.user);
       req.session.save((saveError) => {
         if (saveError)
           return res.status(500).json({ success: false, message: 'Unable to sign in' });
+        if (req.is('application/x-www-form-urlencoded')) return res.redirect(303, redirectUrl);
         res.json({
           success: true,
           redirectUrl,
-          usertype: user.usertype,
+          usertype: req.session.user.usertype,
           message: 'Login successful',
         });
       });

@@ -71,6 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (response.ok) {
           const content = await response.text();
           contentDiv.innerHTML = content;
+          document.querySelectorAll('.admin-pages .link').forEach((item) => {
+            item.setAttribute('aria-current', item === link ? 'page' : 'false');
+          });
+          window.history.replaceState(null, '', link.href);
           attachEventListeners();
         } else {
           contentDiv.innerHTML = '<p>Failure while loading content</p>';
@@ -82,8 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Load default page (Dashboard Analytics)
-  const defaultUrl = '/admin/stats';
+  // Restore the selected sidebar section when returning from dispatch or reloading.
+  const defaultUrl =
+    {
+      users: '/admin/manageusers',
+      bookings: '/admin/bookings',
+    }[contentDiv.dataset.page] || '/admin/stats';
   fetch(defaultUrl)
     .then((response) => {
       if (response.ok) {

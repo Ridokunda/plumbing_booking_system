@@ -33,7 +33,8 @@
       <div class="form-container" style="background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 40px; width: 100%; max-width: 500px;">
         <h1 style="color: #0355cc; font-size: 2.5rem; font-weight: bold; margin-bottom: 30px; text-align: center;">Log in</h1>
         
-        <form id="loginForm" style="display: flex; flex-direction: column; gap: 20px;">
+        <form id="loginForm" action="/login/log" method="post" style="display: flex; flex-direction: column; gap: 20px;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <label style="font-weight: 600; color: #333; font-size: 0.9rem;">Email</label>
             <input 

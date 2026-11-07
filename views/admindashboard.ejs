@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <% if (adminPage === 'dispatch') { %>
+        <link rel="stylesheet" href="/stylesheets/bootstrap.css">
+    <% } %>
     <link rel="stylesheet" href="/stylesheets/custom.css">
+    <% if (adminPage === 'dispatch') { %>
+        <link rel="stylesheet" href="/stylesheets/dispatch.css">
+    <% } %>
 </head>
 <body>
     <div class="admin-container">
@@ -22,10 +28,10 @@
                             <% } %>
                         </a>
                     </li>
-                    <li><a href="/admin/dispatch">Dispatch calendar</a></li>
-                    <li><a class="link" href="/admin/stats" id="stats-link">Dashboard Analytics</a></li>
-                    <li><a class="link" href="/admin/manageusers" id="user-management-link">User management</a></li>
-                    <li><a class="link" href="/admin/bookings" id="bookings-link">Bookings</a></li>
+                    <li><a href="/admin/dispatch" aria-current="<%= adminPage === 'dispatch' ? 'page' : 'false' %>">Dispatch calendar</a></li>
+                    <li><a class="link" href="/admin?section=stats" id="stats-link" aria-current="<%= adminPage === 'stats' ? 'page' : 'false' %>">Dashboard Analytics</a></li>
+                    <li><a class="link" href="/admin?section=users" id="user-management-link" aria-current="<%= adminPage === 'users' ? 'page' : 'false' %>">User management</a></li>
+                    <li><a class="link" href="/admin?section=bookings" id="bookings-link" aria-current="<%= adminPage === 'bookings' ? 'page' : 'false' %>">Bookings</a></li>
                     <li><a href="/admin/contacts">Contact messages</a></li>
                     <li><a href="/support">Operations cases</a></li>
                 </ul>
@@ -34,9 +40,18 @@
                 <form action="/login/logout" method="post"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button type="submit">Logout</button></form>
             </div>
         </div>
-        <div class="content"></div>
+        <div class="content<%= adminPage === 'dispatch' ? ' admin-dispatch-content' : '' %>" data-page="<%= adminPage %>">
+            <% if (adminPage === 'dispatch') { %>
+                <%- include('./dispatch') %>
+            <% } %>
+        </div>
     </div>
-    <script src="/javascripts/admin-dashboard.js"></script>
     <script src="/javascripts/jwt-handler.js"></script>
+    <% if (adminPage === 'dispatch') { %>
+        <script src="/javascripts/dispatch-time.js"></script>
+        <script src="/javascripts/dispatch.js"></script>
+    <% } else { %>
+        <script src="/javascripts/admin-dashboard.js"></script>
+    <% } %>
 </body>
 </html>
