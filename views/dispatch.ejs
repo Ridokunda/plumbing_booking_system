@@ -28,6 +28,12 @@
       <div id="visit-details" class="visit-details"></div>
       <label for="visit-plumber">Plumber</label><select id="visit-plumber" required></select>
       <div class="dispatch-form-dates"><div><label for="visit-start">Starts · SAST</label><input id="visit-start" type="datetime-local" required></div><div><label for="visit-end">Ends · SAST</label><input id="visit-end" type="datetime-local" required></div></div>
+      <section id="visit-availability" class="visit-availability" aria-label="Plumber availability">
+        <strong>Working hours · SAST</strong>
+        <p id="visit-availability-status" role="status" aria-live="polite">Choose a plumber to see their working hours.</p>
+        <ul id="visit-availability-windows"></ul>
+        <button type="button" id="visit-availability-refresh" class="dispatch-button secondary">Refresh working hours</button>
+      </section>
       <p id="visit-gap" class="queue-help"></p>
       <p id="visit-error" class="dispatch-alert" role="alert" hidden></p>
       <div class="dispatch-dialog-actions"><a id="visit-record" href="/admin">Open job record</a><a id="visit-case" href="/support" hidden>Review Operations case</a><button id="visit-save" class="dispatch-button" type="submit">Save visit</button></div>

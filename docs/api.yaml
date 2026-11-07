@@ -124,6 +124,19 @@ paths:
       responses:
         '200': { description: Dispatch calendar }
         '403': { description: Administrator access required }
+  /admin/plumbers/{id}/availability:
+    get:
+      summary: Check a plumber's recorded working hours before scheduling
+      description: Returns availability windows overlapping the requested SAST date and the following day, including unavailable periods for visits spanning midnight. Timestamps are UTC ISO values. Saving a visit rechecks availability and travel gaps.
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, minimum: 1 } }
+        - { in: query, name: date, required: true, schema: { type: string, format: date } }
+      responses:
+        '200': { description: Recorded availability windows; empty when none exist; never cached }
+        '400': { description: Invalid plumber identifier or date }
+        '401': { description: Authentication required; request application/json }
+        '403': { description: Administrator access required }
   /admin/dispatch/data:
     get:
       summary: Day/week calendar, availability, and independently paginated work queues

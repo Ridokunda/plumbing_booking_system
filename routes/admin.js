@@ -8,6 +8,7 @@ const { cleanText, normalizePagination, canTransition } = require('../utils/vali
 const { recordAuditEvent } = require('../utils/audit');
 const { assignVisit } = require('../utils/scheduling');
 const { getDispatchData } = require('../utils/dispatchData');
+const { time } = require('../config/dispatch');
 
 // Protect all administrator routes with the server-side session.
 router.use(verifyToken);
@@ -279,6 +280,28 @@ router.get('/schedule', function (req, res, next) {
 
 router.get('/dispatch', (_req, res) => {
   res.render('admindashboard', { title: 'Dispatch calendar', adminPage: 'dispatch' });
+});
+
+router.get('/plumbers/:id/availability', async (req, res, next) => {
+  const plumberId = Number(req.params.id);
+  const date = req.query.date;
+  if (!Number.isSafeInteger(plumberId) || plumberId < 1 || !time.validDate(date)) {
+    return res.status(400).json({ success: false, message: 'Choose a plumber and valid date.' });
+  }
+  // Include the next day so a visit spanning midnight also sees every blocked period.
+  const start = time.range(date, 'day').start;
+  const end = time.range(time.shiftDate(date, 1), 'day').end;
+  try {
+    const [availability] = await connection.promise().query(
+      `SELECT id, starts_at, ends_at, availability_type FROM plumber_availability
+       WHERE plumber_id = ? AND starts_at < ? AND ends_at > ? ORDER BY starts_at`,
+      [plumberId, end, start],
+    );
+    res.set('Cache-Control', 'no-store');
+    res.json({ success: true, availability });
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.get('/dispatch/data', async (req, res, next) => {

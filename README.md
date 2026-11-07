@@ -122,8 +122,8 @@ Refer to [`env.template`](env.template) for the complete example. Do not commit 
 
 ## Dispatch calendar
 
-Sign in as an administrator and open **Dispatch** in the navigation or **Dispatch calendar**
-from the dashboard. Day view shows plumber timelines; week view groups visits by plumber
+Sign in as an administrator and open **Dispatch calendar** in the dashboard sidebar.
+Day view shows plumber timelines; week view groups visits by plumber
 and day. On small screens, the calendar becomes an agenda. Requests and overdue jobs have
 separate, 20-item pages and remain available when you browse other dates.
 
@@ -131,6 +131,13 @@ Click a request, visit, or available time to open the visit planner. Approved, a
 need an availability window covering the entire visit. Visits that have started or finished
 are read-only. A pending customer reschedule request must be reviewed in **Operations cases**
 before direct calendar edits. Existing booking assignment links open this same planner.
+
+Each plumber must first add their working hours under **My availability** while signed in
+to their plumber account. This also applies to the demo plumber: the demo seed does not
+assume working hours. Enter an **AVAILABLE** window covering the full visit; any overlapping
+**UNAVAILABLE** window blocks it. The planner shows the selected plumber's hours before
+enabling Save. After hours are added or changed, use **Refresh working hours** in the planner.
+Availability entry, display, and scheduling all use SAST.
 
 All calendar dates and times use **Africa/Johannesburg (SAST, UTC+02:00)**, regardless of
 the browser or server timezone. The server retains UTC timestamps. Overdue means an assigned

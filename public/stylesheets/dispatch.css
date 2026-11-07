@@ -534,6 +534,34 @@ dialog::backdrop {
 #visit-gap {
   margin: 14px 0;
 }
+.visit-availability {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--dispatch-line);
+  border-radius: 7px;
+  background: #f3f8f7;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.visit-availability p {
+  margin: 6px 0;
+}
+.visit-availability ul {
+  padding-left: 18px;
+  margin: 8px 0;
+  max-height: 110px;
+  overflow-y: auto;
+}
+.visit-availability[data-state='unavailable'],
+.visit-availability[data-state='error'] {
+  background: #fff8ed;
+  border-color: #ead6b5;
+}
+.visit-availability .dispatch-button {
+  min-height: 32px;
+  padding: 5px 9px;
+  font-size: 11px;
+}
 .dispatch-dialog-actions {
   display: flex;
   flex-wrap: wrap;

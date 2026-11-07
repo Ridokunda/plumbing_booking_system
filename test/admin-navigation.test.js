@@ -10,7 +10,7 @@ process.env.COOKIE_SECURE = 'false';
 const app = require('../app');
 const database = require('../database/connection');
 
-async function signIn(t, usertype, form = false) {
+async function signIn(t, usertype, form = false, availability = []) {
   const password = 'Navigation-test-password';
   const passwordHash = await bcrypt.hash(password, 4);
   t.mock.method(database, 'query', (sql, params, callback) => {
@@ -28,13 +28,15 @@ async function signIn(t, usertype, form = false) {
       },
     ]);
   });
-  t.mock.method(database, 'promise', () => ({
-    query: async (sql) => {
-      if (sql.includes('COUNT(*) AS unreadCount')) return [[{ unreadCount: 0 }]];
-      if (sql.includes('FROM notifications')) return [[]];
-      throw new Error(`Unexpected database query: ${sql}`);
-    },
-  }));
+  const query = t.mock.fn(async (sql) => {
+    if (sql.includes('COUNT(*) AS unreadCount')) return [[{ unreadCount: 0 }]];
+    if (sql.includes('FROM notifications')) return [[]];
+    if (sql.includes('FROM plumber_availability')) return [availability];
+    if (sql.includes('INSERT INTO plumber_availability')) return [{ insertId: 7 }];
+    if (sql.includes('INSERT INTO audit_events')) return [{}];
+    throw new Error(`Unexpected database query: ${sql}`);
+  });
+  t.mock.method(database, 'promise', () => ({ query }));
 
   const agent = request.agent(app);
   const page = await agent.get('/login').expect(200);
@@ -45,7 +47,7 @@ async function signIn(t, usertype, form = false) {
   const response = await login
     .send({ email: 'navigation@example.com', password })
     .expect(form ? 303 : 200);
-  return { agent, response };
+  return { agent, response, query };
 }
 
 for (const usertype of [2, '2']) {
@@ -99,6 +101,53 @@ test('dispatch renders within the admin sidebar and preserves section navigation
   assert.doesNotMatch(home.text, /href="\/admin\/dispatch"/);
 });
 
+test('admin working-hours lookup covers SAST dates and the following night', async (t) => {
+  const availability = [
+    {
+      id: 7,
+      starts_at: '2030-11-07T20:00:00.000Z',
+      ends_at: '2030-11-08T01:00:00.000Z',
+      availability_type: 'AVAILABLE',
+    },
+  ];
+  const { agent, query } = await signIn(t, 2, false, availability);
+  const result = await agent.get('/admin/plumbers/43/availability?date=2030-11-07').expect(200);
+  assert.deepEqual(result.body.availability, availability);
+  assert.equal(result.headers['cache-control'], 'no-store');
+  const lookup = query.mock.calls.find((call) =>
+    call.arguments[0].includes('FROM plumber_availability'),
+  );
+  assert.equal(lookup.arguments[1][0], 43);
+  assert.equal(lookup.arguments[1][1].toISOString(), '2030-11-08T22:00:00.000Z');
+  assert.equal(lookup.arguments[1][2].toISOString(), '2030-11-06T22:00:00.000Z');
+  await agent.get('/admin/plumbers/43/availability?date=2030-02-30').expect(400);
+  await agent.get('/admin/plumbers/invalid/availability?date=2030-11-07').expect(400);
+});
+
+test('plumber availability form stores entered wall times in SAST', async (t) => {
+  const { agent, query } = await signIn(t, 3);
+  const page = await agent.get('/plumber/availability').expect(200);
+  assert.match(page.text, /Starts · SAST/);
+  assert.match(page.text, /My availability/);
+  const cookie = page.headers['set-cookie'].find((value) => value.startsWith('csrfToken='));
+  const token = decodeURIComponent(cookie.split(';')[0].slice('csrfToken='.length));
+  await agent
+    .post('/plumber/availability')
+    .set('X-CSRF-Token', token)
+    .send({
+      starts_at: '2030-11-07T12:30',
+      ends_at: '2030-11-07T13:30',
+      availability_type: 'AVAILABLE',
+    })
+    .expect(201);
+  const insert = query.mock.calls.find((call) =>
+    call.arguments[0].includes('INSERT INTO plumber_availability'),
+  );
+  assert.equal(insert.arguments[1][0], 42);
+  assert.equal(insert.arguments[1][1].toISOString(), '2030-11-07T10:30:00.000Z');
+  assert.equal(insert.arguments[1][2].toISOString(), '2030-11-07T11:30:00.000Z');
+});
+
 for (const [usertype, destination] of [
   [1, '/'],
   [3, '/plumber'],
@@ -108,6 +157,7 @@ for (const [usertype, destination] of [
     assert.equal(response.body.redirectUrl, destination);
     await agent.get('/admin').expect(403);
     await agent.get('/admin/dispatch').expect(403);
+    await agent.get('/admin/plumbers/43/availability?date=2030-11-07').expect(403);
     const login = await agent.get('/login').expect(302);
     assert.equal(login.headers.location, destination);
   });

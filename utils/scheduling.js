@@ -97,8 +97,14 @@ async function validateSlot(db, bookingId, plumberId, start, end) {
       slot.availability_type === 'AVAILABLE' && slot.starts_at <= start && slot.ends_at >= end,
   );
   const blocked = availability.some((slot) => slot.availability_type === 'UNAVAILABLE');
-  if (!available || blocked)
-    throw new SchedulingError('That plumber is not available for the full selected time.');
+  if (blocked)
+    throw new SchedulingError(
+      'This visit overlaps time the plumber marked unavailable. Choose another time or plumber.',
+    );
+  if (!available)
+    throw new SchedulingError(
+      'No available working hours cover this visit. Ask the plumber to add a covering window under My availability, or choose another time or plumber.',
+    );
 }
 
 async function saveSchedule(db, booking, plumberId, start, end, actorId, ipAddress) {

@@ -16,6 +16,7 @@
     request: 0,
     editing: null,
     saving: false,
+    availability: { key: null, request: 0, loading: false, slots: [], error: null },
   };
   controls.date.value = time.validDate(query.get('date')) ? query.get('date') : time.dateKey();
   controls.view.value = query.get('view') === 'week' ? 'week' : 'day';
@@ -438,6 +439,111 @@
       if (request === state.request) $id('dispatch-calendar').setAttribute('aria-busy', 'false');
     }
   }
+  async function loadVisitAvailability(plumberId, date) {
+    const availability = state.availability;
+    const request = ++availability.request;
+    availability.loading = true;
+    availability.error = null;
+    try {
+      const response = await fetch(`/admin/plumbers/${plumberId}/availability?date=${date}`, {
+        headers: { Accept: 'application/json' },
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Unable to check working hours.');
+      if (request === availability.request) availability.slots = result.availability;
+    } catch (error) {
+      if (request === availability.request) availability.error = error.message;
+    } finally {
+      if (request === availability.request) {
+        availability.loading = false;
+        updateVisitAvailability();
+      }
+    }
+  }
+  function updateVisitAvailability(force = false) {
+    const panel = $id('visit-availability');
+    const status = $id('visit-availability-status');
+    const windows = $id('visit-availability-windows');
+    const refresh = $id('visit-availability-refresh');
+    const availability = state.availability;
+    const plumberId = Number($id('visit-plumber').value);
+    const readonly = state.editing && !state.editing.editable;
+    const start = time.parseInput(
+      $id('visit-start').value,
+      state.editing?.expected_schedule.starts_at,
+    );
+    const end = time.parseInput($id('visit-end').value, state.editing?.expected_schedule.ends_at);
+    panel.hidden = Boolean(readonly);
+    panel.dataset.state = 'pending';
+    windows.replaceChildren();
+    $id('visit-save').disabled = true;
+    refresh.disabled = state.saving;
+    if (readonly) return;
+    if (!plumberId || !start || !end || new Date(end) <= new Date(start)) {
+      availability.key = null;
+      availability.request++;
+      availability.loading = false;
+      refresh.disabled = true;
+      status.textContent = plumberId
+        ? 'Choose a valid start and later end time to check working hours.'
+        : 'Choose a plumber to see their working hours.';
+      return;
+    }
+    const date = time.dateKey(start);
+    const key = `${plumberId}:${date}`;
+    if (force || availability.key !== key) {
+      availability.key = key;
+      loadVisitAvailability(plumberId, date);
+    }
+    if (availability.loading) {
+      status.textContent = 'Checking working hours…';
+      refresh.disabled = true;
+      return;
+    }
+    if (availability.error) {
+      panel.dataset.state = 'error';
+      status.textContent = 'Could not check working hours. Refresh working hours to try again.';
+      return;
+    }
+    const day = time.range(date, 'day');
+    const shownEnd = new Date(Math.max(day.end.getTime(), new Date(end).getTime()));
+    const slots = availability.slots.filter(
+      (slot) => new Date(slot.starts_at) < shownEnd && new Date(slot.ends_at) > day.start,
+    );
+    for (const slot of slots)
+      windows.append(
+        el(
+          'li',
+          '',
+          `${slot.availability_type === 'AVAILABLE' ? 'Available' : 'Unavailable'}: ${fullTime(slot.starts_at)} – ${fullTime(slot.ends_at)}`,
+        ),
+      );
+    const covered = slots.some(
+      (slot) =>
+        slot.availability_type === 'AVAILABLE' &&
+        new Date(slot.starts_at) <= new Date(start) &&
+        new Date(slot.ends_at) >= new Date(end),
+    );
+    const blocked = slots.some(
+      (slot) =>
+        slot.availability_type === 'UNAVAILABLE' &&
+        new Date(slot.starts_at) < new Date(end) &&
+        new Date(slot.ends_at) > new Date(start),
+    );
+    panel.dataset.state = covered && !blocked ? 'available' : 'unavailable';
+    if (blocked) {
+      status.textContent =
+        'This visit overlaps an unavailable period. Choose another time or plumber.';
+    } else if (!covered) {
+      status.textContent = slots.some((slot) => slot.availability_type === 'AVAILABLE')
+        ? 'The whole visit must fit inside one available window. Adjust the visit time or choose another plumber.'
+        : `No available working hours are recorded for ${dateLabel(date)}. Ask this plumber to add hours under My availability, then refresh working hours here.`;
+    } else {
+      status.textContent =
+        'This visit fits the recorded working hours. Travel gaps are checked when saving.';
+    }
+    $id('visit-save').disabled = state.saving || !state.editing || !covered || blocked;
+  }
   function chooseBooking() {
     const booking = state.records.get(Number($id('visit-booking').value));
     state.editing = booking || null;
@@ -461,6 +567,7 @@
     $id('visit-record').hidden = !booking;
     if (booking) $id('visit-record').href = `/jobs/${booking.idbookings}`;
     $id('visit-error').hidden = true;
+    updateVisitAvailability();
   }
   function openVisit(booking = null, plumberId = null, startsAt = null) {
     if (!state.data) return;
@@ -496,10 +603,14 @@
     $id('visit-end').value = time.inputValue(new Date(new Date(start).getTime() + 3600000));
     $id('visit-gap').textContent =
       `Leave at least ${state.data.travel_gap_minutes} minutes between this plumber’s visits. Visit times must fit their availability.`;
+    state.availability.key = null;
     chooseBooking();
     $id('dispatch-dialog').showModal();
   }
   $id('visit-booking').addEventListener('change', chooseBooking);
+  for (const id of ['visit-plumber', 'visit-start', 'visit-end'])
+    $id(id).addEventListener('change', () => updateVisitAvailability());
+  $id('visit-availability-refresh').addEventListener('click', () => updateVisitAvailability(true));
   $id('dispatch-close').addEventListener('click', () => {
     if (!state.saving) $id('dispatch-dialog').close();
   });
@@ -509,6 +620,8 @@
   $id('dispatch-form').addEventListener('submit', async (event) => {
     event.preventDefault();
     if (state.saving || !state.editing) return;
+    updateVisitAvailability();
+    if ($id('visit-save').disabled) return;
     const start = time.parseInput(
       $id('visit-start').value,
       state.editing.expected_schedule.starts_at,
@@ -545,8 +658,8 @@
       error.hidden = false;
     } finally {
       state.saving = false;
-      $id('visit-save').disabled = false;
       $id('visit-save').textContent = 'Save visit';
+      updateVisitAvailability();
     }
   });
   for (const [id, direction] of [

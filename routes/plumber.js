@@ -6,7 +6,8 @@ const database = require('../database/connection');
 const { verifyToken, isPlumber } = require('../middleware/auth');
 const { createNotification } = require('../utils/notifications');
 const { getBookingLifecycle } = require('../utils/bookingLifecycle');
-const { normalizeSchedule, canTransition } = require('../utils/validation');
+const { canTransition } = require('../utils/validation');
+const { normalizeAvailability } = require('../utils/availability');
 const { recordAuditEvent } = require('../utils/audit');
 
 const router = express.Router();
@@ -72,7 +73,7 @@ router.get('/availability', async (req, res, next) => {
 });
 
 router.post('/availability', async (req, res, next) => {
-  const schedule = normalizeSchedule(req.body.starts_at, req.body.ends_at);
+  const schedule = normalizeAvailability(req.body.starts_at, req.body.ends_at);
   const type = String(req.body.availability_type || 'AVAILABLE').toUpperCase();
   if (!schedule || !['AVAILABLE', 'UNAVAILABLE'].includes(type)) {
     return res
