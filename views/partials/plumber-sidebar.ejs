@@ -1,0 +1,31 @@
+<aside class="sidebar" aria-label="Plumber workspace">
+    <div class="logo"><h1>WeFixIt</h1></div>
+    <nav class="admin-pages" aria-label="Plumber navigation">
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/plumber/my-bookings" aria-current="<%= activePage === 'bookings' ? 'page' : 'false' %>">Dashboard</a></li>
+            <li><a href="/plumber/availability" aria-current="<%= activePage === 'availability' ? 'page' : 'false' %>">My availability</a></li>
+            <li><a href="/notifications">Notifications <span id="notification-count" class="notification-badge" <%= notificationCount ? '' : 'hidden' %>><%= notificationCount || 0 %></span></a></li>
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/support">Support</a></li>
+        </ul>
+    </nav>
+    <div class="logout-section">
+        <form action="/login/logout" method="post">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</aside>
+<script>
+    (() => {
+        const badge = document.getElementById('notification-count');
+        if (!badge || !window.EventSource) return;
+        const stream = new EventSource('/notifications/stream');
+        stream.addEventListener('unread', (event) => {
+            const count = Number(JSON.parse(event.data).unreadCount || 0);
+            badge.textContent = String(count);
+            badge.hidden = count === 0;
+        });
+    })();
+</script>

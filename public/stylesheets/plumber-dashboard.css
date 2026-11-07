@@ -1,0 +1,201 @@
+.plumber-dashboard,
+.plumber-dashboard *,
+.plumber-dashboard *::before,
+.plumber-dashboard *::after {
+  box-sizing: border-box;
+}
+
+.plumber-dashboard .content,
+.plumber-dashboard .admin-panel {
+  min-width: 0;
+}
+
+.plumber-dashboard .admin-btn,
+.plumber-dashboard .booking-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.plumber-dashboard .search-input {
+  min-width: 0;
+  flex-basis: 220px;
+}
+
+.plumber-dashboard .bookings-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+  align-items: start;
+  padding: 0;
+}
+
+.plumber-dashboard .booking-card {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid #e0e9f5;
+  box-shadow: 0 4px 14px rgba(16, 35, 63, 0.04);
+  overflow-wrap: anywhere;
+}
+
+.plumber-dashboard .card-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plumber-dashboard .service-badge {
+  position: static;
+  font-size: 0.75rem;
+  max-width: 100%;
+}
+
+.plumber-customer {
+  margin: 0;
+  color: #10233f;
+  font-size: 1.15rem;
+}
+
+.plumber-description {
+  color: #607085;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.plumber-dashboard .photo-form,
+.plumber-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.plumber-dashboard .photo-form input[type='file'] {
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.plumber-card-links {
+  padding-top: 12px;
+  border-top: 1px solid #edf2f8;
+}
+
+.plumber-dashboard .admin-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.plumber-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+  color: #607085;
+  font-size: 0.875rem;
+}
+
+.plumber-availability-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(150px, 0.7fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.plumber-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plumber-form-field label {
+  color: #324764;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.plumber-form-field input,
+.plumber-form-field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #d5e0ef;
+  border-radius: 10px;
+  background: #fff;
+  color: #10233f;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.plumber-availability-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.plumber-availability-slot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #e0e9f5;
+  border-radius: 12px;
+  background: #fbfdff;
+}
+
+.plumber-availability-slot p {
+  margin: 10px 0 0;
+  color: #4e6280;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.availability-label {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: #e9f7f1;
+  color: #096c50;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.availability-label.unavailable {
+  background: #fff0f2;
+  color: #a83246;
+}
+
+.plumber-dashboard :focus-visible {
+  outline: 3px solid #60a5fa;
+  outline-offset: 3px;
+}
+
+@media (max-width: 1180px) {
+  .plumber-availability-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .plumber-dashboard .content {
+    padding: 14px;
+  }
+
+  .plumber-dashboard .admin-panel,
+  .plumber-dashboard .booking-card {
+    padding: 16px;
+  }
+
+  .plumber-dashboard .status-filter {
+    width: 100%;
+  }
+}

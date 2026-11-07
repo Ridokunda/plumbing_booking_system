@@ -698,7 +698,8 @@ footer span {
   padding-top: 22px;
 }
 
-.logout-section a {
+.logout-section a,
+.logout-section button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -709,9 +710,15 @@ footer span {
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
   font-weight: 700;
+  border: 0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
-.logout-section a:hover {
+.logout-section a:hover,
+.logout-section button:hover {
   background: rgba(255, 255, 255, 0.24);
 }
 

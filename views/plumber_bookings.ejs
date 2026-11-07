@@ -5,27 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeFixIt | <%= title %></title>
     <link rel="stylesheet" href="/stylesheets/custom.css">
-    <!-- slider stylesheet -->
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
-    <!-- bootstrap core css -->
-    <link rel="stylesheet" type="text/css" href="/stylesheets/bootstrap.css" />
-    <!-- font awesome style -->
-    <link rel="stylesheet" type="text/css" href="/stylesheets/font-awesome.min.css" />
-    <!-- Custom styles for this template -->
-    <link href="/stylesheets/style.css" rel="stylesheet" />
-    <!-- responsive style -->
-    <link href="/stylesheets/responsive.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/stylesheets/plumber-dashboard.css">
 </head>
 <body>
-    <%- include('./partials/head') %>
-    <div class="mybookings-container">
-        <div style="width:100%; display:flex; align-items:center; justify-content:space-between;">
-          <div class="mybookings-header">My Assigned Bookings</div>
+    <div class="admin-container plumber-dashboard">
+      <%- include('./partials/plumber-sidebar', { activePage: 'bookings' }) %>
+      <main class="content">
+       <section class="admin-panel" aria-labelledby="plumber-bookings-heading">
+        <div class="admin-panel-header">
+          <div>
+            <p class="admin-panel-eyebrow">Plumber dashboard</p>
+            <h2 class="admin-panel-title" id="plumber-bookings-heading">My Assigned Bookings</h2>
+            <p class="admin-panel-subtitle">Manage your visits, update job progress, and keep work records together.</p>
+          </div>
+          <a class="admin-btn secondary" href="/plumber/availability">Manage availability</a>
         </div>
         <div class="search-filter-bar">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search bookings">
-            <select id="statusFilter" class="status-filter">
-                <option value="ALL">ALL STATUS</option>
+            <input type="search" id="searchInput" class="search-input" placeholder="Search bookings" aria-label="Search assigned bookings">
+            <select id="statusFilter" class="status-filter" aria-label="Filter bookings by status">
+                <option value="ALL">All statuses</option>
                 <option value="NEW">NEW</option>
                 <option value="ASSIGNED">ASSIGNED</option>
                 <option value="CANCELLED">CANCELLED</option>
@@ -40,12 +38,12 @@
                     <div class="booking-card" data-status="<%= booking.status %>" data-type="<%= booking.type || booking.service_type %>" data-date="<%= booking.date_start %>" data-search="<%= (booking.customer_name || booking.customer_fullname || '') %> <%= booking.type || booking.service_type %> <%= booking.status %> <%= booking.date_start %>">
                         <div class="card-row card-row-top">
                             <div class="service-type">Service Type</div>
-                            <span class="service-badge"><%= booking.type || booking.service_type %></span>
+                            <span class="service-badge"><%= (booking.type || booking.service_type || 'Service').replace(/_/g, ' ') %></span>
                         </div>
-                        <div class="service-type" style="font-size:1.25em; margin-bottom:2px;"><%= booking.customer_name ? (booking.customer_name + ' ' + (booking.customer_surname || '')) : (booking.customer_fullname || 'Customer') %></div>
+                        <h3 class="plumber-customer"><%= booking.customer_name ? (booking.customer_name + ' ' + (booking.customer_surname || '')) : (booking.customer_fullname || 'Customer') %></h3>
                         <div class="booking-date" data-date="<%= booking.date_start %>"></div>
                         <div class="card-row card-row-bottom">
-                            <span class="status-label status-<%= booking.status %>"><%= booking.status %></span>
+                            <span class="analytics-status" data-status="<%= booking.status %>"><%= booking.status.toLowerCase().replace(/_/g, ' ') %></span>
                         </div>
                         <div class="status-roadmap">
                           <% booking.lifecycle.steps.forEach(step => { %>
@@ -53,7 +51,7 @@
                           <% }); %>
                         </div>
                         <div class="status-note"><strong>Next:</strong> <%= booking.lifecycle.nextAction %></div>
-                        <div style="margin-top:8px; color:#666; font-size:0.9em;">
+                        <div class="plumber-description">
                             <strong>Description:</strong> <%= booking.description || '' %>
                         </div>
                         <!-- photo section -->
@@ -61,7 +59,7 @@
                             <% if (booking.before_photo) { %>
                                 <div>Before:<br><img src="<%= booking.before_photo %>" alt="Before-work evidence" class="booking-photo" style="max-width:150px; max-height:150px; display:block;"/></div>
                             <% } else if (booking.status !== 'NEW' && booking.status !== 'CANCELLED') { %>
-                                <form class="photo-form" data-booking-id="<%= booking.idbookings %>" data-type="before" enctype="multipart/form-data" style="display:flex; gap:4px; align-items:center;">
+                                <form class="photo-form" data-booking-id="<%= booking.idbookings %>" data-type="before" enctype="multipart/form-data">
                                     <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" aria-label="Upload before-work photo" required />
                                   <button type="submit" class="photo-upload-btn">Upload Before</button>
                                 </form>
@@ -69,7 +67,7 @@
                             <% if (booking.after_photo) { %>
                                 <div>After:<br><img src="<%= booking.after_photo %>" alt="After-work evidence" class="booking-photo" style="max-width:150px; max-height:150px; display:block;"/></div>
                             <% } else if (booking.status === 'COMPLETED') { %>
-                                <form class="photo-form" data-booking-id="<%= booking.idbookings %>" data-type="after" enctype="multipart/form-data" style="display:flex; gap:4px; align-items:center;">
+                                <form class="photo-form" data-booking-id="<%= booking.idbookings %>" data-type="after" enctype="multipart/form-data">
                                     <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" aria-label="Upload after-work photo" required />
                                   <button type="submit" class="photo-upload-btn">Upload After</button>
                                 </form>
@@ -83,25 +81,30 @@
                             <% } %>
                           <% }); %>
                         </div>
-                        <a href="/quotes/booking/<%= booking.idbookings %>" class="booking-mini-btn">Prepare / view quote</a>
-                        <a href="/jobs/<%= booking.idbookings %>" class="booking-mini-btn">Open job record</a>
+                        <div class="plumber-card-links">
+                          <a href="/quotes/booking/<%= booking.idbookings %>" class="booking-mini-btn primary">Prepare / view quote</a>
+                          <a href="/jobs/<%= booking.idbookings %>" class="admin-btn secondary">Open job record</a>
+                        </div>
                     </div>
                 <% }); %>
             <% } else { %>
-                <div style="padding:20px; color:#666;">No bookings assigned to you yet.</div>
+                <div class="admin-empty">No bookings assigned to you yet. New assignments will appear here.</div>
             <% } %>
         </div>
 
         <div id="complete-message" style="margin:20px; display:none; padding:10px; border-radius:5px;"></div>
         <% if (pagination && pagination.pages > 1) { %>
-          <nav aria-label="Booking pages" class="p-3 d-flex justify-content-between">
-            <% if (pagination.page > 1) { %><a class="btn btn-outline-primary" href="?page=<%= pagination.page - 1 %>">Previous</a><% } else { %><span></span><% } %>
+          <nav aria-label="Booking pages" class="plumber-pagination">
+            <% if (pagination.page > 1) { %><a class="admin-btn secondary" href="?page=<%= pagination.page - 1 %>">Previous</a><% } else { %><span></span><% } %>
             <span>Page <%= pagination.page %> of <%= pagination.pages %></span>
-            <% if (pagination.page < pagination.pages) { %><a class="btn btn-outline-primary" href="?page=<%= pagination.page + 1 %>">Next</a><% } %>
+            <% if (pagination.page < pagination.pages) { %><a class="admin-btn secondary" href="?page=<%= pagination.page + 1 %>">Next</a><% } %>
           </nav>
         <% } %>
+       </section>
+      </main>
     </div>
 
+    <script src="/javascripts/jwt-handler.js"></script>
     <script>
       // Format booking dates
       document.querySelectorAll('.booking-date').forEach(function(el) {
@@ -192,6 +195,5 @@
           });
       }));
     </script>
-    <%- include('./partials/footer') %>
 </body>
 </html>

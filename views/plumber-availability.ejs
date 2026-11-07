@@ -1,7 +1,80 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WeFixIt | <%= title %></title><link rel="stylesheet" href="/stylesheets/bootstrap.css"><link rel="stylesheet" href="/stylesheets/custom.css"></head>
-<body><%- include('./partials/head') %><main class="container py-5"><p class="booking-stepper-eyebrow">Scheduling</p><h1>My availability</h1>
-<p>Enter working hours in South African Standard Time (SAST). A visit must fit entirely inside an AVAILABLE window. UNAVAILABLE windows block visits.</p>
-<form id="availabilityForm" class="card card-body mb-4"><div class="form-row"><div class="col-md"><label for="startsAt">Starts · SAST</label><input id="startsAt" name="starts_at" type="datetime-local" class="form-control" required></div><div class="col-md"><label for="endsAt">Ends · SAST</label><input id="endsAt" name="ends_at" type="datetime-local" class="form-control" required></div><div class="col-md"><label for="availabilityType">Type</label><select id="availabilityType" name="availability_type" class="form-control"><option>AVAILABLE</option><option>UNAVAILABLE</option></select></div></div><button class="btn btn-primary mt-3" type="submit">Add availability</button></form>
-<div class="list-group"><% availability.forEach(slot => { %><div class="list-group-item d-flex justify-content-between align-items-center"><span><strong><%= slot.availability_type %></strong> · <%= new Date(slot.starts_at).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' }) %> – <%= new Date(slot.ends_at).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' }) %> SAST</span><button class="btn btn-sm btn-outline-danger delete-slot" data-id="<%= slot.id %>">Remove</button></div><% }) %></div>
-</main><%- include('./partials/footer') %><script>document.getElementById('availabilityForm').addEventListener('submit',async event=>{event.preventDefault();const form=new FormData(event.target);const response=await fetch('/plumber/availability',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(form))});const data=await response.json();if(!response.ok)return alert(data.message);location.reload()});document.querySelectorAll('.delete-slot').forEach(button=>button.addEventListener('click',async()=>{const response=await fetch('/plumber/availability/'+button.dataset.id,{method:'DELETE'});if(response.ok)location.reload()}));</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WeFixIt | <%= title %></title>
+    <link rel="stylesheet" href="/stylesheets/custom.css">
+    <link rel="stylesheet" href="/stylesheets/plumber-dashboard.css">
+</head>
+<body>
+    <div class="admin-container plumber-dashboard">
+        <%- include('./partials/plumber-sidebar', { activePage: 'availability' }) %>
+        <main class="content">
+            <section class="admin-panel" aria-labelledby="availability-heading">
+                <div class="admin-panel-header">
+                    <div>
+                        <p class="admin-panel-eyebrow">Scheduling</p>
+                        <h2 id="availability-heading" class="admin-panel-title">My availability</h2>
+                        <p class="admin-panel-subtitle">Set your working hours so administrators can schedule visits that fit your day.</p>
+                    </div>
+                </div>
+                <p class="plumber-description">Enter working hours in South African Standard Time (SAST). A visit must fit entirely inside an AVAILABLE window. UNAVAILABLE windows block visits.</p>
+                <form id="availabilityForm">
+                    <div class="plumber-availability-fields">
+                        <div class="plumber-form-field">
+                            <label for="startsAt">Starts · SAST</label>
+                            <input id="startsAt" name="starts_at" type="datetime-local" required>
+                        </div>
+                        <div class="plumber-form-field">
+                            <label for="endsAt">Ends · SAST</label>
+                            <input id="endsAt" name="ends_at" type="datetime-local" required>
+                        </div>
+                        <div class="plumber-form-field">
+                            <label for="availabilityType">Type</label>
+                            <select id="availabilityType" name="availability_type">
+                                <option value="AVAILABLE">Available</option>
+                                <option value="UNAVAILABLE">Unavailable</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="admin-btn" type="submit">Add availability</button>
+                </form>
+                <div class="plumber-availability-list">
+                    <% availability.forEach(slot => { %>
+                        <div class="plumber-availability-slot">
+                            <div>
+                                <span class="availability-label<%= slot.availability_type === 'UNAVAILABLE' ? ' unavailable' : '' %>"><%= slot.availability_type === 'AVAILABLE' ? 'Available' : 'Unavailable' %></span>
+                                <p><%= new Date(slot.starts_at).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' }) %> – <%= new Date(slot.ends_at).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' }) %> SAST</p>
+                            </div>
+                            <button class="admin-btn secondary delete-slot" data-id="<%= slot.id %>" type="button">Remove</button>
+                        </div>
+                    <% }) %>
+                    <% if (!availability.length) { %>
+                        <div class="admin-empty">No working hours recorded yet. Add an available window so visits can be scheduled.</div>
+                    <% } %>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="/javascripts/jwt-handler.js"></script>
+    <script>
+        document.getElementById('availabilityForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const form = new FormData(event.target);
+            const response = await fetch('/plumber/availability', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.fromEntries(form))
+            });
+            const data = await response.json();
+            if (!response.ok) return alert(data.message);
+            location.reload();
+        });
+        document.querySelectorAll('.delete-slot').forEach(button => button.addEventListener('click', async () => {
+            const response = await fetch('/plumber/availability/' + button.dataset.id, { method: 'DELETE' });
+            if (response.ok) location.reload();
+        }));
+    </script>
+</body>
+</html>
