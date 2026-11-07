@@ -1,4 +1,4 @@
-<div class="admin-panel">
+<div class="admin-panel admin-analytics-panel">
     <div class="admin-panel-header">
         <div>
             <p class="admin-panel-eyebrow">Dashboard</p>
@@ -34,20 +34,51 @@
         </div>
     </div>
 
-    <div class="row mt-4">
-        <section class="col-lg-6 mb-4">
-            <h3 class="h5">Booking status mix</h3>
-            <div class="table-responsive"><table class="table table-striped">
-                <thead><tr><th>Status</th><th class="text-right">Bookings</th></tr></thead>
-                <tbody><% statusBreakdown.forEach((row) => { %><tr><td><%= row.status %></td><td class="text-right"><%= row.total %></td></tr><% }) %></tbody>
-            </table></div>
+    <div class="analytics-tables">
+        <section class="analytics-card" aria-labelledby="booking-status-heading">
+            <div class="analytics-card-heading">
+                <h3 id="booking-status-heading">Booking status mix</h3>
+                <p>Current distribution across booking stages.</p>
+            </div>
+            <div class="analytics-table-wrap">
+                <table class="analytics-table" aria-labelledby="booking-status-heading">
+                    <thead><tr><th scope="col">Status</th><th scope="col" class="analytics-number">Bookings</th></tr></thead>
+                    <tbody>
+                        <% statusBreakdown.forEach((row) => { %>
+                            <tr>
+                                <th scope="row"><span class="analytics-status" data-status="<%= row.status %>"><%= row.status.toLowerCase().replace(/_/g, ' ') %></span></th>
+                                <td class="analytics-number"><%= Number(row.total || 0).toLocaleString('en-ZA') %></td>
+                            </tr>
+                        <% }) %>
+                        <% if (!statusBreakdown.length) { %>
+                            <tr><td colspan="2" class="analytics-table-empty">No bookings yet. Status totals will appear here.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
         </section>
-        <section class="col-lg-6 mb-4">
-            <h3 class="h5">Six-month trend</h3>
-            <div class="table-responsive"><table class="table table-striped">
-                <thead><tr><th>Month</th><th>Bookings</th><th class="text-right">Revenue</th></tr></thead>
-                <tbody><% monthlyTrend.forEach((row) => { %><tr><td><%= row.month %></td><td><%= row.bookings %></td><td class="text-right">R<%= Number(row.revenue || 0).toFixed(2) %></td></tr><% }) %></tbody>
-            </table></div>
+        <section class="analytics-card" aria-labelledby="monthly-trend-heading">
+            <div class="analytics-card-heading">
+                <h3 id="monthly-trend-heading">Six-month trend</h3>
+                <p>Monthly bookings and paid revenue.</p>
+            </div>
+            <div class="analytics-table-wrap">
+                <table class="analytics-table" aria-labelledby="monthly-trend-heading">
+                    <thead><tr><th scope="col">Month</th><th scope="col" class="analytics-number">Bookings</th><th scope="col" class="analytics-number">Revenue</th></tr></thead>
+                    <tbody>
+                        <% monthlyTrend.forEach((row) => { %>
+                            <tr>
+                                <th scope="row"><time datetime="<%= row.month %>"><%= new Date(row.month + '-01T12:00:00Z').toLocaleDateString('en-ZA', { month: 'short', year: 'numeric', timeZone: 'Africa/Johannesburg' }) %></time></th>
+                                <td class="analytics-number"><%= Number(row.bookings || 0).toLocaleString('en-ZA') %></td>
+                                <td class="analytics-number analytics-revenue">R<%= Number(row.revenue || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                            </tr>
+                        <% }) %>
+                        <% if (!monthlyTrend.length) { %>
+                            <tr><td colspan="3" class="analytics-table-empty">No activity in this period. Monthly totals will appear here.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
         </section>
     </div>
 </div>
