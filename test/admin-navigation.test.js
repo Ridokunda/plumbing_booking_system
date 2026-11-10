@@ -10,6 +10,46 @@ process.env.COOKIE_SECURE = 'false';
 const app = require('../app');
 const database = require('../database/connection');
 
+test('public pages share the branded header and identify the current destination', async () => {
+  for (const [url, activeLink] of [
+    ['/', '/'],
+    ['/index/about', '/index/about'],
+    ['/index/service', '/index/service'],
+    ['/index/contact', '/index/contact'],
+    ['/about', '/index/about'],
+    ['/login', '/login'],
+    ['/register/register', null],
+    ['/register/plumber', null],
+    ['/account/forgot-password', null],
+  ]) {
+    const page = await request(app).get(url).expect(200);
+    const header = page.text.match(/<header class="site-header">[\s\S]*?<\/header>/)?.[0];
+    assert.ok(header, `Missing shared header on ${url}`);
+    assert.match(header, /aria-label="WeFixIt home">WeFixIt<\/a>/);
+    assert.equal((page.text.match(/class="site-header"/g) || []).length, 1);
+    assert.match(page.text, /<head>[\s\S]*\/stylesheets\/site-header.css[\s\S]*<\/head>/);
+    assert.match(page.text, /src="\/javascripts\/site-header.js" defer/);
+    assert.doesNotMatch(header, /action="\/login\/logout"/);
+    const active = header.match(/href="([^"]+)" aria-current="page"/g) || [];
+    assert.deepEqual(active, activeLink ? [`href="${activeLink}" aria-current="page"`] : []);
+  }
+});
+
+async function checkSharedHeader(agent, role) {
+  const destination = { 1: '/booking/mybookings', 2: '/admin', 3: '/plumber/my-bookings' }[role];
+  for (const url of ['/', '/notifications']) {
+    const page = await agent.get(url).expect(200);
+    const header = page.text.match(/<header class="site-header">[\s\S]*?<\/header>/)[0];
+    assert.match(header, new RegExp(`href="${destination}"`));
+    assert.match(header, /action="\/login\/logout" method="post"/);
+    assert.match(header, /name="_csrf" value="[a-f0-9]{64}"/);
+    assert.match(header, /id="notification-count"/);
+    assert.match(header, /aria-controls="site-navigation" aria-expanded="false" hidden/);
+    assert.match(header, new RegExp(`href="${url}" aria-current="page"`));
+    assert.equal((header.match(/aria-current="page"/g) || []).length, 1);
+  }
+}
+
 async function signIn(t, usertype, form = false, availability = []) {
   const password = 'Navigation-test-password';
   const passwordHash = await bcrypt.hash(password, 4);
@@ -55,6 +95,7 @@ for (const usertype of [2, '2']) {
     const { agent, response } = await signIn(t, usertype);
     assert.equal(response.body.redirectUrl, '/admin');
     assert.equal(response.body.usertype, 2);
+    await checkSharedHeader(agent, 2);
     const dashboard = await agent.get(response.body.redirectUrl).expect(200);
     assert.match(dashboard.text, /class="sidebar"/);
     assert.match(dashboard.text, /data-page="stats"/);
@@ -189,6 +230,7 @@ for (const [usertype, destination] of [
   test(`role ${usertype} keeps its destination and cannot access admin pages`, async (t) => {
     const { agent, response } = await signIn(t, usertype);
     assert.equal(response.body.redirectUrl, destination);
+    await checkSharedHeader(agent, usertype);
     await agent.get('/admin').expect(403);
     await agent.get('/admin/dispatch').expect(403);
     await agent.get('/admin/plumbers/43/availability?date=2030-11-07').expect(403);

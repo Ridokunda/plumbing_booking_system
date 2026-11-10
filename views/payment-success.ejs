@@ -5,15 +5,19 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>WeFixIt | <%= title %></title>
 	<style>
-		body { font-family: Arial, sans-serif; max-width: 680px; margin: 30px auto; padding: 0 16px; }
+		body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .payment-content { font-family: Arial, sans-serif; max-width: 680px; margin: 30px auto; padding: 0 16px; }
 		.card { border: 1px solid #ddd; border-radius: 10px; padding: 20px; }
 		.actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
 		.btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; }
 		.btn-primary { background: #0f7e94; color: #fff; }
 		.btn-secondary { background: #f1f5f9; color: #333; }
 	</style>
+  <%- include('./partials/header-assets') %>
 </head>
 <body>
+  <%- include('./partials/head') %>
+  <main class="payment-content">
 	<div class="card">
 		<h1>Payment Successful</h1>
 		<p>Thank you for your payment for booking #<%= booking_id %>.</p>
@@ -27,5 +31,6 @@
 			<a class="btn btn-secondary" href="/booking/mybookings">Back to My Bookings</a>
 		</div>
 	</div>
+  </main>
 </body>
 </html>

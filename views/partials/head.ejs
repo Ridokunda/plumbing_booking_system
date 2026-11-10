@@ -1,96 +1,56 @@
-<div class="hero_area">
-  <header class="header_section">
-    <div class="header_bottom">
-      <div class="container-fluid">
-        <nav class="navbar navbar-expand-lg custom_nav-container ">
-          <a class="navbar-brand" href="/" style="color: rgb(15, 126, 148); font-weight: bold; font-size: 24px; font-family: Arial, Helvetica, sans-serif;">
-            <span>
-              WeFixIt
-            </span>
+<%
+  const headerUser = typeof session !== 'undefined' ? session.user : null;
+  const headerRole = Number(headerUser?.usertype);
+  const headerPath = typeof currentPath === 'string' ? currentPath : '/';
+  const headerLinks = [{ href: '/', label: 'Home' }];
+  if (headerRole === 1) {
+    headerLinks.push({ href: '/booking/mybookings', label: 'My Bookings' }, { href: '/payment/history', label: 'Invoices' });
+  } else if (headerRole === 2) {
+    headerLinks.push({ href: '/admin', label: 'Dashboard' });
+  } else if (headerRole === 3) {
+    headerLinks.push({ href: '/plumber/my-bookings', label: 'Dashboard' }, { href: '/plumber/availability', label: 'My availability' });
+  }
+  if (headerUser) headerLinks.push({ href: '/profile', label: 'Profile' });
+  headerLinks.push({ href: '/index/about', label: 'About' }, { href: '/index/service', label: 'Services' }, { href: '/index/contact', label: 'Contact Us' });
+  if (headerUser) {
+    headerLinks.push({ href: '/support', label: headerRole === 2 ? 'Cases' : 'Support' }, { href: '/notifications', label: 'Notifications', notifications: true });
+  } else {
+    headerLinks.push({ href: '/login', label: 'Login' });
+  }
+  const headerIsActive = href => {
+    if (href === '/') return ['/', '/index', '/index/'].includes(headerPath);
+    if (href === '/payment/history') return headerPath === '/payment' || headerPath.startsWith('/payment/');
+    return headerPath === href || headerPath.startsWith(href + '/') || (href.startsWith('/index/') && headerPath === href.slice(6));
+  };
+  const headerUnread = typeof notificationCount === 'number' ? notificationCount : 0;
+%>
+<header class="site-header">
+  <nav class="site-nav" aria-label="Main navigation">
+    <a class="site-brand" href="/" aria-label="WeFixIt home">WeFixIt</a>
+    <button class="site-nav-toggle" type="button" aria-controls="site-navigation" aria-expanded="false" hidden>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span>Menu</span>
+    </button>
+    <ul class="site-nav-links" id="site-navigation">
+      <% headerLinks.forEach(link => { %>
+        <li>
+          <a class="site-nav-link" href="<%= link.href %>" <%- headerIsActive(link.href) ? 'aria-current="page"' : '' %>>
+            <%= link.label %>
+            <% if (link.notifications) { %>
+              <span id="notification-count" class="site-unread-count" aria-label="<%= headerUnread %> unread notifications" <%= headerUnread ? '' : 'hidden' %>><%= headerUnread %></span>
+            <% } %>
           </a>
-
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class=""> </span>
-          </button>
-
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ">
-              <li class="nav-item active">
-                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-              </li>
-              <% if(session.user && session.user.usertype === 1){ %>
-                <li class="nav-item">
-                  <a class="nav-link" href="/booking/mybookings">My Bookings</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="/payment/history">Invoices</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="/profile">Profile</a>
-                </li>
-              <% } %>
-              <% if(session.user && session.user.usertype === 2){ %>
-                  <li class="nav-item">
-                    <a class="nav-link" href="/admin">Dashboard</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="/profile">Profile</a>
-                  </li>
-              <% } %>
-              <% if(session.user && session.user.usertype === 3){ %>
-                  <li class="nav-item">
-                    <a class="nav-link" href="/plumber/my-bookings">Dashboard</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="/plumber/availability">My availability</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="/profile">Profile</a>
-                  </li>
-              <% } %>
-              <li class="nav-item">
-                <a class="nav-link" href="/index/about"> About</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/index/service">Services</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/index/contact">Contact Us</a>
-              </li>
-              <% if(session.user){ %>
-                <li class="nav-item">
-                  <a class="nav-link" href="/support"><%= session.user.usertype === 2 ? 'Cases' : 'Support' %></a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="/notifications">Notifications <span id="notification-count" class="notification-badge" <%= notificationCount ? '' : 'hidden' %>><%= notificationCount || 0 %></span></a>
-                </li>
-                <li class="nav-item">
-                  <form action="/login/logout" method="post" class="nav-link-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="nav-link nav-link-button" type="submit">Logout</button></form>
-                </li>
-              <% } else { %>
-                <li class="nav-item">
-                  <a class="nav-link" href="/login">Login</a>
-                </li>
-              <% } %>
-            </ul>
-          </div>
-        </nav>
-      </div>
-    </div>
-  </header>
-</div>
+        </li>
+      <% }); %>
+      <% if (headerUser) { %>
+        <li class="site-logout">
+          <form action="/login/logout" method="post">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="site-nav-link site-logout-button" type="submit">Logout</button>
+          </form>
+        </li>
+      <% } %>
+    </ul>
+  </nav>
+</header>
 <script src="/javascripts/jwt-handler.js"></script>
-<% if (session.user) { %>
-<script>
-  (() => {
-    const badge = document.getElementById('notification-count');
-    if (!badge || !window.EventSource) return;
-    const stream = new EventSource('/notifications/stream');
-    stream.addEventListener('unread', (event) => {
-      const count = Number(JSON.parse(event.data).unreadCount || 0);
-      badge.textContent = String(count);
-      badge.hidden = count === 0;
-    });
-  })();
-</script>
-<% } %>

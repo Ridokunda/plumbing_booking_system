@@ -74,6 +74,7 @@ app.use(csrfProtection);
 // Make the active session and notification summary available to templates.
 app.use(async (req, res, next) => {
   res.locals.session = req.session;
+  res.locals.currentPath = req.path;
 
   const activeUser = req.session?.user;
   if (activeUser && activeUser.idusers) {

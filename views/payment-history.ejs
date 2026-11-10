@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WeFixIt | <%= title %></title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .payment-content { font-family: Arial, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; }
     h1 { margin-bottom: 16px; }
     .top-actions { margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
     .btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; display: inline-block; }
@@ -20,8 +21,11 @@
     .table-wrap { overflow-x: auto; }
     .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
   </style>
+  <%- include('./partials/header-assets') %>
 </head>
 <body>
+  <%- include('./partials/head') %>
+  <main class="payment-content">
   <h1>Invoice & Receipt History</h1>
   <div class="top-actions">
     <a class="btn btn-secondary" href="/booking/mybookings">Back to My Bookings</a>
@@ -87,5 +91,6 @@
       <% if (pagination.page < pagination.pages) { %><a href="?page=<%= pagination.page + 1 %>">Next</a><% } %>
     </nav><% } %>
   <% } %>
+  </main>
 </body>
 </html>

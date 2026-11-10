@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeFixIt | <%= title %></title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 760px; margin: 24px auto; padding: 0 16px; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .payment-content { font-family: Arial, sans-serif; max-width: 760px; margin: 24px auto; padding: 0 16px; }
         .panel { border: 1px solid #ddd; border-radius: 10px; padding: 20px; background: #fff; }
         .row { margin: 10px 0; }
         .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
@@ -14,8 +15,11 @@
         .btn-secondary { background: #f0f4f8; color: #333; }
         .status { font-weight: 700; color: #0f7e94; }
     </style>
+  <%- include('./partials/header-assets') %>
 </head>
 <body>
+  <%- include('./partials/head') %>
+  <main class="payment-content">
     <h1>Payment for Booking #<%= booking.idbookings %></h1>
     <div class="panel">
         <div class="row"><strong>Service:</strong> <%= booking.type || 'General plumbing' %></div>
@@ -58,5 +62,6 @@
             });
         }
     </script>
+  </main>
 </body>
 </html>

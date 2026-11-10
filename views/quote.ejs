@@ -1,28 +1,107 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WeFixIt | <%= title %></title><link rel="stylesheet" href="/stylesheets/bootstrap.css"><link rel="stylesheet" href="/stylesheets/custom.css"></head>
-<body><%- include('./partials/head') %><main class="container py-5">
-  <p class="booking-stepper-eyebrow">Booking #<%= booking.idbookings %></p><h1>Itemized quote</h1>
-  <p><strong>Service:</strong> <%= booking.type.replace(/_/g, ' ') %> · <strong>Location:</strong> <%= booking.location %></p>
-  <% if (!quote) { %><div class="alert alert-info">No quote has been submitted yet.</div><% } else { %>
-    <div class="card"><div class="card-body"><div class="d-flex justify-content-between"><h2 class="h4"><%= quote.quote_number %></h2><span class="badge badge-primary"><%= quote.status %></span></div>
-    <table class="table"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Total</th></tr></thead><tbody>
-      <% items.forEach(item => { %><tr><td><%= item.description %></td><td><%= item.quantity %></td><td>R<%= Number(item.unit_price).toFixed(2) %></td><td>R<%= Number(item.line_total).toFixed(2) %></td></tr><% }) %>
-    </tbody></table><dl class="row"><dt class="col-8">Subtotal</dt><dd class="col-4">R<%= Number(quote.subtotal).toFixed(2) %></dd><dt class="col-8">Tax</dt><dd class="col-4">R<%= Number(quote.tax_amount).toFixed(2) %></dd><dt class="col-8">Total</dt><dd class="col-4"><strong>R<%= Number(quote.total_amount).toFixed(2) %></strong></dd></dl>
-    <% if (session.user.usertype === 1 && quote.status === 'SENT') { %><div class="d-flex gap-2"><button class="btn btn-success quote-response" data-decision="APPROVED">Approve</button><button class="btn btn-danger quote-response" data-decision="REJECTED">Reject</button></div><% } %>
-    </div></div>
-  <% } %><p class="mt-4"><a href="<%= session.user.usertype === 3 ? '/plumber' : session.user.usertype === 2 ? '/admin/bookings' : '/booking/mybookings' %>">Back to bookings</a></p>
-  <% if (session.user.usertype === 3 && ['ASSIGNED','IN_PROGRESS'].includes(booking.status)) { %>
-    <section class="card mt-4"><div class="card-body"><h2 class="h4">Prepare a new quote</h2>
-      <form id="quoteForm"><div id="quoteItems"><div class="form-row quote-item mb-2"><div class="col-md-6"><input class="form-control item-description" aria-label="Line item description" placeholder="Labour or material" required></div><div class="col"><input class="form-control item-quantity" aria-label="Quantity" type="number" min="0.01" step="0.01" value="1" required></div><div class="col"><input class="form-control item-price" aria-label="Unit price" type="number" min="0" step="0.01" placeholder="Unit price" required></div></div></div>
-      <button type="button" id="addItem" class="btn btn-secondary">Add item</button> <button type="submit" class="btn btn-primary">Send quote</button></form>
-    </div></section>
-  <% } %>
-</main><%- include('./partials/footer') %>
-<script>
-document.querySelectorAll('.quote-response').forEach(button => button.addEventListener('click', async () => { if (!confirm(`${button.dataset.decision.toLowerCase()} this quote?`)) return; const response = await fetch('/quotes/<%= quote ? quote.idquote : 0 %>/respond', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({decision:button.dataset.decision}) }); const data = await response.json(); if (!response.ok) return alert(data.message); location.reload(); }));
-const quoteForm = document.getElementById('quoteForm'); const quoteItems = document.getElementById('quoteItems');
-document.getElementById('addItem')?.addEventListener('click', () => { const row = quoteItems.firstElementChild.cloneNode(true); row.querySelector('.item-description').value=''; row.querySelector('.item-price').value=''; quoteItems.appendChild(row); });
-quoteForm?.addEventListener('submit', async event => { event.preventDefault(); const items=[...document.querySelectorAll('.quote-item')].map(row => ({description:row.querySelector('.item-description').value, quantity:row.querySelector('.item-quantity').value, unitPrice:row.querySelector('.item-price').value})); const response=await fetch('/quotes/booking/<%= booking.idbookings %>', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items})}); const data=await response.json(); if(!response.ok) return alert(data.message); location.reload(); });
-</script>
-</body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WeFixIt | <%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/bootstrap.css">
+  <link rel="stylesheet" href="/stylesheets/custom.css">
+  <link rel="stylesheet" href="/stylesheets/quote.css">
+  <%- include('./partials/header-assets') %>
+</head>
+<body class="quote-page">
+  <%- include('./partials/head') %>
+  <%
+    const role = Number(session.user.usertype);
+    const canPrepare = role === 3 && ['ASSIGNED', 'IN_PROGRESS'].includes(booking.status);
+    const bookingsUrl = role === 3 ? '/plumber/my-bookings' : role === 2 ? '/admin/bookings' : '/booking/mybookings';
+    const money = value => 'R' + Number(value).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  %>
+  <main class="container quote-main">
+    <a class="quote-back" href="<%= bookingsUrl %>"><span aria-hidden="true">&larr;</span> Back to bookings</a>
+    <header class="quote-heading">
+      <div>
+        <p class="quote-eyebrow">Booking #<%= booking.idbookings %></p>
+        <h1>Itemized quote</h1>
+        <p class="quote-intro">A clear breakdown of the labour and materials for this job.</p>
+      </div>
+      <span class="quote-booking-status"><span class="quote-status-dot" aria-hidden="true"></span><%= booking.status.replace(/_/g, ' ').toLowerCase() %></span>
+    </header>
+    <dl class="quote-booking-details">
+      <div><dt>Service</dt><dd><%= booking.type.replace(/_/g, ' ') %></dd></div>
+      <div><dt>Location</dt><dd><%= booking.location || 'Address to confirm' %></dd></div>
+    </dl>
+    <div class="quote-layout <%= canPrepare ? '' : 'quote-layout-single' %>">
+      <% if (!quote) { %>
+        <section class="quote-panel quote-empty" aria-labelledby="quote-empty-title">
+          <svg class="quote-empty-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+            <rect x="12" y="6" width="32" height="44" rx="5" stroke="currentColor" stroke-width="2"/>
+            <path d="M20 18h16M20 26h16M20 34h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <p class="quote-eyebrow">Quote overview</p>
+          <h2 id="quote-empty-title">No quote yet</h2>
+          <p><%= canPrepare ? 'Add labour and materials to prepare an itemized quote for your customer.' : 'No quote has been submitted yet. The cost breakdown will appear here once your plumber sends it.' %></p>
+        </section>
+      <% } else { %>
+        <section class="quote-panel quote-summary" aria-labelledby="quote-summary-title">
+          <div class="quote-panel-heading">
+            <div><p class="quote-eyebrow">Quote overview</p><h2 id="quote-summary-title"><%= quote.quote_number %></h2></div>
+            <span class="quote-status" data-status="<%= quote.status %>"><%= quote.status.toLowerCase() %></span>
+          </div>
+          <div class="quote-table-scroll" role="region" aria-label="Itemized quote costs" tabindex="0">
+            <table class="quote-table">
+              <caption class="sr-only">Labour and material costs for booking #<%= booking.idbookings %></caption>
+              <thead><tr><th scope="col">Description</th><th scope="col">Qty</th><th scope="col">Unit price</th><th scope="col">Total</th></tr></thead>
+              <tbody>
+                <% items.forEach(item => { %>
+                  <tr><td><%= item.description %></td><td><%= Number(item.quantity) %></td><td><%= money(item.unit_price) %></td><td><%= money(item.line_total) %></td></tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+          <dl class="quote-totals">
+            <div><dt>Subtotal</dt><dd><%= money(quote.subtotal) %></dd></div>
+            <div><dt>Tax</dt><dd><%= money(quote.tax_amount) %></dd></div>
+            <div class="quote-grand-total"><dt>Total</dt><dd><%= money(quote.total_amount) %></dd></div>
+          </dl>
+          <% if (role === 1 && quote.status === 'SENT') { %>
+            <div class="quote-decision">
+              <p>Review the breakdown above, then approve or reject this quote.</p>
+              <div class="quote-actions">
+                <button type="button" class="btn quote-button-primary quote-response" data-decision="APPROVED">Approve quote</button>
+                <button type="button" class="btn quote-button-danger quote-response" data-decision="REJECTED">Reject quote</button>
+              </div>
+              <p class="quote-error" id="quoteResponseError" role="alert" hidden></p>
+            </div>
+          <% } %>
+        </section>
+      <% } %>
+      <% if (canPrepare) { %>
+        <section class="quote-panel quote-editor" aria-labelledby="quote-editor-title">
+          <div class="quote-panel-heading">
+            <div><p class="quote-eyebrow">Quote builder</p><h2 id="quote-editor-title">Prepare a new quote</h2></div>
+          </div>
+          <p class="quote-editor-intro">Add each cost below. Enter unit prices in rand.</p>
+          <form id="quoteForm" action="/quotes/booking/<%= booking.idbookings %>" method="post">
+            <div id="quoteItems">
+              <div class="quote-item" role="group" aria-label="Line item 1">
+                <label class="quote-description-field">Description<input class="form-control item-description" name="description" placeholder="Labour or material" maxlength="500" required></label>
+                <label>Qty<input class="form-control item-quantity" name="quantity" type="number" min="0.01" max="1000" step="0.01" value="1" required></label>
+                <label>Unit price (R)<input class="form-control item-price" name="unitPrice" type="number" min="0" step="0.01" placeholder="0.00" required></label>
+              </div>
+            </div>
+            <button type="button" id="addItem" class="btn quote-button-add"><span aria-hidden="true">+</span> Add item</button>
+            <div class="quote-submit">
+              <p>The customer will receive this quote for review.</p>
+              <button type="submit" class="btn quote-button-primary">Send quote <span aria-hidden="true">&rarr;</span></button>
+            </div>
+            <p class="quote-error" id="quoteFormError" role="alert" hidden></p>
+          </form>
+        </section>
+      <% } %>
+    </div>
+  </main>
+  <%- include('./partials/footer') %>
+  <script src="/javascripts/quote.js" data-quote-id="<%= quote ? quote.idquote : 0 %>"></script>
+</body>
+</html>

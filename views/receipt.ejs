@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WeFixIt | <%= title %></title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 720px; margin: 28px auto; padding: 0 16px; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .payment-content { font-family: Arial, sans-serif; max-width: 720px; margin: 28px auto; padding: 0 16px; }
     .receipt { border: 1px solid #d1d5db; border-radius: 12px; overflow: hidden; }
     .receipt-header { background: #0f7e94; color: #fff; padding: 16px; }
     .receipt-body { padding: 18px; }
@@ -16,8 +17,11 @@
     .btn-primary { background: #0f7e94; color: #fff; }
     .btn-secondary { background: #f1f5f9; color: #333; }
   </style>
+  <%- include('./partials/header-assets') %>
 </head>
 <body>
+  <%- include('./partials/head') %>
+  <main class="payment-content">
   <div class="receipt">
     <div class="receipt-header">
       <h1 style="margin: 0; font-size: 1.4rem;">Payment Receipt</h1>
@@ -38,5 +42,6 @@
     <a href="/payment/receipt/<%= booking.idbookings %>/pdf" class="btn btn-primary">Download PDF</a>
     <a href="#" class="btn btn-primary" onclick="window.print(); return false;">Print</a>
   </div>
+  </main>
 </body>
 </html>
