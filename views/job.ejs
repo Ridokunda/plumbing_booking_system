@@ -6,38 +6,115 @@
   <title>WeFixIt | <%= title %></title>
   <link rel="stylesheet" href="/stylesheets/bootstrap.css">
   <link rel="stylesheet" href="/stylesheets/custom.css">
+  <link rel="stylesheet" href="/stylesheets/job.css">
   <%- include('./partials/header-assets') %>
 </head>
-<body>
+<body class="job-page">
 <%- include('./partials/head') %>
-<main class="container py-5">
-  <p class="booking-stepper-eyebrow">Job record</p>
-  <h1><%= title %></h1>
-  <p><a class="btn btn-outline-primary" href="/jobs/<%= booking.idbookings %>/pdf">Download job card (PDF)</a></p>
-  <div class="card mb-4"><div class="card-body"><dl class="row">
-    <dt class="col-sm-3">Service</dt><dd class="col-sm-9"><%= booking.type.replace(/_/g,' ') %></dd>
-    <dt class="col-sm-3">Location</dt><dd class="col-sm-9"><%= booking.location %></dd>
-    <dt class="col-sm-3">Status</dt><dd class="col-sm-9"><%= booking.status %></dd>
-    <dt class="col-sm-3">Customer</dt><dd class="col-sm-9"><%= booking.customer_name %> <%= booking.customer_surname %></dd>
-    <dt class="col-sm-3">Plumber</dt><dd class="col-sm-9"><%= booking.plumber_name ? booking.plumber_name + ' ' + booking.plumber_surname : 'Not assigned' %></dd>
-  </dl></div></div>
+<%
+  const jobRole = Number(session.user.usertype);
+  const backUrl = jobRole === 3 ? '/plumber/my-bookings' : jobRole === 2 ? '/admin?section=bookings' : '/booking/mybookings';
+  const jobDate = value => new Date(value).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' });
+%>
+<main class="job-main">
+  <a class="job-back" href="<%= backUrl %>"><span aria-hidden="true">&larr;</span> Back to bookings</a>
+  <div class="job-heading">
+    <div>
+      <p class="job-eyebrow">Job record</p>
+      <h1><%= title %></h1>
+      <p class="job-intro">Service details, work evidence, and updates in one place.</p>
+    </div>
+    <a class="job-button secondary" href="/jobs/<%= booking.idbookings %>/pdf">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Download job card (PDF)
+    </a>
+  </div>
 
-  <section><h2>Photo evidence</h2><div class="row">
-    <% photos.forEach(photo => { %><figure class="col-md-4"><img class="img-fluid booking-photo" src="<%= photo.file_path %>" alt="<%= photo.photo_type.toLowerCase() %> job photo"><figcaption><%= photo.photo_type %><% if (photo.caption) { %> - <%= photo.caption %><% } %></figcaption></figure><% }) %>
-    <% if (!photos.length) { %><p class="col-12 alert alert-info">No photos yet.</p><% } %>
-  </div></section>
+  <section class="job-panel job-overview" aria-labelledby="job-details-title">
+    <div class="job-panel-heading">
+      <h2 id="job-details-title">Job details</h2>
+      <span class="job-status" data-status="<%= booking.status %>"><%= booking.status.replace(/_/g, ' ').toLowerCase() %></span>
+    </div>
+    <dl class="job-details">
+      <div><dt>Service</dt><dd><%= booking.type.replace(/_/g, ' ') %></dd></div>
+      <div><dt>Location</dt><dd><%= booking.location || 'Address to confirm' %></dd></div>
+      <div><dt>Customer</dt><dd><%= [booking.customer_name, booking.customer_surname].filter(Boolean).join(' ') %></dd></div>
+      <div><dt>Plumber</dt><dd><%= booking.plumber_name ? [booking.plumber_name, booking.plumber_surname].filter(Boolean).join(' ') : 'Not assigned' %></dd></div>
+    </dl>
+    <% if (booking.description) { %>
+      <div class="job-description"><h3>Work requested</h3><p><%= booking.description %></p></div>
+    <% } %>
+  </section>
 
-  <section class="mt-4"><h2>Job notes</h2><div class="list-group mb-3">
-    <% notes.forEach(note => { %><article class="list-group-item"><strong><%= note.author_name %></strong> <small>- <%= note.visibility %> - <%= new Date(note.created_at).toLocaleString() %></small><p><%= note.note %></p></article><% }) %>
-  </div><form id="noteForm"><textarea class="form-control" name="note" minlength="2" maxlength="5000" required placeholder="Add a job note"></textarea>
-    <% if (session.user.usertype !== 1) { %><label><input type="checkbox" name="visibility" value="INTERNAL"> Internal note</label><% } %>
-    <button class="btn btn-primary mt-3" type="submit">Add note</button>
-  </form></section>
+  <div class="job-layout">
+    <div class="job-record-sections">
+      <section class="job-panel" aria-labelledby="job-photos-title">
+        <div class="job-panel-heading"><h2 id="job-photos-title">Photo evidence</h2><span class="job-count"><%= photos.length %> photo<%= photos.length === 1 ? '' : 's' %></span></div>
+        <% if (photos.length) { %>
+          <div class="job-photo-grid">
+            <% photos.forEach(photo => { %>
+              <figure class="job-photo">
+                <a href="<%= photo.file_path %>" target="_blank" rel="noopener"><img src="<%= photo.file_path %>" alt="<%= photo.photo_type.toLowerCase() %> job photo" loading="lazy"></a>
+                <figcaption><strong><%= photo.photo_type.replace(/_/g, ' ').toLowerCase() %></strong><% if (photo.caption) { %><span><%= photo.caption %></span><% } %></figcaption>
+              </figure>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="job-empty">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><path d="m4 18 5-5 3 3 4-5 5 6" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            <h3>No photos yet</h3><p>Photos added to this job will appear here.</p>
+          </div>
+        <% } %>
+      </section>
 
-  <% if (session.user.usertype === 1 && booking.status === 'COMPLETED' && !confirmation) { %>
-    <section class="card mt-4"><div class="card-body"><h2 class="h4">Confirm completion</h2><form id="confirmForm"><label for="signatureName">Type your name to confirm the work</label><input id="signatureName" name="signature_name" class="form-control" required><button class="btn btn-success mt-3" type="submit">Confirm completion</button></form></div></section>
-  <% } %>
-  <% if (confirmation) { %><p class="alert alert-success mt-4">Confirmed by <%= confirmation.signature_name %> on <%= new Date(confirmation.confirmed_at).toLocaleString() %>.</p><% } %>
+      <section class="job-panel" aria-labelledby="job-notes-title">
+        <div class="job-panel-heading"><h2 id="job-notes-title">Job notes</h2><span class="job-count"><%= notes.length %> note<%= notes.length === 1 ? '' : 's' %></span></div>
+        <% if (notes.length) { %>
+          <div class="job-notes">
+            <% notes.forEach(note => { %>
+              <article class="job-note">
+                <div class="job-note-heading"><strong><%= note.author_name %></strong><span class="job-note-visibility"><%= note.visibility === 'INTERNAL' ? 'Internal' : 'Shared with customer' %></span></div>
+                <time datetime="<%= new Date(note.created_at).toISOString() %>"><%= jobDate(note.created_at) %> SAST</time>
+                <p><%= note.note %></p>
+              </article>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="job-note-empty">No notes yet. Add an update or a question about this job.</p>
+        <% } %>
+        <form id="noteForm" class="job-note-form">
+          <label for="jobNote">Add a note</label>
+          <textarea id="jobNote" name="note" rows="4" minlength="2" maxlength="5000" required placeholder="Write a job update or question..."></textarea>
+          <div class="job-note-actions">
+            <% if (jobRole !== 1) { %><label class="job-checkbox"><input type="checkbox" name="visibility" value="INTERNAL"> Internal note</label><% } else { %><span class="job-help">Your note is shared with the service team.</span><% } %>
+            <button class="job-button primary" type="submit">Add note</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <aside class="job-panel job-completion" aria-labelledby="job-completion-title">
+      <p class="job-eyebrow">Customer sign-off</p>
+      <h2 id="job-completion-title"><%= confirmation ? 'Completion confirmed' : 'Confirm completion' %></h2>
+      <% if (confirmation) { %>
+        <div class="job-confirmed"><span aria-hidden="true">&#10003;</span><strong>Work signed off</strong></div>
+        <p class="job-completion-copy">Confirmed by <strong><%= confirmation.signature_name %></strong> on <%= jobDate(confirmation.confirmed_at) %> SAST.</p>
+        <% if (jobRole === 1 && booking.status === 'COMPLETED') { %><a class="job-button primary" href="/payment?booking_id=<%= booking.idbookings %>">Continue to payment &rarr;</a><% } %>
+        <% if (jobRole === 1 && booking.status === 'PAID') { %><a class="job-button secondary" href="/payment/receipt/<%= booking.idbookings %>">View receipt &rarr;</a><% } %>
+      <% } else if (jobRole === 1 && booking.status === 'COMPLETED') { %>
+        <p class="job-completion-copy">Review the completed work, then type your name to confirm it is finished.</p>
+        <form id="confirmForm">
+          <label for="signatureName">Your full name</label>
+          <input id="signatureName" name="signature_name" type="text" autocomplete="name" minlength="2" maxlength="200" required placeholder="Enter your name">
+          <p class="job-help">Your name and confirmation date will be saved to this job record.</p>
+          <button class="job-button primary" type="submit">Confirm completion</button>
+        </form>
+      <% } else { %>
+        <p class="job-completion-copy"><%= booking.status === 'COMPLETED' ? 'The customer can confirm completion after reviewing the finished work.' : ['CANCELLED', 'DECLINED'].includes(booking.status) ? 'This job is closed.' : 'Customer sign-off will be available once the work is marked complete.' %></p>
+      <% } %>
+      <a class="job-quote-link" href="/quotes/booking/<%= booking.idbookings %>">View itemized quote &rarr;</a>
+    </aside>
+  </div>
 </main>
 <%- include('./partials/footer') %>
 <script>
