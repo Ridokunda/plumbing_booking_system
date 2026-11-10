@@ -53,14 +53,14 @@
             <td><%= item.type || '-' %></td>
             <td>R<%= Number(item.amount || 0).toFixed(2) %></td>
             <td>
-              <div><strong><%= item.isPaid ? 'Receipt' : 'Invoice' %>:</strong> <%= item.invoiceNumber %></div>
+              <div><strong><%= item.isPaid ? (item.receipt.isSimulated ? 'Demo receipt' : 'Receipt') : 'Invoice' %>:</strong> <%= item.invoiceNumber %></div>
               <% if (item.description) { %>
                 <div><small><%= item.description %></small></div>
               <% } %>
             </td>
             <td>
               <% if (item.isPaid) { %>
-                <span class="status status-paid">PAID</span>
+                <span class="status status-paid"><%= item.receipt.isSimulated ? 'SIMULATED · PAID' : 'PAID' %></span>
               <% } else { %>
                 <span class="status status-pending">PENDING PAYMENT</span>
               <% } %>

@@ -1,36 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>WeFixIt | <%= title %></title>
-	<style>
-		body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        .payment-content { font-family: Arial, sans-serif; max-width: 680px; margin: 30px auto; padding: 0 16px; }
-		.card { border: 1px solid #ddd; border-radius: 10px; padding: 20px; }
-		.actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
-		.btn { padding: 10px 14px; border-radius: 8px; text-decoration: none; }
-		.btn-primary { background: #0f7e94; color: #fff; }
-		.btn-secondary { background: #f1f5f9; color: #333; }
-	</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeFixIt | <%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/payment.css">
   <%- include('./partials/header-assets') %>
 </head>
-<body>
+<body class="payment-page">
   <%- include('./partials/head') %>
   <main class="payment-content">
-	<div class="card">
-		<h1>Payment Successful</h1>
-		<p>Thank you for your payment for booking #<%= booking_id %>.</p>
-		<% if (receipt) { %>
-			<p><strong>Receipt Number:</strong> <%= receipt.receiptNumber %></p>
-			<p><strong>Paid At:</strong> <%= new Date(receipt.paidAt).toLocaleString() %></p>
-		<% } %>
-		<div class="actions">
-			<a class="btn btn-primary" href="/payment/receipt/<%= booking_id %>">View Receipt</a>
-			<a class="btn btn-secondary" href="/payment/history">Invoice & Receipt History</a>
-			<a class="btn btn-secondary" href="/booking/mybookings">Back to My Bookings</a>
-		</div>
-	</div>
+    <section class="payment-panel payment-success" aria-labelledby="payment-success-title">
+      <div class="payment-success-icon" aria-hidden="true">&#10003;</div>
+      <p class="payment-eyebrow">Booking #<%= booking_id %></p>
+      <h1 id="payment-success-title"><%= receipt?.isSimulated ? 'Demo payment successful' : 'Payment successful' %></h1>
+      <p class="payment-muted"><%= receipt?.isSimulated ? 'Your simulation is complete. No real money was charged or transferred.' : 'Thank you. Your payment has been recorded.' %></p>
+      <% if (receipt) { %>
+        <dl class="payment-details">
+          <div><dt><%= receipt.isSimulated ? 'Demo receipt' : 'Receipt number' %></dt><dd><%= receipt.receiptNumber %></dd></div>
+          <div><dt>Amount recorded</dt><dd><%= new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(receipt.amount) %></dd></div>
+          <div><dt>Recorded at</dt><dd><%= new Date(receipt.paidAt).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' }) %></dd></div>
+        </dl>
+      <% } %>
+      <a class="payment-button primary" href="/payment/receipt/<%= booking_id %>">View <%= receipt?.isSimulated ? 'demo receipt' : 'receipt' %> &rarr;</a>
+      <div class="payment-success-links"><a href="/payment/history">Invoice &amp; receipt history</a><a href="/booking/mybookings">Back to my bookings</a></div>
+    </section>
   </main>
 </body>
 </html>

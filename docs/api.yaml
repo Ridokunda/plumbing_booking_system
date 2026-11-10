@@ -229,6 +229,32 @@ paths:
       responses:
         '200': { description: Checkout URL returned }
         '409': { description: Work, quote, or confirmation is incomplete }
+  /payment/process:
+    post:
+      summary: Simulate payment for a customer's completed and confirmed booking
+      description: Requires ENABLE_SIMULATED_PAYMENTS=true. Success marks the booking PAID and creates a demo receipt without moving money. A decline makes no changes. Repeated successful requests return the existing receipt.
+      security: [{ sessionCookie: [], csrfHeader: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [booking_id]
+              properties:
+                booking_id: { type: integer, minimum: 1 }
+                outcome: { type: string, enum: [success, declined], default: success }
+      responses:
+        '200': { description: Demo receipt created or existing receipt returned }
+        '400': { description: Invalid booking ID or simulation outcome }
+        '402': { description: Simulated decline; booking remains unpaid }
+        '403': { description: Simulation disabled, invalid CSRF, or not a customer }
+        '409':
+          {
+            description: Booking is not owned by the customer,
+            has no approved quote,
+            or is not confirmed and payable,
+          }
   /payment/receipt/{bookingId}/pdf:
     get:
       summary: Download a paid booking receipt as a PDF

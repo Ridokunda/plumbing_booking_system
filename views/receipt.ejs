@@ -24,10 +24,11 @@
   <main class="payment-content">
   <div class="receipt">
     <div class="receipt-header">
-      <h1 style="margin: 0; font-size: 1.4rem;">Payment Receipt</h1>
+      <h1 style="margin: 0; font-size: 1.4rem;"><%= receipt.isSimulated ? 'Demo Payment Receipt' : 'Payment Receipt' %></h1>
       <div>Receipt Number: <strong><%= receipt.receiptNumber %></strong></div>
     </div>
     <div class="receipt-body">
+      <% if (receipt.isSimulated) { %><p><strong>Simulated payment.</strong> No real money was charged or transferred. This receipt is for demonstration only.</p><% } %>
       <div class="line"><span>Booking ID</span><strong>#<%= booking.idbookings %></strong></div>
       <div class="line"><span>Service</span><strong><%= receipt.serviceType || booking.type || 'General plumbing' %></strong></div>
       <div class="line"><span>Payment Method</span><strong><%= receipt.paymentMethod %></strong></div>

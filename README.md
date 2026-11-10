@@ -103,6 +103,23 @@ npm run smoke:dispatch # dispatch integration tests; disposable *_test database 
 npm run verify      # complete local static/unit quality gate
 ```
 
+## Local payment simulation
+
+Set `ENABLE_SIMULATED_PAYMENTS=true` in your local `.env`, then restart the Node server.
+For Docker, apply the same setting with `docker compose up -d --build app`.
+Keep the setting disabled in real deployments.
+
+As a customer, approve the quote and confirm the completed work from the job record.
+Open **Pay now** for the completed booking, choose **Successful payment** or
+**Declined payment**, then select **Simulate payment**. No card details or external
+payment service are needed, and no real money is moved.
+
+A success marks the demo booking `PAID`, creates a simulated receipt, and records a
+`PAYMENT_SIMULATED` audit event. A decline leaves the booking and billing records unchanged.
+Retrying a successful request returns the existing receipt. Demo labels appear on the
+confirmation, invoice history, HTML receipt, and PDF receipt. When Stripe is configured,
+its card checkout remains a separate option.
+
 ## Configuration
 
 | Variable                                     | Required             | Purpose                                           |

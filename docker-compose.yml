@@ -41,6 +41,7 @@ services:
     environment:
       <<: *app_environment
       APP_URL: http://localhost:3000
+      ENABLE_SIMULATED_PAYMENTS: ${ENABLE_SIMULATED_PAYMENTS:-false}
     volumes:
       - app_uploads:/app/uploads
     depends_on:

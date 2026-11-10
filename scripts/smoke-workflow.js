@@ -1,4 +1,5 @@
 const request = require('supertest');
+const assert = require('node:assert/strict');
 
 process.env.SESSION_SECRET = 'workflow-smoke-secret-with-at-least-32-characters';
 process.env.COOKIE_SECURE = 'false';
@@ -149,11 +150,46 @@ async function smoke() {
       .get(`/jobs/${bookingId}/pdf`)
       .expect('Content-Type', /application\/pdf/)
       .expect(200);
-    const payment = await post(customer, `/payment?booking_id=${bookingId}`, '/payment/process', {
+    const declined = await post(
+      customer,
+      `/payment?booking_id=${bookingId}`,
+      '/payment/process',
+      {
+        booking_id: bookingId,
+        outcome: 'declined',
+      },
+      402,
+    );
+    assert.equal(declined.body.code, 'SIMULATED_DECLINE');
+    const [[unpaid]] = await database.promise().query(
+      `SELECT b.status,
+        (SELECT COUNT(*) FROM invoices i WHERE i.booking_id = b.idbookings) AS invoice_count,
+        (SELECT COUNT(*) FROM payment_receipts r WHERE r.booking_id = b.idbookings) AS receipt_count
+       FROM bookings b WHERE b.idbookings = ?`,
+      [bookingId],
+    );
+    assert.equal(unpaid.status, 'COMPLETED');
+    assert.equal(unpaid.invoice_count, 0);
+    assert.equal(unpaid.receipt_count, 0);
+    const paymentCsrf = await token(customer, `/payment?booking_id=${bookingId}`);
+    const simulate = () =>
+      customer
+        .post('/payment/process')
+        .set('X-CSRF-Token', paymentCsrf)
+        .send({ booking_id: bookingId })
+        .expect(200);
+    const payments = await Promise.all([simulate(), simulate()]);
+    const payment = payments[0];
+    assert.equal(payments.filter((result) => result.body.alreadyPaid).length, 1);
+    assert.equal(payments[0].body.receiptNumber, payments[1].body.receiptNumber);
+    if (!payment.body.receiptNumber) throw new Error('Payment did not create a receipt');
+    const retry = await post(customer, `/payment?booking_id=${bookingId}`, '/payment/process', {
       booking_id: bookingId,
     });
-    if (!payment.body.receiptNumber) throw new Error('Payment did not create a receipt');
-    await customer.get(`/payment/receipt/${bookingId}`).expect(200);
+    assert.equal(retry.body.alreadyPaid, true);
+    assert.equal(retry.body.receiptNumber, payment.body.receiptNumber);
+    const receiptPage = await customer.get(`/payment/receipt/${bookingId}`).expect(200);
+    assert.match(receiptPage.text, /Demo Payment Receipt/);
     await customer
       .get(`/payment/receipt/${bookingId}/pdf`)
       .expect('Content-Type', /application\/pdf/)

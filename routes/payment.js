@@ -46,6 +46,7 @@ function normalizeDbReceipt(row, fallback = {}) {
     serviceType: row.service_type || fallback.serviceType || null,
     description: row.description || fallback.description || null,
     paymentMethod: row.payment_method || 'SIMULATED',
+    isSimulated: row.provider === 'SIMULATED' || row.payment_method === 'SIMULATED',
     paidAt:
       row.paid_at instanceof Date ? row.paid_at.toISOString() : new Date(row.paid_at).toISOString(),
     invoiceNumber: row.invoice_number || fallback.invoiceNumber || null,
@@ -55,7 +56,7 @@ function normalizeDbReceipt(row, fallback = {}) {
 function getPersistentReceiptForBooking(bookingId, userId, callback) {
   const query = `
         SELECT r.idreceipt, r.receipt_number, r.booking_id, r.customer_id, r.plumber_id,
-               r.payment_method, r.amount_paid, r.paid_at,
+               r.provider, r.payment_method, r.amount_paid, r.paid_at,
                i.invoice_number
         FROM payment_receipts r
         JOIN invoices i ON i.idinvoice = r.invoice_id
@@ -80,8 +81,10 @@ router.get('/', (req, res) => {
   if (!bookingId) return res.status(400).send('Booking ID required');
 
   // Fetch booking details
-  const query =
-    'SELECT * FROM bookings WHERE idbookings = ? AND idUser = ? AND status IN ("COMPLETED", "PAID")';
+  const query = `SELECT b.*,
+      EXISTS (SELECT 1 FROM completion_confirmations cc WHERE cc.booking_id = b.idbookings) AS completion_confirmed,
+      EXISTS (SELECT 1 FROM quotes q WHERE q.booking_id = b.idbookings AND q.status = 'APPROVED') AS quote_approved
+    FROM bookings b WHERE b.idbookings = ? AND b.idUser = ? AND b.status IN ('COMPLETED', 'PAID')`;
   connection.query(query, [bookingId, req.user.idusers], (err, results) => {
     if (err || results.length === 0)
       return res.status(404).send('Booking not found or not completed');
@@ -151,17 +154,21 @@ router.post('/process', async (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Simulated payments are disabled.' });
   }
   const bookingId = Number(req.body.booking_id);
-  if (!Number.isInteger(bookingId)) {
+  if (!Number.isInteger(bookingId) || bookingId <= 0) {
     return res.status(400).json({ success: false, message: 'booking_id is required' });
+  }
+  const outcome = req.body.outcome ?? 'success';
+  if (!['success', 'declined'].includes(outcome)) {
+    return res.status(400).json({ success: false, message: 'Choose a valid simulation result.' });
   }
   let db;
   try {
     db = await connection.promise().getConnection();
     await db.beginTransaction();
     const [bookings] = await db.query(
-      `SELECT b.idbookings, b.idUser, b.idPlumber, b.amount, b.currency, b.type, b.description
+      `SELECT b.idbookings, b.idUser, b.idPlumber, b.amount, b.currency, b.type, b.description, b.status
              FROM bookings b
-             WHERE b.idbookings = ? AND b.idUser = ? AND b.status = 'COMPLETED' AND b.amount > 0
+             WHERE b.idbookings = ? AND b.idUser = ? AND b.status IN ('COMPLETED', 'PAID') AND b.amount > 0
                AND EXISTS (SELECT 1 FROM completion_confirmations cc WHERE cc.booking_id = b.idbookings)
                AND EXISTS (SELECT 1 FROM quotes q WHERE q.booking_id = b.idbookings AND q.status = 'APPROVED')
              FOR UPDATE`,
@@ -175,7 +182,39 @@ router.post('/process', async (req, res, next) => {
       });
     }
     const booking = bookings[0];
-    await db.query("UPDATE bookings SET status = 'PAID' WHERE idbookings = ?", [bookingId]);
+    if (booking.status === 'PAID') {
+      const [receipts] = await db.query(
+        'SELECT receipt_number FROM payment_receipts WHERE booking_id = ? AND customer_id = ? FOR UPDATE',
+        [bookingId, req.user.idusers],
+      );
+      await db.rollback();
+      if (!receipts.length) {
+        return res.status(409).json({
+          success: false,
+          message: 'This booking is already paid. Contact support if its receipt is missing.',
+        });
+      }
+      return res.json({
+        success: true,
+        alreadyPaid: true,
+        receiptNumber: receipts[0].receipt_number,
+        url: `/payment/success?booking_id=${bookingId}`,
+      });
+    }
+    if (outcome === 'declined') {
+      await db.rollback();
+      return res.status(402).json({
+        success: false,
+        code: 'SIMULATED_DECLINE',
+        message:
+          'Demo payment declined. No money was charged and your booking is still unpaid. Choose a successful payment to try again.',
+      });
+    }
+    const [statusUpdate] = await db.query(
+      "UPDATE bookings SET status = 'PAID' WHERE idbookings = ? AND status = 'COMPLETED'",
+      [bookingId],
+    );
+    if (!statusUpdate.affectedRows) throw new Error('Concurrent payment state change detected');
     const invoiceNumber = buildInvoiceNumber(bookingId);
     await db.query(
       `INSERT INTO invoices (invoice_number, booking_id, customer_id, plumber_id, service_type, description,
@@ -215,7 +254,7 @@ router.post('/process', async (req, res, next) => {
     );
     const [[receiptRow]] = await db.query(
       `SELECT r.idreceipt, r.receipt_number, r.booking_id, r.customer_id, r.plumber_id,
-              r.payment_method, r.amount_paid, r.paid_at, i.invoice_number
+              r.provider, r.payment_method, r.amount_paid, r.paid_at, i.invoice_number
              FROM payment_receipts r JOIN invoices i ON i.idinvoice = r.invoice_id WHERE r.booking_id = ?`,
       [bookingId],
     );
@@ -229,8 +268,8 @@ router.post('/process', async (req, res, next) => {
       role: 'customer',
       bookingId,
       type: 'booking_paid',
-      title: 'Payment completed',
-      message: 'Your payment was processed successfully.',
+      title: 'Demo payment completed',
+      message: 'Your simulated payment was recorded. No real money was charged.',
     });
     if (booking.idPlumber)
       createNotification({
@@ -238,12 +277,13 @@ router.post('/process', async (req, res, next) => {
         role: 'plumber',
         bookingId,
         type: 'booking_paid',
-        title: 'Customer payment received',
-        message: 'A customer has paid for a completed booking.',
+        title: 'Demo payment recorded',
+        message:
+          'A customer simulated payment for a completed booking. No real money was transferred.',
       });
     recordAuditEvent({
       actorId: req.user.idusers,
-      action: 'PAYMENT_COMPLETED',
+      action: 'PAYMENT_SIMULATED',
       entityType: 'booking',
       entityId: bookingId,
       metadata: { provider: 'SIMULATED', amount: booking.amount },
@@ -253,6 +293,7 @@ router.post('/process', async (req, res, next) => {
       success: true,
       message: 'Payment simulated successfully',
       receiptNumber: receipt.receiptNumber,
+      url: `/payment/success?booking_id=${bookingId}`,
     });
   } catch (error) {
     if (db) await db.rollback();
@@ -285,7 +326,7 @@ router.get('/history', async (req, res, next) => {
       connection.promise().query(
         `SELECT b.idbookings, b.type, b.amount, b.status, b.date_start, b.description,
           r.idreceipt, r.receipt_number, r.booking_id, r.customer_id, r.plumber_id,
-          r.payment_method, r.amount_paid, r.paid_at, i.invoice_number
+          r.provider, r.payment_method, r.amount_paid, r.paid_at, i.invoice_number
          FROM bookings b
          LEFT JOIN payment_receipts r ON r.booking_id = b.idbookings
          LEFT JOIN invoices i ON i.idinvoice = r.invoice_id

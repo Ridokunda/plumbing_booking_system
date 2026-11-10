@@ -31,7 +31,7 @@ function streamReceipt(res, booking, receipt) {
   const document = startDocument(
     res,
     `${receipt.receiptNumber}.pdf`,
-    `Receipt ${receipt.receiptNumber}`,
+    `${receipt.isSimulated ? 'Demo receipt' : 'Receipt'} ${receipt.receiptNumber}`,
   );
   field(document, 'Invoice', receipt.invoiceNumber);
   field(document, 'Booking', `#${booking.idbookings}`);
@@ -49,7 +49,9 @@ function streamReceipt(res, booking, receipt) {
     .font('Helvetica')
     .fillColor('#4b5563')
     .text(
-      'This receipt was generated from the provider-confirmed payment record stored by WeFixIt.',
+      receipt.isSimulated
+        ? 'SIMULATED PAYMENT - DEMO RECEIPT. No real money was charged or transferred. This is a demonstration record only.'
+        : 'This receipt was generated from the provider-confirmed payment record stored by WeFixIt.',
     );
   document.end();
 }

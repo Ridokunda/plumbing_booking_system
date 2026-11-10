@@ -1,67 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeFixIt | <%= title %></title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        .payment-content { font-family: Arial, sans-serif; max-width: 760px; margin: 24px auto; padding: 0 16px; }
-        .panel { border: 1px solid #ddd; border-radius: 10px; padding: 20px; background: #fff; }
-        .row { margin: 10px 0; }
-        .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-        .btn { border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; }
-        .btn-primary { background: #0f7e94; color: #fff; }
-        .btn-secondary { background: #f0f4f8; color: #333; }
-        .status { font-weight: 700; color: #0f7e94; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeFixIt | <%= title %></title>
+  <link rel="stylesheet" href="/stylesheets/payment.css">
   <%- include('./partials/header-assets') %>
 </head>
-<body>
+<body class="payment-page">
   <%- include('./partials/head') %>
+  <%
+    const money = value => new Intl.NumberFormat('en-ZA', { style: 'currency', currency: booking.currency || 'ZAR' }).format(Number(value || 0));
+    const paid = booking.status === 'PAID';
+    const canPay = !paid && Boolean(booking.quote_approved) && Boolean(booking.completion_confirmed) && Number(booking.amount) > 0;
+  %>
   <main class="payment-content">
-    <h1>Payment for Booking #<%= booking.idbookings %></h1>
-    <div class="panel">
-        <div class="row"><strong>Service:</strong> <%= booking.type || 'General plumbing' %></div>
-        <div class="row"><strong>Amount:</strong> R<%= Number(booking.amount || 0).toFixed(2) %></div>
-        <div class="row"><strong>Status:</strong> <span class="status"><%= booking.status %></span></div>
-        <% if (receipt) { %>
-            <div class="row"><strong>Receipt Number:</strong> <%= receipt.receiptNumber %></div>
-        <% } %>
-
-        <div class="actions">
-            <% if (booking.status === 'COMPLETED') { %>
-                <form id="payment-form" style="margin:0;">
-                    <button type="submit" class="btn btn-primary" <%= !stripeEnabled && !simulatedEnabled ? 'disabled' : '' %>><%= stripeEnabled ? 'Pay securely by card' : simulatedEnabled ? 'Simulate demo payment' : 'Payments unavailable' %></button>
-                </form>
-            <% } else { %>
-                <a href="/payment/receipt/<%= booking.idbookings %>" class="btn btn-primary">View Receipt</a>
-            <% } %>
-            <a href="/payment/history" class="btn btn-secondary">Invoice & Receipt History</a>
-            <a href="/booking/mybookings" class="btn btn-secondary">Back to My Bookings</a>
-        </div>
+    <a class="payment-back" href="/booking/mybookings">&larr; Back to my bookings</a>
+    <div class="payment-heading">
+      <div>
+        <p class="payment-eyebrow">Booking #<%= booking.idbookings %></p>
+        <h1><%= paid ? 'Payment recorded' : 'Complete your payment' %></h1>
+        <p>Review the service details and keep your receipt in one place.</p>
+      </div>
+      <% if (simulatedEnabled || receipt?.isSimulated) { %><span class="payment-pill">Demo mode</span><% } %>
     </div>
 
-    <script>
-        const form = document.getElementById('payment-form');
-        if (form) {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
+    <% if (simulatedEnabled && !paid) { %>
+      <div class="payment-notice">
+        <strong>This is a payment simulation.</strong>
+        No real money is charged. A successful simulation marks this booking as paid and creates a demo receipt.
+      </div>
+    <% } %>
 
-                fetch('<%= stripeEnabled ? '/payment/checkout' : '/payment/process' %>', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ booking_id: '<%= booking.idbookings %>'})
-                }).then(res => res.json()).then(data => {
-                    if (data.success) {
-                        window.location.href = data.url || '/payment/success?booking_id=<%= booking.idbookings %>';
-                    } else {
-                        alert(data.message);
-                    }
-                });
-            });
-        }
-    </script>
+    <div class="payment-layout">
+      <section class="payment-panel" aria-labelledby="payment-summary-title">
+        <p class="payment-eyebrow">Service summary</p>
+        <h2 id="payment-summary-title"><%= (booking.type || 'General plumbing').replace(/_/g, ' ') %></h2>
+        <dl class="payment-details">
+          <div><dt>Booking</dt><dd>#<%= booking.idbookings %></dd></div>
+          <div><dt>Job status</dt><dd><%= paid ? (receipt?.isSimulated ? 'Demo paid' : 'Paid') : 'Completed' %></dd></div>
+          <% if (!paid) { %>
+            <div><dt>Quote</dt><dd><%= booking.quote_approved ? 'Approved' : 'Approval needed' %></dd></div>
+            <div><dt>Completion</dt><dd><%= booking.completion_confirmed ? 'Confirmed' : 'Confirmation needed' %></dd></div>
+          <% } %>
+        </dl>
+        <div class="payment-total"><span><%= paid ? 'Amount recorded' : 'Total due' %></span><strong><%= money(booking.amount) %></strong></div>
+        <a class="payment-text-link" href="/quotes/booking/<%= booking.idbookings %>">View itemized quote &rarr;</a>
+      </section>
+
+      <section class="payment-panel" aria-labelledby="payment-checkout-title">
+        <% if (paid) { %>
+          <p class="payment-eyebrow"><%= receipt?.isSimulated ? 'Simulation complete' : 'Payment complete' %></p>
+          <h2 id="payment-checkout-title"><%= receipt?.isSimulated ? 'Demo payment recorded' : 'You are all paid up' %></h2>
+          <% if (receipt?.isSimulated) { %><p class="payment-muted">No real money was charged or transferred.</p><% } %>
+          <% if (receipt) { %>
+            <p class="payment-muted">Receipt <strong><%= receipt.receiptNumber %></strong></p>
+            <a class="payment-button primary" href="/payment/receipt/<%= booking.idbookings %>">View <%= receipt.isSimulated ? 'demo receipt' : 'receipt' %> &rarr;</a>
+          <% } %>
+        <% } else { %>
+          <p class="payment-eyebrow"><%= simulatedEnabled ? 'Demo checkout' : 'Checkout' %></p>
+          <h2 id="payment-checkout-title"><%= simulatedEnabled ? 'Try a payment' : 'Choose a payment method' %></h2>
+
+          <% if (!booking.quote_approved) { %>
+            <p class="payment-prerequisite">Approve your quote before paying. <a href="/quotes/booking/<%= booking.idbookings %>">Review quote &rarr;</a></p>
+          <% } %>
+          <% if (!booking.completion_confirmed) { %>
+            <p class="payment-prerequisite">Confirm the completed work before paying. <a href="/jobs/<%= booking.idbookings %>">Review job &rarr;</a></p>
+          <% } %>
+          <% if (Number(booking.amount) <= 0) { %><p class="payment-prerequisite">This booking does not have a payable amount. Contact support to review the quote.</p><% } %>
+
+          <% if (simulatedEnabled) { %>
+            <div class="payment-demo-card" aria-label="Sample demo card ending 4242. No real card details needed.">
+              <div class="payment-demo-card-top"><span class="payment-card-chip" aria-hidden="true"></span><strong>DEMO CARD</strong></div>
+              <p class="payment-card-number" aria-hidden="true">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; 4242</p>
+              <span>Sample card &middot; no details needed</span>
+            </div>
+            <form action="/payment/process" method="post" data-payment-form data-mode="simulation">
+              <input type="hidden" name="booking_id" value="<%= booking.idbookings %>">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <label class="payment-field" for="simulation-outcome">Simulation result
+                <select id="simulation-outcome" name="outcome" <%= canPay ? '' : 'disabled' %>>
+                  <option value="success">Successful payment</option>
+                  <option value="declined">Declined payment</option>
+                </select>
+              </label>
+              <p class="payment-help">Try a success to generate a receipt, or a decline to test a failed payment.</p>
+              <button class="payment-button primary" type="submit" <%= canPay ? '' : 'disabled' %>>Simulate payment &middot; <%= money(booking.amount) %></button>
+            </form>
+          <% } %>
+
+          <% if (stripeEnabled) { %>
+            <form class="<%= simulatedEnabled ? 'payment-card-option' : '' %>" action="/payment/checkout" method="post" data-payment-form data-mode="card">
+              <input type="hidden" name="booking_id" value="<%= booking.idbookings %>">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <p class="payment-muted">Continue to Stripe for card checkout.</p>
+              <button class="payment-button <%= simulatedEnabled ? 'secondary' : 'primary' %>" type="submit" <%= canPay ? '' : 'disabled' %>>Pay securely by card &rarr;</button>
+            </form>
+          <% } %>
+
+          <% if (!simulatedEnabled && !stripeEnabled) { %>
+            <p class="payment-muted">Payments are currently unavailable. Please try again later or <a href="/support">contact support</a>.</p>
+            <button class="payment-button primary" type="button" disabled>Payments unavailable</button>
+          <% } %>
+          <p class="payment-progress" id="payment-progress" role="status" hidden></p>
+          <p class="payment-error" id="payment-error" role="alert" hidden></p>
+        <% } %>
+        <a class="payment-history-link" href="/payment/history">Invoice &amp; receipt history</a>
+      </section>
+    </div>
   </main>
+  <script src="/javascripts/payment.js" defer></script>
 </body>
 </html>
